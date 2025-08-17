@@ -1,5 +1,0 @@
-import QtCore
-
-Settings {
-    property int money  
-}
