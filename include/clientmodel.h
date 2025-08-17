@@ -1,0 +1,70 @@
+#ifndef CLIENTMODEL_H
+#define CLIENTMODEL_H
+#include "basemodel.h"
+class ClientModel : public BaseModel
+{
+    Q_OBJECT
+public:
+    enum Roles {
+        BusinessTypeRole = Qt::UserRole + 1,
+        NameRole,
+        OfferRole,
+        PriceRole,
+        SupplementsRole,
+        ChestIDRole,
+        DiscountRole,
+        PhoneNumberRole,
+        CommentRole
+    };
+    enum BusinessType {
+        Business = 0,
+        Consumer = 1
+    };
+    Q_ENUM(BusinessType)
+
+    enum Offer {
+        Bronze = 0,
+        Silver = 1,
+        Gold = 2
+    };
+    Q_ENUM(Offer)
+
+    explicit ClientModel(QObject *parent = nullptr);
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    Q_INVOKABLE void addClient(int businessType, const QString &name, int offer, int price,
+                               const QList<int> &supplements,
+                               int chestID, int discount, const QString &phoneNumber,
+                               const QString &comment);
+    Q_INVOKABLE void updateClient(int index, int businessType, const QString &name, int offer, int price,
+                                  const QList<int> &supplements,
+                                  int chestID, int discount, const QString &phoneNumber,
+                                  const QString &comment);
+    Q_INVOKABLE int calculatePrice(int offer, const QList<int> &supplements, int discount);
+
+protected:
+    QJsonObject entryToJson(int index) const override;
+    void entryFromJson(const QJsonObject &obj) override;
+    void addEntryToModel() override;
+    void removeEntryFromModel(int index) override;
+    void clearModel() override;
+private:
+    static const int BRONZE_BASE_PRICE = 1000;
+    static const int SILVER_BASE_PRICE = 2000;
+    static const int GOLD_BASE_PRICE = 3000;
+    struct Client {
+        BusinessType businessType;
+        QString name;
+        Offer offer;
+        int price;
+        QList<int> supplements;
+        int chestID;
+        int discount;
+        QString phoneNumber;
+        QString comment;
+    };
+    QList<Client> m_clients;
+    int getSupplementPrice(int supplementId);
+};
+#endif // CLIENTMODEL_H
