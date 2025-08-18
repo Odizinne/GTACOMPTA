@@ -168,7 +168,6 @@ void ClientModel::clearModel()
 
 int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int discount)
 {
-    // Base price from offer
     int basePrice = 0;
     switch (offer) {
     case Bronze: basePrice = BRONZE_BASE_PRICE; break;
@@ -177,16 +176,12 @@ int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int di
     default: basePrice = BRONZE_BASE_PRICE; break;
     }
 
-    // Calculate supplements total
     int supplementsTotal = 0;
     for (int supplementId : supplements) {
         supplementsTotal += getSupplementPrice(supplementId);
     }
 
-    // Calculate total before discount
     int totalBeforeDiscount = basePrice + supplementsTotal;
-
-    // Apply discount
     int finalPrice = totalBeforeDiscount * (100 - discount) / 100;
 
     return finalPrice;

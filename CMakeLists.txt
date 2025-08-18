@@ -14,23 +14,23 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Qml)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-set(SOURCES
-    src/basemodel.cpp
-    src/employeemodel.cpp
-    src/transactionmodel.cpp
-    src/clientmodel.cpp
-)
-
 set(HEADERS
     include/basemodel.h
     include/employeemodel.h
     include/transactionmodel.h
     include/clientmodel.h
+    include/awaitingtransactionmodel.h
+)
+
+set(SOURCES
+    src/basemodel.cpp
+    src/employeemodel.cpp
+    src/transactionmodel.cpp
+    src/clientmodel.cpp
+    src/awaitingtransactionmodel.cpp
 )
 
 qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
-    #${SOURCES}
-    #${HEADERS}
     src/main.cpp
 )
 

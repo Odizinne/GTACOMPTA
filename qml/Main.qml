@@ -22,6 +22,11 @@ ApplicationWindow {
         Component.onCompleted: loadFromFile()
     }
 
+    AwaitingTransactionModel {
+        id: awaitingTransactionModel
+        Component.onCompleted: loadFromFile()
+    }
+
     ClientModel {
         id: clientModel
         Component.onCompleted: loadFromFile()
@@ -30,9 +35,22 @@ ApplicationWindow {
     Connections {
         target: clientModel
         function onCheckoutCompleted(description, amount) {
-            console.log("pass")
-            transactionModel.addTransactionFromCheckout(description, amount)
-            // Money will be updated when transaction is added
+            console.log("Adding to awaiting transactions")
+            awaitingTransactionModel.addAwaitingTransaction(description, amount, Qt.formatDateTime(new Date(), "yyyy-MM-dd"))
+        }
+    }
+
+    Connections {
+        target: employeeModel
+        function onPaymentCompleted(description, amount) {
+            awaitingTransactionModel.addAwaitingTransaction(description, amount, Qt.formatDateTime(new Date(), "yyyy-MM-dd"))
+        }
+    }
+
+    Connections {
+        target: awaitingTransactionModel
+        function onTransactionApproved(description, amount, date) {
+            transactionModel.addTransaction(description, amount, date)
         }
     }
 
@@ -44,14 +62,6 @@ ApplicationWindow {
                 var amount = transactionModel.getTransactionAmount(i)
                 UserSettings.money += amount
             }
-        }
-    }
-
-    Connections {
-        target: employeeModel
-        function onPaymentCompleted(description, amount) {
-            transactionModel.addTransactionFromCheckout(description, amount)
-            // Money will be updated when transaction is added
         }
     }
 
@@ -128,6 +138,9 @@ ApplicationWindow {
             text: "Transactions (" + transactionModel.count + ")"
         }
         TabButton {
+            text: "Awaiting (" + awaitingTransactionModel.count + ")"
+        }
+        TabButton {
             text: "Clients (" + clientModel.count + ")"
         }
     }
@@ -192,7 +205,6 @@ ApplicationWindow {
                     Label {
                         text: "Actions"
                         font.bold: true
-                        Layout.preferredWidth: 150
                     }
                 }
             }
@@ -213,12 +225,12 @@ ApplicationWindow {
 
                         delegate: Rectangle {
                             width: employeeListView.width
-                            height: 50
+                            height: 40
                             color: (index % 2 === 0) ? "#404040" : "#303030"
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: 5
+                                anchors.leftMargin: 5
                                 spacing: 10
 
                                 Label {
@@ -259,13 +271,13 @@ ApplicationWindow {
 
                                 ToolButton {
                                     text: "Pay"
-                                    Layout.preferredWidth: 45
+                                    Layout.preferredHeight: 40
                                     onClicked: employeeModel.payEmployee(index)
                                 }
 
                                 ToolButton {
                                     text: "Edit"
-                                    Layout.preferredWidth: 40
+                                    Layout.preferredHeight: 40
                                     onClicked: {
                                         employeeDialog.editMode = true
                                         employeeDialog.editIndex = index
@@ -276,7 +288,7 @@ ApplicationWindow {
 
                                 ToolButton {
                                     text: "Remove"
-                                    Layout.preferredWidth: 60
+                                    Layout.preferredHeight: 40
                                     onClicked: employeeModel.removeEntry(index)
                                 }
                             }
@@ -308,9 +320,9 @@ ApplicationWindow {
                     spacing: 10
 
                     Label {
-                        text: "Description"
+                        text: "Amount"
                         font.bold: true
-                        Layout.preferredWidth: 200
+                        Layout.preferredWidth: 120
                     }
 
                     Label {
@@ -320,15 +332,14 @@ ApplicationWindow {
                     }
 
                     Label {
-                        text: "Amount"
+                        text: "Description"
                         font.bold: true
-                        Layout.preferredWidth: 120
+                        Layout.fillWidth: true
                     }
 
                     Label {
                         text: "Actions"
                         font.bold: true
-                        Layout.preferredWidth: 100
                     }
                 }
             }
@@ -349,19 +360,19 @@ ApplicationWindow {
 
                         delegate: Rectangle {
                             width: transactionListView.width
-                            height: 50
+                            height: 40
                             color: (index % 2 === 0) ? "#404040" : "#303030"
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: 5
+                                anchors.leftMargin: 5
                                 spacing: 10
 
                                 Label {
-                                    text: description
+                                    text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
+                                    color: amount >= 0 ? "lightgreen" : "lightcoral"
                                     font.bold: true
-                                    Layout.preferredWidth: 200
-                                    elide: Text.ElideRight
+                                    Layout.preferredWidth: 120
                                 }
 
                                 Label {
@@ -371,15 +382,15 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
-                                    color: amount >= 0 ? "lightgreen" : "lightcoral"
+                                    text: description
                                     font.bold: true
-                                    Layout.preferredWidth: 120
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
                                 }
 
                                 ToolButton {
+                                    Layout.preferredHeight: 40
                                     text: "Edit"
-                                    Layout.preferredWidth: 40
                                     onClicked: {
                                         transactionDialog.editMode = true
                                         transactionDialog.editIndex = index
@@ -389,8 +400,8 @@ ApplicationWindow {
                                 }
 
                                 ToolButton {
+                                    Layout.preferredHeight: 40
                                     text: "Remove"
-                                    Layout.preferredWidth: 60
                                     onClicked: {
                                         UserSettings.money -= amount
                                         transactionModel.removeEntry(index)
@@ -404,6 +415,125 @@ ApplicationWindow {
                         anchors.centerIn: parent
                         text: "No transactions added yet.\nUse File → New Transaction to add one."
                         visible: transactionModel.count === 0
+                        horizontalAlignment: Text.AlignHCenter
+                        color: "gray"
+                    }
+                }
+            }
+        }
+
+        // Awaiting Transactions Tab
+        Column {
+            spacing: 0
+
+            ToolBar {
+                width: parent.width
+                height: 35
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    spacing: 10
+
+                    Label {
+                        text: "Amount"
+                        font.bold: true
+                        Layout.preferredWidth: 120
+                    }
+
+                    Label {
+                        text: "Date"
+                        font.bold: true
+                        Layout.preferredWidth: 100
+                    }
+
+                    Label {
+                        text: "Description"
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: "Actions"
+                        font.bold: true
+                    }
+                }
+            }
+
+            ScrollView {
+                width: parent.width
+                height: parent.height - 35
+
+                Column {
+                    width: parent.width
+
+                    ListView {
+                        id: awaitingTransactionListView
+                        width: parent.width
+                        height: parent.parent.height
+                        model: awaitingTransactionModel
+                        spacing: 0
+
+                        delegate: Rectangle {
+                            width: awaitingTransactionListView.width
+                            height: 40
+                            color: (index % 2 === 0) ? "#404040" : "#303030"
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 5
+                                spacing: 10
+
+                                Label {
+                                    text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
+                                    color: amount >= 0 ? "lightgreen" : "lightcoral"
+                                    font.bold: true
+                                    Layout.preferredWidth: 120
+                                }
+
+                                Label {
+                                    text: date
+                                    color: "gray"
+                                    Layout.preferredWidth: 100
+                                }
+
+                                Label {
+                                    text: description
+                                    font.bold: true
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                ToolButton {
+                                    Layout.preferredHeight: 40
+                                    text: "Approve"
+                                    onClicked: awaitingTransactionModel.approveTransaction(index)
+                                }
+
+                                ToolButton {
+                                    Layout.preferredHeight: 40
+                                    text: "Edit"
+                                    onClicked: {
+                                        awaitingTransactionDialog.editMode = true
+                                        awaitingTransactionDialog.editIndex = index
+                                        awaitingTransactionDialog.loadTransaction(description, amount, date)
+                                        awaitingTransactionDialog.open()
+                                    }
+                                }
+
+                                ToolButton {
+                                    Layout.preferredHeight: 40
+                                    text: "Remove"
+                                    onClicked: awaitingTransactionModel.removeEntry(index)
+                                }
+                            }
+                        }
+                    }
+
+                    Label {
+                        anchors.centerIn: parent
+                        text: "No awaiting transactions.\nTransactions will appear here when clients checkout or employees are paid."
+                        visible: awaitingTransactionModel.count === 0
                         horizontalAlignment: Text.AlignHCenter
                         color: "gray"
                     }
@@ -429,7 +559,7 @@ ApplicationWindow {
                     Label {
                         text: "Type"
                         font.bold: true
-                        Layout.preferredWidth: 20
+                        Layout.preferredWidth: 30
                     }
 
                     Label {
@@ -482,7 +612,6 @@ ApplicationWindow {
                     Label {
                         text: "Actions"
                         font.bold: true
-                        Layout.preferredWidth: 100
                     }
                 }
             }
@@ -503,19 +632,19 @@ ApplicationWindow {
 
                         delegate: Rectangle {
                             width: clientListView.width
-                            height: 50
+                            height: 40
                             color: (index % 2 === 0) ? "#404040" : "#303030"  // Mid grey for even, dark grey for odd
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.margins: 5
+                                anchors.leftMargin: 5
                                 spacing: 10
 
                                 Label {
-                                    text: businessType === 0 ? "B" : "C"
+                                    text: businessType === 0 ? "Pro" : "Part"
                                     font.bold: true
-                                    color: businessType === 0 ? "blue" : "green"
-                                    Layout.preferredWidth: 20
+                                    color: businessType === 0 ? Constants.businessColor : Constants.consumerColor
+                                    Layout.preferredWidth: 30
                                 }
 
                                 Label {
@@ -543,6 +672,7 @@ ApplicationWindow {
                                 }
 
                                 ToolButton {
+                                    Layout.preferredHeight: 40
                                     text: supplements.length + " supp"
                                     Layout.preferredWidth: 80
                                     onClicked: {
@@ -576,13 +706,13 @@ ApplicationWindow {
 
                                 ToolButton {
                                     text: "Checkout"
-                                    Layout.preferredWidth: 70
+                                    Layout.preferredHeight: 40
                                     onClicked: clientModel.checkout(index)
                                 }
 
                                 ToolButton {
                                     text: "Edit"
-                                    Layout.preferredWidth: 40
+                                    Layout.preferredHeight: 40
                                     onClicked: {
                                         clientDialog.editMode = true
                                         clientDialog.editIndex = index
@@ -594,7 +724,7 @@ ApplicationWindow {
 
                                 ToolButton {
                                     text: "Remove"
-                                    Layout.preferredWidth: 60
+                                    Layout.preferredHeight: 40
                                     onClicked: clientModel.removeEntry(index)
                                 }
                             }
@@ -909,8 +1039,7 @@ ApplicationWindow {
                         transactionModel.updateTransaction(transactionDialog.editIndex, transDesc.text,
                                                            transAmount.value, transDate.text)
                     } else {
-                        transactionModel.addTransaction(transDesc.text, transAmount.value, transDate.text)
-                        // Money will be updated automatically via onRowsInserted
+                        awaitingTransactionModel.addAwaitingTransaction(transDesc.text, transAmount.value, transDate.text)
                     }
                     transactionDialog.close()
                 }
@@ -920,6 +1049,94 @@ ApplicationWindow {
                 text: "Cancel"
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: transactionDialog.close()
+            }
+        }
+    }
+
+    // Awaiting Transaction Dialog
+    Dialog {
+        id: awaitingTransactionDialog
+        title: editMode ? "Edit Awaiting Transaction" : "Add New Awaiting Transaction"
+        width: 400
+        anchors.centerIn: parent
+        modal: true
+
+        property bool editMode: false
+        property int editIndex: -1
+
+        function loadTransaction(description, amount, date) {
+            awaitingTransDesc.text = description
+            awaitingTransAmount.value = amount
+            awaitingTransDate.text = date
+        }
+
+        function clearFields() {
+            awaitingTransDesc.clear()
+            awaitingTransAmount.value = 100
+            awaitingTransDate.text = Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+        }
+
+        onClosed: {
+            editMode = false
+            editIndex = -1
+            clearFields()
+        }
+
+        GridLayout {
+            anchors.fill: parent
+            columns: 2
+
+            Label { text: "Description:" }
+            TextField {
+                id: awaitingTransDesc
+                Layout.fillWidth: true
+                placeholderText: "Office supplies"
+            }
+
+            Label { text: "Amount:" }
+            SpinBox {
+                id: awaitingTransAmount
+                Layout.fillWidth: true
+                from: -999999
+                to: 999999
+                value: 100
+                editable: true
+            }
+
+            Label { text: "Date:" }
+            TextField {
+                id: awaitingTransDate
+                Layout.fillWidth: true
+                placeholderText: "YYYY-MM-DD"
+                text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                flat: true
+                text: awaitingTransactionDialog.editMode ? "Update" : "Add"
+                enabled: awaitingTransDesc.text.length > 0
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                onClicked: {
+                    if (awaitingTransactionDialog.editMode) {
+                        awaitingTransactionModel.updateAwaitingTransaction(awaitingTransactionDialog.editIndex,
+                                                                           awaitingTransDesc.text,
+                                                                           awaitingTransAmount.value,
+                                                                           awaitingTransDate.text)
+                    } else {
+                        awaitingTransactionModel.addAwaitingTransaction(awaitingTransDesc.text,
+                                                                        awaitingTransAmount.value,
+                                                                        awaitingTransDate.text)
+                    }
+                    awaitingTransactionDialog.close()
+                }
+            }
+            Button {
+                flat: true
+                text: "Cancel"
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: awaitingTransactionDialog.close()
             }
         }
     }
@@ -970,7 +1187,7 @@ ApplicationWindow {
             columns: 2
             rowSpacing: 10
 
-            Label { text: "Type:"; }
+            Label { text: "Type:" }
             ComboBox {
                 Layout.preferredHeight: Constants.comboHeight
                 id: businessTypeCombo
@@ -1148,6 +1365,7 @@ ApplicationWindow {
                 onClicked: {
                     employeeModel.clear()
                     transactionModel.clear()
+                    awaitingTransactionModel.clear()
                     clientModel.clear()
                     UserSettings.money = 0
                     clearAllDialog.close()

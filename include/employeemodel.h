@@ -18,15 +18,10 @@ public:
         AddedDateRole,
         CommentRole
     };
-
     explicit EmployeeModel(QObject *parent = nullptr);
-
-    // QAbstractListModel interface
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
-
-    // Employee-specific methods
     Q_INVOKABLE void addEmployee(const QString &name, const QString &phone,
                                  const QString &role, int salary, const QString &addedDate, const QString &comment);
     Q_INVOKABLE void updateEmployee(int index, const QString &name, const QString &phone,
@@ -41,7 +36,7 @@ protected:
     void clearModel() override;
 
 signals:
-    void paymentCompleted(const QString &employeeName, double amount);
+    void paymentCompleted(const QString &description, double amount);
 
 private:
     struct Employee {

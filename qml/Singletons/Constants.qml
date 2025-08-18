@@ -7,4 +7,6 @@ Item {
     property int comboHeight: 35
     property color creditColor: Material.color(Material.Green)
     property color debitColor: Material.color(Material.Red)
+    property color consumerColor: Material.color(Material.Teal)
+    property color businessColor: Material.color(Material.Amber)
 }

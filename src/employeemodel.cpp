@@ -78,7 +78,7 @@ void EmployeeModel::payEmployee(int employeeIndex)
     const Employee &employee = m_employees.at(employeeIndex);
     QString description = QString("Salary payment for %1").arg(employee.name);
 
-    emit paymentCompleted(description, -employee.salary); // Negative because it's an expense
+    emit paymentCompleted(description, -employee.salary);
 }
 
 QJsonObject EmployeeModel::entryToJson(int index) const

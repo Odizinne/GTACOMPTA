@@ -1,0 +1,121 @@
+#include "awaitingtransactionmodel.h"
+
+AwaitingTransactionModel::AwaitingTransactionModel(QObject *parent)
+    : BaseModel("awaiting_transactions.json", parent)
+{
+}
+
+int AwaitingTransactionModel::rowCount(const QModelIndex &parent) const
+{
+    Q_UNUSED(parent)
+    return m_awaitingTransactions.size();
+}
+
+QVariant AwaitingTransactionModel::data(const QModelIndex &index, int role) const
+{
+    if (!index.isValid() || index.row() >= m_awaitingTransactions.size())
+        return QVariant();
+
+    const AwaitingTransaction &transaction = m_awaitingTransactions.at(index.row());
+
+    switch (role) {
+    case DescriptionRole:
+        return transaction.description;
+    case AmountRole:
+        return transaction.amount;
+    case DateRole:
+        return transaction.date;
+    default:
+        return QVariant();
+    }
+}
+
+QHash<int, QByteArray> AwaitingTransactionModel::roleNames() const
+{
+    QHash<int, QByteArray> roles;
+    roles[DescriptionRole] = "description";
+    roles[AmountRole] = "amount";
+    roles[DateRole] = "date";
+    return roles;
+}
+
+void AwaitingTransactionModel::addAwaitingTransaction(const QString &description, double amount, const QString &date)
+{
+    beginInsertRows(QModelIndex(), m_awaitingTransactions.size(), m_awaitingTransactions.size());
+    m_awaitingTransactions.append({description, amount, date});
+    endInsertRows();
+
+    emit countChanged();
+    saveToFile();
+}
+
+void AwaitingTransactionModel::updateAwaitingTransaction(int index, const QString &description, double amount, const QString &date)
+{
+    if (index < 0 || index >= m_awaitingTransactions.size())
+        return;
+
+    m_awaitingTransactions[index] = {description, amount, date};
+    emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+    saveToFile();
+}
+
+double AwaitingTransactionModel::getAwaitingTransactionAmount(int index) const
+{
+    if (index < 0 || index >= m_awaitingTransactions.size())
+        return 0.0;
+
+    return m_awaitingTransactions.at(index).amount;
+}
+
+void AwaitingTransactionModel::approveTransaction(int index)
+{
+    if (index < 0 || index >= m_awaitingTransactions.size())
+        return;
+
+    const AwaitingTransaction &transaction = m_awaitingTransactions.at(index);
+
+    // Emit signal to add to real transaction model
+    emit transactionApproved(transaction.description, transaction.amount, transaction.date);
+
+    // Remove from awaiting list
+    removeEntry(index);
+}
+
+QJsonObject AwaitingTransactionModel::entryToJson(int index) const
+{
+    if (index < 0 || index >= m_awaitingTransactions.size())
+        return QJsonObject();
+
+    const AwaitingTransaction &trans = m_awaitingTransactions.at(index);
+    QJsonObject obj;
+    obj["description"] = trans.description;
+    obj["amount"] = trans.amount;
+    obj["date"] = trans.date;
+    return obj;
+}
+
+void AwaitingTransactionModel::entryFromJson(const QJsonObject &obj)
+{
+    AwaitingTransaction trans;
+    trans.description = obj["description"].toString();
+    trans.amount = obj["amount"].toDouble();
+    trans.date = obj["date"].toString();
+    m_awaitingTransactions.append(trans);
+}
+
+void AwaitingTransactionModel::addEntryToModel()
+{
+    // Not used in this implementation
+}
+
+void AwaitingTransactionModel::removeEntryFromModel(int index)
+{
+    beginRemoveRows(QModelIndex(), index, index);
+    m_awaitingTransactions.removeAt(index);
+    endRemoveRows();
+}
+
+void AwaitingTransactionModel::clearModel()
+{
+    m_awaitingTransactions.clear();
+}

@@ -57,7 +57,7 @@ protected:
     void clearModel() override;
 
 signals:
-    void checkoutCompleted(const QString &clientName, double amount);
+    void checkoutCompleted(const QString &description, double amount);
 
 private:
     static const int BRONZE_BASE_PRICE = 1000;
