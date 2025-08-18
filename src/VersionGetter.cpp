@@ -41,3 +41,13 @@ QString VersionGetter::getQtVersion() const
 {
     return QT_VERSION_STRING;
 }
+
+QString VersionGetter::getCommitHash() const
+{
+    return QString(GIT_COMMIT_HASH);
+}
+
+QString VersionGetter::getBuildTimestamp() const
+{
+    return QString(BUILD_TIMESTAMP);
+}

@@ -5,19 +5,30 @@ import Odizinne.GTACOMPTA
 
 Dialog {
     id: dialog
-    title: "GTACOMPTA"
     width: 400
     anchors.centerIn: parent
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 20
+        spacing: 10
 
         Image {
             Layout.alignment: Qt.AlignCenter
-            Layout.preferredHeight: 64
-            Layout.preferredWidth: 64
+            Layout.preferredHeight: 128
+            Layout.preferredWidth: 128
             source: "qrc:/icons/icon.png"
+        }
+
+        Label {
+            text: "GTACOMPTA"
+            font.bold: true
+            font.pixelSize: 20
+            Layout.topMargin: -8
+            Layout.alignment: Qt.AlignCenter
+        }
+
+        MenuSeparator {
+            Layout.fillWidth: true
         }
 
         RowLayout {
@@ -27,10 +38,13 @@ Dialog {
                 text: "Author"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
+                font.bold: true
             }
 
             Label {
                 text: "Odizinne"
+                font.bold: true
+                color: Material.accent
             }
         }
 
@@ -59,6 +73,34 @@ Dialog {
 
             Label {
                 text: VersionGetter.getQtVersion()
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            Label {
+                text: "Commit"
+                Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: true
+            }
+
+            Label {
+                text: VersionGetter.getCommitHash()
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            Label {
+                text: "Build date"
+                Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: true
+            }
+
+            Label {
+                text: VersionGetter.getBuildTimestamp()
             }
         }
     }

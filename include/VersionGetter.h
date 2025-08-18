@@ -20,6 +20,8 @@ public:
 
     Q_INVOKABLE QString getAppVersion() const;
     Q_INVOKABLE QString getQtVersion() const;
+    Q_INVOKABLE QString getCommitHash() const;
+    Q_INVOKABLE QString getBuildTimestamp() const;
 
 private:
     static VersionGetter* m_instance;
