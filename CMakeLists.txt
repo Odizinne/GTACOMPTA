@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 
-project(GTACOMPTA VERSION 1.0.4 LANGUAGES CXX)
+project(GTACOMPTA VERSION 1.0.5 LANGUAGES CXX)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
 set(CMAKE_CXX_STANDARD 20)
@@ -69,6 +69,7 @@ configure_file(
 qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
     src/main.cpp
     resources/icons/icons.qrc
+    resources/sounds/sounds.qrc
     "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
 )
 
@@ -99,6 +100,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES qml/FakeUpgradeDialog.qml
     QML_FILES qml/WelcomeDialog.qml
     QML_FILES qml/VersionDialog.qml
+    QML_FILES qml/SplashScreen.qml
 )
 
 set_target_properties(GTACOMPTA PROPERTIES

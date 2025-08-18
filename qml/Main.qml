@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Controls.Material
+import QtQuick.Controls.Material.impl
 import QtQuick.Controls.impl
 import QtQuick.Layouts
 import QtQml
 import Odizinne.GTACOMPTA
+import QtMultimedia
 
 ApplicationWindow {
     id: window
@@ -21,6 +23,11 @@ ApplicationWindow {
         if (UserSettings.firstRun) {
             welcomeDialog.open()
         }
+    }
+
+    SoundEffect {
+        id: introSound
+        source: "qrc:/sounds/intro.wav"
     }
 
     Material.primary: "#2A2F2A"
@@ -142,409 +149,443 @@ ApplicationWindow {
         }
     }
 
-    // Header with menu
-    header: ToolBar {
-        height: 40
-        Material.primary: Material.dialogColor
-        Item {
-            anchors.fill: parent
-            MenuBar {
-                anchors.left: parent.left
-                height: 40
-                Menu {
-                    title: "File"
-
-                    MenuItem {
-                        text: "Clear All Data"
-                        onTriggered: clearAllDialog.open()
-                    }
-
-                    MenuSeparator { }
-
-                    MenuItem {
-                        text: "Exit"
-                        onTriggered: Qt.quit()
-                    }
-                }
-
-                Menu {
-                    title: "Databases"
-                    MenuItem {
-                        text: "New Employee..."
-                        onTriggered: employeeDialog.open()
-                    }
-                    MenuItem {
-                        text: "New Transaction..."
-                        onTriggered: transactionDialog.open()
-                    }
-                    MenuItem {
-                        text: "New Client..."
-                        onTriggered: clientDialog.open()
-                    }
-
-                    MenuSeparator { }
-
-                    MenuItem {
-                        text: "Supplements and Offers..."
-                        onTriggered: supplementOfferManagementDialog.open()
-                    }
-                }
-
-                Menu {
-                    title: "Additions"
-
-                    MenuItem {
-                        text: "Connect to FiveM"
-                        onTriggered: fakeUpgradeDialog.open()
-                    }
-                }
-            }
-
-            RowLayout {
-                anchors.centerIn: parent
-
-                Label {
-                    text: UserSettings.companyName + " - " + "Balance: "
-                    font.bold: true
-                    font.pixelSize: 16
-                }
-
-                Label {
-                    text: window.toUiPrice(UserSettings.money)
-                    color: UserSettings.money >= 0 ? Constants.creditColor : Constants.debitColor
-                    font.bold: true
-                    font.pixelSize: 16
-                }
-
-                Label {
-                    text: {
-                        var awaitingSum = 0
-                        for (var i = 0; i < awaitingTransactionModel.count; i++) {
-                            awaitingSum += awaitingTransactionModel.getAwaitingTransactionAmount(i)
-                        }
-                        var virtualTotal = UserSettings.money + awaitingSum
-                        return "(" + window.toUiPrice(virtualTotal) + ")"
-                    }
-                    color: Material.color(Material.Orange)
-                    font.bold: true
-                    font.pixelSize: 16
-                    visible: awaitingTransactionModel.count > 0
-                }
-            }
-
-            IconImage {
-                anchors.right: filterField.left
-                anchors.rightMargin: 5
-                sourceSize.width: 20
-                sourceSize.height: 20
-                height: 20
-                width: 20
-                color: filterField.activeFocus ? Material.accent : Material.hintTextColor
-                anchors.verticalCenter: parent.verticalCenter
-                source: "qrc:/icons/search.svg"
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 200
-                        easing.type: Easing.OutQuad
-                    }
-                }
-            }
-
-            TextField {
-                id: filterField
-                anchors.right: logo.left
-                anchors.rightMargin: 5
-                anchors.verticalCenter: parent.verticalCenter
-                height: 35
-                width: 180
-                placeholderText: "Filter..."
-                onTextChanged: window.filterText = text
-            }
-
-            Item {
-                id: logo
-                anchors.right: parent.right
-                anchors.rightMargin: 5
-                anchors.verticalCenter: parent.verticalCenter
-                height: 40
-                width: 40
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: versionDialog.open()
-                }
-
-                Image {
-                    id: logoImage
-                    anchors.centerIn: parent
-                    height: 32
-                    width: 32
-                    sourceSize.width: 32
-                    sourceSize.height: 32
-                    mipmap: true
-                    source: "qrc:/icons/icon.png"
-                    transform: Rotation {
-                        id: rotation3d
-                        origin.x: logoImage.width / 2
-                        origin.y: logoImage.height / 2
-                        axis { x: 0; y: 1; z: 0 }
-                        angle: 0
-                    }
-
-                    PropertyAnimation {
-                        target: rotation3d
-                        property: "angle"
-                        from: 0
-                        to: 360
-                        duration: 5000
-                        loops: Animation.Infinite
-                        running: true
-                    }
-                }
-            }
-        }
-    }
-
-    TabBar {
-        id: tabBar
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        TabButton {
-            text: "Employees (" + (filterText ? employeeFilterModel.rowCount() + "/" + employeeModel.count : employeeModel.count) + ")"
-        }
-        TabButton {
-            text: "Transactions (" + (filterText ? transactionFilterModel.rowCount() + "/" + transactionModel.count : transactionModel.count) + ")"
-        }
-        TabButton {
-            text: "Awaiting (" + (filterText ? awaitingTransactionFilterModel.rowCount() + "/" + awaitingTransactionModel.count : awaitingTransactionModel.count) + ")"
-        }
-        TabButton {
-            text: "Clients (" + (filterText ? clientFilterModel.rowCount() + "/" + clientModel.count : clientModel.count) + ")"
-        }
-    }
-
-    // Replace your existing StackLayout section with this StackView implementation
-
     StackView {
-        id: stackView
-        anchors.top: tabBar.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        id: mainStack
+        anchors.fill: parent
+        initialItem: splash
 
-        // Simple fade transitions
-        pushEnter: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 200
-                easing.type: Easing.OutQuad
+        Connections {
+            target: splash
+            function onLoadingFinished() {
+                mainStack.replace(mainPage)
+                introSound.play()
             }
         }
+    }
 
-        pushExit: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 200
-                easing.type: Easing.OutQuad
+    SplashScreen {
+        id: splash
+    }
+
+    Page {
+        id: mainPage
+        visible: false
+        Material.primary: "#2A2F2A"
+        Material.background: "#232323"
+        Material.accent: "#4CAF50"
+        //anchors.fill: parent
+
+        background: Rectangle {
+            color: "#1A1A1A"
+
+            layer.enabled: mainPage.enabled && mainPage.Material.elevation > 0
+            layer.effect: ElevationEffect {
+                elevation: mainPage.Material.elevation
             }
         }
+        header: ToolBar {
+            height: 40
+            Material.primary: Material.dialogColor
+            Item {
+                anchors.fill: parent
+                MenuBar {
+                    anchors.left: parent.left
+                    height: 40
+                    Menu {
+                        title: "File"
 
-        replaceEnter: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 200
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        replaceExit: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 200
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        // Create components for each tab
-        Component {
-            id: employeeComponent
-
-            Column {
-                spacing: 0
-
-                ToolBar {
-                    width: parent.width
-                    height: 35
-
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 5
-                        spacing: 10
-
-                        SortableLabel {
-                            headerText: "Name"
-                            sortColumn: EmployeeModel.SortByName
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 120
+                        MenuItem {
+                            text: "Clear All Data"
+                            onTriggered: clearAllDialog.open()
                         }
 
-                        SortableLabel {
-                            headerText: "Phone"
-                            sortColumn: EmployeeModel.SortByPhone
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 100
+                        MenuSeparator { }
+
+                        MenuItem {
+                            text: "Exit"
+                            onTriggered: Qt.quit()
+                        }
+                    }
+
+                    Menu {
+                        title: "Databases"
+                        MenuItem {
+                            text: "New Employee..."
+                            onTriggered: employeeDialog.open()
+                        }
+                        MenuItem {
+                            text: "New Transaction..."
+                            onTriggered: transactionDialog.open()
+                        }
+                        MenuItem {
+                            text: "New Client..."
+                            onTriggered: clientDialog.open()
                         }
 
-                        SortableLabel {
-                            headerText: "Role"
-                            sortColumn: EmployeeModel.SortByRole
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 100
-                        }
+                        MenuSeparator { }
 
-                        SortableLabel {
-                            headerText: "Salary"
-                            sortColumn: EmployeeModel.SortBySalary
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 80
+                        MenuItem {
+                            text: "Supplements and Offers..."
+                            onTriggered: supplementOfferManagementDialog.open()
                         }
+                    }
 
-                        SortableLabel {
-                            headerText: "Added Date"
-                            sortColumn: EmployeeModel.SortByAddedDate
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 90
-                        }
+                    Menu {
+                        title: "Additions"
 
-                        SortableLabel {
-                            headerText: "Comment"
-                            sortColumn: EmployeeModel.SortByComment
-                            sortModel: employeeModel
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
-                            text: "Actions"
-                            font.bold: true
+                        MenuItem {
+                            text: "Connect to FiveM"
+                            onTriggered: fakeUpgradeDialog.open()
                         }
                     }
                 }
 
-                ScrollView {
-                    width: parent.width
-                    height: parent.height - 35
+                RowLayout {
+                    anchors.centerIn: parent
 
-                    ListView {
-                        id: employeeListView
-                        width: parent.width
-                        height: parent.parent.height
-                        model: employeeFilterModel
-                        spacing: 0
+                    Label {
+                        text: UserSettings.companyName + " - " + "Balance: "
+                        font.bold: true
+                        font.pixelSize: 16
+                    }
 
-                        Label {
-                            anchors.centerIn: parent
-                            text: filterText ? "No employees match the filter." : "No employees added yet.\nUse Databases → New Employee to add one."
-                            visible: employeeListView.count === 0
-                            horizontalAlignment: Text.AlignHCenter
-                            color: "gray"
+                    Label {
+                        text: window.toUiPrice(UserSettings.money)
+                        color: UserSettings.money >= 0 ? Constants.creditColor : Constants.debitColor
+                        font.bold: true
+                        font.pixelSize: 16
+                    }
+
+                    Label {
+                        text: {
+                            var awaitingSum = 0
+                            for (var i = 0; i < awaitingTransactionModel.count; i++) {
+                                awaitingSum += awaitingTransactionModel.getAwaitingTransactionAmount(i)
+                            }
+                            var virtualTotal = UserSettings.money + awaitingSum
+                            return "(" + window.toUiPrice(virtualTotal) + ")"
+                        }
+                        color: Material.color(Material.Orange)
+                        font.bold: true
+                        font.pixelSize: 16
+                        visible: awaitingTransactionModel.count > 0
+                    }
+                }
+
+                IconImage {
+                    anchors.right: filterField.left
+                    anchors.rightMargin: 5
+                    sourceSize.width: 20
+                    sourceSize.height: 20
+                    height: 20
+                    width: 20
+                    color: filterField.activeFocus ? Material.accent : Material.hintTextColor
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: "qrc:/icons/search.svg"
+                    Behavior on color {
+                        ColorAnimation {
+                            duration: 200
+                            easing.type: Easing.OutQuad
+                        }
+                    }
+                }
+
+                TextField {
+                    id: filterField
+                    anchors.right: logo.left
+                    anchors.rightMargin: 5
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 35
+                    width: 180
+                    placeholderText: "Filter..."
+                    onTextChanged: window.filterText = text
+                }
+
+                Item {
+                    id: logo
+                    anchors.right: parent.right
+                    anchors.rightMargin: 5
+                    anchors.verticalCenter: parent.verticalCenter
+                    height: 40
+                    width: 40
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: versionDialog.open()
+                    }
+
+                    Image {
+                        id: logoImage
+                        anchors.centerIn: parent
+                        height: 32
+                        width: 32
+                        sourceSize.width: 32
+                        sourceSize.height: 32
+                        mipmap: true
+                        source: "qrc:/icons/icon.png"
+                        transform: Rotation {
+                            id: rotation3d
+                            origin.x: logoImage.width / 2
+                            origin.y: logoImage.height / 2
+                            axis { x: 0; y: 1; z: 0 }
+                            angle: 0
                         }
 
-                        delegate: Rectangle {
-                            width: employeeListView.width
-                            height: 40
-                            color: (index % 2 === 0) ? "#404040" : "#303030"
+                        PropertyAnimation {
+                            target: rotation3d
+                            property: "angle"
+                            from: 0
+                            to: 360
+                            duration: 5000
+                            loops: Animation.Infinite
+                            running: true
+                        }
+                    }
+                }
+            }
+        }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 5
-                                spacing: 10
+        TabBar {
+            id: tabBar
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-                                Label {
-                                    text: name
-                                    font.bold: true
-                                    Layout.preferredWidth: 120
-                                    elide: Text.ElideRight
-                                }
+            TabButton {
+                text: "Employees (" + (filterText ? employeeFilterModel.rowCount() + "/" + employeeModel.count : employeeModel.count) + ")"
+            }
+            TabButton {
+                text: "Transactions (" + (filterText ? transactionFilterModel.rowCount() + "/" + transactionModel.count : transactionModel.count) + ")"
+            }
+            TabButton {
+                text: "Awaiting (" + (filterText ? awaitingTransactionFilterModel.rowCount() + "/" + awaitingTransactionModel.count : awaitingTransactionModel.count) + ")"
+            }
+            TabButton {
+                text: "Clients (" + (filterText ? clientFilterModel.rowCount() + "/" + clientModel.count : clientModel.count) + ")"
+            }
+        }
 
-                                Label {
-                                    text: phone
-                                    Layout.preferredWidth: 100
-                                    elide: Text.ElideRight
-                                }
+        // Replace your existing StackLayout section with this StackView implementation
 
-                                Label {
-                                    text: role
-                                    Layout.preferredWidth: 100
-                                    elide: Text.ElideRight
-                                }
+        StackView {
+            id: stackView
+            anchors.top: tabBar.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
 
-                                Label {
-                                    text: window.toUiPrice(salary)
-                                    color: "lightgreen"
-                                    Layout.preferredWidth: 80
-                                }
+            // Simple fade transitions
+            pushEnter: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
+            }
 
-                                Label {
-                                    text: addedDate
-                                    Layout.preferredWidth: 90
-                                }
+            pushExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
+            }
 
-                                Label {
-                                    text: comment
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                }
+            replaceEnter: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
+            }
+
+            replaceExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 200
+                    easing.type: Easing.OutQuad
+                }
+            }
+
+            // Create components for each tab
+            Component {
+                id: employeeComponent
+
+                Column {
+                    spacing: 0
+
+                    ToolBar {
+                        width: parent.width
+                        height: 35
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            spacing: 10
+
+                            SortableLabel {
+                                headerText: "Name"
+                                sortColumn: EmployeeModel.SortByName
+                                sortModel: employeeModel
+                                Layout.preferredWidth: 120
+                            }
+
+                            SortableLabel {
+                                headerText: "Phone"
+                                sortColumn: EmployeeModel.SortByPhone
+                                sortModel: employeeModel
+                                Layout.preferredWidth: 100
+                            }
+
+                            SortableLabel {
+                                headerText: "Role"
+                                sortColumn: EmployeeModel.SortByRole
+                                sortModel: employeeModel
+                                Layout.preferredWidth: 100
+                            }
+
+                            SortableLabel {
+                                headerText: "Salary"
+                                sortColumn: EmployeeModel.SortBySalary
+                                sortModel: employeeModel
+                                Layout.preferredWidth: 80
+                            }
+
+                            SortableLabel {
+                                headerText: "Added Date"
+                                sortColumn: EmployeeModel.SortByAddedDate
+                                sortModel: employeeModel
+                                Layout.preferredWidth: 90
+                            }
+
+                            SortableLabel {
+                                headerText: "Comment"
+                                sortColumn: EmployeeModel.SortByComment
+                                sortModel: employeeModel
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "Actions"
+                                font.bold: true
+                            }
+                        }
+                    }
+
+                    ScrollView {
+                        width: parent.width
+                        height: parent.height - 35
+
+                        ListView {
+                            id: employeeListView
+                            width: parent.width
+                            height: parent.parent.height
+                            model: employeeFilterModel
+                            spacing: 0
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: filterText ? "No employees match the filter." : "No employees added yet.\nUse Databases → New Employee to add one."
+                                visible: employeeListView.count === 0
+                                horizontalAlignment: Text.AlignHCenter
+                                color: "gray"
+                            }
+
+                            delegate: Rectangle {
+                                width: employeeListView.width
+                                height: 40
+                                color: (index % 2 === 0) ? "#404040" : "#303030"
 
                                 RowLayout {
-                                    spacing: 0
-                                    ToolButton {
-                                        text: "Pay"
-                                        Layout.preferredHeight: 40
-                                        icon.source: "qrc:/icons/dollar.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Orange)
-                                        onClicked: {
-                                            var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
-                                            employeeModel.payEmployee(sourceIndex.row)
-                                        }
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 5
+                                    spacing: 10
+
+                                    Label {
+                                        text: name
+                                        font.bold: true
+                                        Layout.preferredWidth: 120
+                                        elide: Text.ElideRight
                                     }
 
-                                    ToolButton {
-                                        text: "Edit"
-                                        icon.source: "qrc:/icons/edit.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Blue)
-                                        Layout.preferredHeight: 40
-                                        onClicked: {
-                                            var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
-                                            employeeDialog.editMode = true
-                                            employeeDialog.editIndex = sourceIndex.row
-                                            employeeDialog.loadEmployee(name, phone, role, salary, addedDate, comment)
-                                            employeeDialog.open()
-                                        }
+                                    Label {
+                                        text: phone
+                                        Layout.preferredWidth: 100
+                                        elide: Text.ElideRight
                                     }
 
-                                    ToolButton {
-                                        text: "Remove"
-                                        icon.source: "qrc:/icons/delete.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Red)
-                                        Layout.preferredHeight: 40
-                                        onClicked: {
-                                            var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
-                                            employeeModel.removeEntry(sourceIndex.row)
+                                    Label {
+                                        text: role
+                                        Layout.preferredWidth: 100
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Label {
+                                        text: window.toUiPrice(salary)
+                                        color: "lightgreen"
+                                        Layout.preferredWidth: 80
+                                    }
+
+                                    Label {
+                                        text: addedDate
+                                        Layout.preferredWidth: 90
+                                    }
+
+                                    Label {
+                                        text: comment
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    RowLayout {
+                                        spacing: 0
+                                        ToolButton {
+                                            text: "Pay"
+                                            Layout.preferredHeight: 40
+                                            icon.source: "qrc:/icons/dollar.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Orange)
+                                            onClicked: {
+                                                var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
+                                                employeeModel.payEmployee(sourceIndex.row)
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            text: "Edit"
+                                            icon.source: "qrc:/icons/edit.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Blue)
+                                            Layout.preferredHeight: 40
+                                            onClicked: {
+                                                var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
+                                                employeeDialog.editMode = true
+                                                employeeDialog.editIndex = sourceIndex.row
+                                                employeeDialog.loadEmployee(name, phone, role, salary, addedDate, comment)
+                                                employeeDialog.open()
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            text: "Remove"
+                                            icon.source: "qrc:/icons/delete.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Red)
+                                            Layout.preferredHeight: 40
+                                            onClicked: {
+                                                var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
+                                                employeeModel.removeEntry(sourceIndex.row)
+                                            }
                                         }
                                     }
                                 }
@@ -553,126 +594,126 @@ ApplicationWindow {
                     }
                 }
             }
-        }
 
-        Component {
-            id: transactionComponent
+            Component {
+                id: transactionComponent
 
-            Column {
-                spacing: 0
+                Column {
+                    spacing: 0
 
-                ToolBar {
-                    width: parent.width
-                    height: 35
+                    ToolBar {
+                        width: parent.width
+                        height: 35
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 5
-                        spacing: 10
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            spacing: 10
 
-                        Label {
-                            text: "Amount"
-                            font.bold: true
-                            Layout.preferredWidth: 120
-                        }
+                            Label {
+                                text: "Amount"
+                                font.bold: true
+                                Layout.preferredWidth: 120
+                            }
 
-                        Label {
-                            text: "Date"
-                            font.bold: true
-                            Layout.preferredWidth: 100
-                        }
+                            Label {
+                                text: "Date"
+                                font.bold: true
+                                Layout.preferredWidth: 100
+                            }
 
-                        Label {
-                            text: "Description"
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
+                            Label {
+                                text: "Description"
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
 
-                        Label {
-                            text: "Actions"
-                            font.bold: true
+                            Label {
+                                text: "Actions"
+                                font.bold: true
+                            }
                         }
                     }
-                }
 
-                ScrollView {
-                    width: parent.width
-                    height: parent.height - 35
-
-                    ListView {
-                        id: transactionListView
+                    ScrollView {
                         width: parent.width
-                        height: parent.parent.height
-                        model: transactionFilterModel
-                        spacing: 0
+                        height: parent.height - 35
 
-                        Label {
-                            anchors.centerIn: parent
-                            text: filterText ? "No transactions match the filter." : "No transactions added yet.\nUse Databases → New Transaction to add one."
-                            visible: transactionListView.count === 0
-                            horizontalAlignment: Text.AlignHCenter
-                            color: "gray"
-                        }
+                        ListView {
+                            id: transactionListView
+                            width: parent.width
+                            height: parent.parent.height
+                            model: transactionFilterModel
+                            spacing: 0
 
-                        delegate: Rectangle {
-                            width: transactionListView.width
-                            height: 40
-                            color: (index % 2 === 0) ? "#404040" : "#303030"
+                            Label {
+                                anchors.centerIn: parent
+                                text: filterText ? "No transactions match the filter." : "No transactions added yet.\nUse Databases → New Transaction to add one."
+                                visible: transactionListView.count === 0
+                                horizontalAlignment: Text.AlignHCenter
+                                color: "gray"
+                            }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 5
-                                spacing: 10
-
-                                Label {
-                                    text: (amount >= 0 ? "+" : "") + window.toUiPrice(amount)
-                                    color: amount >= 0 ? "lightgreen" : "lightcoral"
-                                    font.bold: true
-                                    Layout.preferredWidth: 120
-                                }
-
-                                Label {
-                                    text: date
-                                    color: "gray"
-                                    Layout.preferredWidth: 100
-                                }
-
-                                Label {
-                                    text: description
-                                    font.bold: true
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                }
+                            delegate: Rectangle {
+                                width: transactionListView.width
+                                height: 40
+                                color: (index % 2 === 0) ? "#404040" : "#303030"
 
                                 RowLayout {
-                                    spacing: 0
-                                    ToolButton {
-                                        Layout.preferredHeight: 40
-                                        text: "Edit"
-                                        icon.source: "qrc:/icons/edit.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Blue)
-                                        onClicked: {
-                                            var sourceIndex = transactionFilterModel.mapToSource(transactionFilterModel.index(index, 0))
-                                            transactionDialog.editMode = true
-                                            transactionDialog.editIndex = sourceIndex.row
-                                            transactionDialog.loadTransaction(description, amount, date)
-                                            transactionDialog.open()
-                                        }
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 5
+                                    spacing: 10
+
+                                    Label {
+                                        text: (amount >= 0 ? "+" : "") + window.toUiPrice(amount)
+                                        color: amount >= 0 ? "lightgreen" : "lightcoral"
+                                        font.bold: true
+                                        Layout.preferredWidth: 120
                                     }
 
-                                    ToolButton {
-                                        Layout.preferredHeight: 40
-                                        text: "Remove"
-                                        icon.source: "qrc:/icons/delete.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Red)
-                                        onClicked: {
-                                            var sourceIndex = transactionFilterModel.mapToSource(transactionFilterModel.index(index, 0))
-                                            UserSettings.money -= amount
-                                            transactionModel.removeEntry(sourceIndex.row)
+                                    Label {
+                                        text: date
+                                        color: "gray"
+                                        Layout.preferredWidth: 100
+                                    }
+
+                                    Label {
+                                        text: description
+                                        font.bold: true
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    RowLayout {
+                                        spacing: 0
+                                        ToolButton {
+                                            Layout.preferredHeight: 40
+                                            text: "Edit"
+                                            icon.source: "qrc:/icons/edit.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Blue)
+                                            onClicked: {
+                                                var sourceIndex = transactionFilterModel.mapToSource(transactionFilterModel.index(index, 0))
+                                                transactionDialog.editMode = true
+                                                transactionDialog.editIndex = sourceIndex.row
+                                                transactionDialog.loadTransaction(description, amount, date)
+                                                transactionDialog.open()
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            Layout.preferredHeight: 40
+                                            text: "Remove"
+                                            icon.source: "qrc:/icons/delete.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Red)
+                                            onClicked: {
+                                                var sourceIndex = transactionFilterModel.mapToSource(transactionFilterModel.index(index, 0))
+                                                UserSettings.money -= amount
+                                                transactionModel.removeEntry(sourceIndex.row)
+                                            }
                                         }
                                     }
                                 }
@@ -681,138 +722,138 @@ ApplicationWindow {
                     }
                 }
             }
-        }
 
-        Component {
-            id: awaitingComponent
+            Component {
+                id: awaitingComponent
 
-            Column {
-                spacing: 0
+                Column {
+                    spacing: 0
 
-                ToolBar {
-                    width: parent.width
-                    height: 35
+                    ToolBar {
+                        width: parent.width
+                        height: 35
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 5
-                        spacing: 10
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            spacing: 10
 
-                        Label {
-                            text: "Amount"
-                            font.bold: true
-                            Layout.preferredWidth: 120
-                        }
+                            Label {
+                                text: "Amount"
+                                font.bold: true
+                                Layout.preferredWidth: 120
+                            }
 
-                        Label {
-                            text: "Date"
-                            font.bold: true
-                            Layout.preferredWidth: 100
-                        }
+                            Label {
+                                text: "Date"
+                                font.bold: true
+                                Layout.preferredWidth: 100
+                            }
 
-                        Label {
-                            text: "Description"
-                            font.bold: true
-                            Layout.fillWidth: true
-                        }
+                            Label {
+                                text: "Description"
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
 
-                        Label {
-                            text: "Actions"
-                            font.bold: true
+                            Label {
+                                text: "Actions"
+                                font.bold: true
+                            }
                         }
                     }
-                }
 
-                ScrollView {
-                    width: parent.width
-                    height: parent.height - 35
-
-                    ListView {
-                        id: awaitingTransactionListView
+                    ScrollView {
                         width: parent.width
-                        height: parent.parent.height
-                        model: awaitingTransactionFilterModel
-                        spacing: 0
+                        height: parent.height - 35
 
-                        Label {
-                            anchors.centerIn: parent
-                            text: filterText ? "No awaiting transactions match the filter." : "No awaiting transactions.\nTransactions will appear here when clients checkout or employees are paid."
-                            visible: awaitingTransactionListView.count === 0
-                            horizontalAlignment: Text.AlignHCenter
-                            color: "gray"
-                        }
+                        ListView {
+                            id: awaitingTransactionListView
+                            width: parent.width
+                            height: parent.parent.height
+                            model: awaitingTransactionFilterModel
+                            spacing: 0
 
-                        delegate: Rectangle {
-                            width: awaitingTransactionListView.width
-                            height: 40
-                            color: (index % 2 === 0) ? "#404040" : "#303030"
+                            Label {
+                                anchors.centerIn: parent
+                                text: filterText ? "No awaiting transactions match the filter." : "No awaiting transactions.\nTransactions will appear here when clients checkout or employees are paid."
+                                visible: awaitingTransactionListView.count === 0
+                                horizontalAlignment: Text.AlignHCenter
+                                color: "gray"
+                            }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 5
-                                spacing: 10
-
-                                Label {
-                                    text: (amount >= 0 ? "+" : "") + window.toUiPrice(amount)
-                                    color: amount >= 0 ? "lightgreen" : "lightcoral"
-                                    font.bold: true
-                                    Layout.preferredWidth: 120
-                                }
-
-                                Label {
-                                    text: date
-                                    color: "gray"
-                                    Layout.preferredWidth: 100
-                                }
-
-                                Label {
-                                    text: description
-                                    font.bold: true
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                }
+                            delegate: Rectangle {
+                                width: awaitingTransactionListView.width
+                                height: 40
+                                color: (index % 2 === 0) ? "#404040" : "#303030"
 
                                 RowLayout {
-                                    spacing: 0
-                                    ToolButton {
-                                        Layout.preferredHeight: 40
-                                        text: "Approve"
-                                        icon.source: "qrc:/icons/checkmark.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Green)
-                                        onClicked: {
-                                            var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
-                                            awaitingTransactionModel.approveTransaction(sourceIndex.row)
-                                        }
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 5
+                                    spacing: 10
+
+                                    Label {
+                                        text: (amount >= 0 ? "+" : "") + window.toUiPrice(amount)
+                                        color: amount >= 0 ? "lightgreen" : "lightcoral"
+                                        font.bold: true
+                                        Layout.preferredWidth: 120
                                     }
 
-                                    ToolButton {
-                                        Layout.preferredHeight: 40
-                                        text: "Edit"
-                                        icon.source: "qrc:/icons/edit.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Blue)
-                                        onClicked: {
-                                            var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
-                                            awaitingTransactionDialog.editMode = true
-                                            awaitingTransactionDialog.editIndex = sourceIndex.row
-                                            awaitingTransactionDialog.loadTransaction(description, amount, date)
-                                            awaitingTransactionDialog.open()
-                                        }
+                                    Label {
+                                        text: date
+                                        color: "gray"
+                                        Layout.preferredWidth: 100
                                     }
 
-                                    ToolButton {
-                                        Layout.preferredHeight: 40
-                                        text: "Remove"
-                                        icon.source: "qrc:/icons/delete.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Red)
-                                        onClicked: {
-                                            var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
-                                            awaitingTransactionModel.removeEntry(sourceIndex.row)
+                                    Label {
+                                        text: description
+                                        font.bold: true
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    RowLayout {
+                                        spacing: 0
+                                        ToolButton {
+                                            Layout.preferredHeight: 40
+                                            text: "Approve"
+                                            icon.source: "qrc:/icons/checkmark.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Green)
+                                            onClicked: {
+                                                var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
+                                                awaitingTransactionModel.approveTransaction(sourceIndex.row)
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            Layout.preferredHeight: 40
+                                            text: "Edit"
+                                            icon.source: "qrc:/icons/edit.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Blue)
+                                            onClicked: {
+                                                var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
+                                                awaitingTransactionDialog.editMode = true
+                                                awaitingTransactionDialog.editIndex = sourceIndex.row
+                                                awaitingTransactionDialog.loadTransaction(description, amount, date)
+                                                awaitingTransactionDialog.open()
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            Layout.preferredHeight: 40
+                                            text: "Remove"
+                                            icon.source: "qrc:/icons/delete.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Red)
+                                            onClicked: {
+                                                var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
+                                                awaitingTransactionModel.removeEntry(sourceIndex.row)
+                                            }
                                         }
                                     }
                                 }
@@ -821,213 +862,213 @@ ApplicationWindow {
                     }
                 }
             }
-        }
 
-        Component {
-            id: clientComponent
+            Component {
+                id: clientComponent
 
-            Column {
-                spacing: 0
+                Column {
+                    spacing: 0
 
-                ToolBar {
-                    width: parent.width
-                    height: 35
+                    ToolBar {
+                        width: parent.width
+                        height: 35
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.margins: 5
-                        spacing: 10
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 5
+                            spacing: 10
 
-                        SortableLabel {
-                            headerText: "Type"
-                            sortColumn: ClientModel.SortByBusinessType
-                            sortModel: clientModel
-                            Layout.preferredWidth: 30
-                        }
+                            SortableLabel {
+                                headerText: "Type"
+                                sortColumn: ClientModel.SortByBusinessType
+                                sortModel: clientModel
+                                Layout.preferredWidth: 30
+                            }
 
-                        SortableLabel {
-                            headerText: "Name"
-                            sortColumn: ClientModel.SortByName
-                            sortModel: clientModel
-                            Layout.preferredWidth: 120
-                        }
+                            SortableLabel {
+                                headerText: "Name"
+                                sortColumn: ClientModel.SortByName
+                                sortModel: clientModel
+                                Layout.preferredWidth: 120
+                            }
 
-                        SortableLabel {
-                            headerText: "Offer"
-                            sortColumn: ClientModel.SortByOffer
-                            sortModel: clientModel
-                            Layout.preferredWidth: 80
-                        }
+                            SortableLabel {
+                                headerText: "Offer"
+                                sortColumn: ClientModel.SortByOffer
+                                sortModel: clientModel
+                                Layout.preferredWidth: 80
+                            }
 
-                        SortableLabel {
-                            headerText: "Price"
-                            sortColumn: ClientModel.SortByPrice
-                            sortModel: clientModel
-                            Layout.preferredWidth: 60
-                        }
+                            SortableLabel {
+                                headerText: "Price"
+                                sortColumn: ClientModel.SortByPrice
+                                sortModel: clientModel
+                                Layout.preferredWidth: 60
+                            }
 
-                        Label {
-                            text: "Supplements"
-                            font.bold: true
-                            Layout.preferredWidth: 80
-                        }
+                            Label {
+                                text: "Supplements"
+                                font.bold: true
+                                Layout.preferredWidth: 80
+                            }
 
-                        SortableLabel {
-                            headerText: "Disc"
-                            sortColumn: ClientModel.SortByDiscount
-                            sortModel: clientModel
-                            Layout.preferredWidth: 40
-                        }
+                            SortableLabel {
+                                headerText: "Disc"
+                                sortColumn: ClientModel.SortByDiscount
+                                sortModel: clientModel
+                                Layout.preferredWidth: 40
+                            }
 
-                        SortableLabel {
-                            headerText: "Phone"
-                            sortColumn: ClientModel.SortByPhone
-                            sortModel: clientModel
-                            Layout.preferredWidth: 100
-                        }
+                            SortableLabel {
+                                headerText: "Phone"
+                                sortColumn: ClientModel.SortByPhone
+                                sortModel: clientModel
+                                Layout.preferredWidth: 100
+                            }
 
-                        SortableLabel {
-                            headerText: "Comment"
-                            sortColumn: ClientModel.SortByComment
-                            sortModel: clientModel
-                            Layout.fillWidth: true
-                        }
+                            SortableLabel {
+                                headerText: "Comment"
+                                sortColumn: ClientModel.SortByComment
+                                sortModel: clientModel
+                                Layout.fillWidth: true
+                            }
 
-                        Label {
-                            text: "Actions"
-                            font.bold: true
+                            Label {
+                                text: "Actions"
+                                font.bold: true
+                            }
                         }
                     }
-                }
 
-                ScrollView {
-                    width: parent.width
-                    height: parent.height - 35
-
-                    ListView {
-                        id: clientListView
+                    ScrollView {
                         width: parent.width
-                        height: parent.parent.height
-                        model: clientFilterModel
-                        spacing: 0
+                        height: parent.height - 35
 
-                        Label {
-                            anchors.centerIn: parent
-                            text: filterText ? "No clients match the filter." : "No clients added yet.\nUse Databases → New Client to add one."
-                            visible: clientListView.count === 0
-                            horizontalAlignment: Text.AlignHCenter
-                            color: "gray"
-                        }
+                        ListView {
+                            id: clientListView
+                            width: parent.width
+                            height: parent.parent.height
+                            model: clientFilterModel
+                            spacing: 0
 
-                        delegate: Rectangle {
-                            width: clientListView.width
-                            height: 40
-                            color: (index % 2 === 0) ? "#404040" : "#303030"
+                            Label {
+                                anchors.centerIn: parent
+                                text: filterText ? "No clients match the filter." : "No clients added yet.\nUse Databases → New Client to add one."
+                                visible: clientListView.count === 0
+                                horizontalAlignment: Text.AlignHCenter
+                                color: "gray"
+                            }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 5
-                                spacing: 10
-
-                                Label {
-                                    text: businessType === 0 ? "Pro" : "Part"
-                                    font.bold: true
-                                    color: businessType === 0 ? Constants.businessColor : Constants.consumerColor
-                                    Layout.preferredWidth: 30
-                                }
-
-                                Label {
-                                    text: name
-                                    font.bold: true
-                                    Layout.preferredWidth: 120
-                                    elide: Text.ElideRight
-                                }
-
-                                Label {
-                                    text: {
-                                        if (offer >= 0 && offer < offerModel.count) {
-                                            return offerModel.getOfferName(offer)
-                                        }
-                                        return "Unknown"
-                                    }
-                                    Layout.preferredWidth: 80
-                                }
-
-                                Label {
-                                    text: window.toUiPrice(price)
-                                    Layout.preferredWidth: 60
-                                }
-
-                                ToolButton {
-                                    Layout.preferredHeight: 40
-                                    text: supplements.length + " supp"
-                                    Layout.preferredWidth: 80
-                                    onClicked: {
-                                        supplementDialog.currentSupplements = supplements
-                                        supplementDialog.readOnly = true
-                                        supplementDialog.open()
-                                    }
-                                }
-
-                                Label {
-                                    text: discount + "%"
-                                    Layout.preferredWidth: 40
-                                }
-
-                                Label {
-                                    text: phoneNumber
-                                    Layout.preferredWidth: 100
-                                    elide: Text.ElideRight
-                                }
-
-                                Label {
-                                    text: comment
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                }
+                            delegate: Rectangle {
+                                width: clientListView.width
+                                height: 40
+                                color: (index % 2 === 0) ? "#404040" : "#303030"
 
                                 RowLayout {
-                                    spacing: 0
-                                    ToolButton {
-                                        text: "Checkout"
-                                        icon.source: "qrc:/icons/dollar.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Orange)
-                                        Layout.preferredHeight: 40
-                                        onClicked: {
-                                            var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
-                                            clientModel.checkout(sourceIndex.row)
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 5
+                                    spacing: 10
+
+                                    Label {
+                                        text: businessType === 0 ? "Pro" : "Part"
+                                        font.bold: true
+                                        color: businessType === 0 ? Constants.businessColor : Constants.consumerColor
+                                        Layout.preferredWidth: 30
+                                    }
+
+                                    Label {
+                                        text: name
+                                        font.bold: true
+                                        Layout.preferredWidth: 120
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Label {
+                                        text: {
+                                            if (offer >= 0 && offer < offerModel.count) {
+                                                return offerModel.getOfferName(offer)
+                                            }
+                                            return "Unknown"
                                         }
+                                        Layout.preferredWidth: 80
+                                    }
+
+                                    Label {
+                                        text: window.toUiPrice(price)
+                                        Layout.preferredWidth: 60
                                     }
 
                                     ToolButton {
-                                        text: "Edit"
-                                        icon.source: "qrc:/icons/edit.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Blue)
                                         Layout.preferredHeight: 40
+                                        text: supplements.length + " supp"
+                                        Layout.preferredWidth: 80
                                         onClicked: {
-                                            var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
-                                            clientDialog.editMode = true
-                                            clientDialog.editIndex = sourceIndex.row
-                                            clientDialog.loadClient(businessType, name, offer, price,
-                                                                    supplements, discount, phoneNumber, comment)
-                                            clientDialog.open()
+                                            supplementDialog.currentSupplements = supplements
+                                            supplementDialog.readOnly = true
+                                            supplementDialog.open()
                                         }
                                     }
 
-                                    ToolButton {
-                                        text: "Remove"
-                                        icon.source: "qrc:/icons/delete.svg"
-                                        icon.width: 16
-                                        icon.height: 16
-                                        icon.color: Material.color(Material.Red)
-                                        Layout.preferredHeight: 40
-                                        onClicked: {
-                                            var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
-                                            clientModel.removeEntry(sourceIndex.row)
+                                    Label {
+                                        text: discount + "%"
+                                        Layout.preferredWidth: 40
+                                    }
+
+                                    Label {
+                                        text: phoneNumber
+                                        Layout.preferredWidth: 100
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Label {
+                                        text: comment
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+
+                                    RowLayout {
+                                        spacing: 0
+                                        ToolButton {
+                                            text: "Checkout"
+                                            icon.source: "qrc:/icons/dollar.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Orange)
+                                            Layout.preferredHeight: 40
+                                            onClicked: {
+                                                var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
+                                                clientModel.checkout(sourceIndex.row)
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            text: "Edit"
+                                            icon.source: "qrc:/icons/edit.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Blue)
+                                            Layout.preferredHeight: 40
+                                            onClicked: {
+                                                var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
+                                                clientDialog.editMode = true
+                                                clientDialog.editIndex = sourceIndex.row
+                                                clientDialog.loadClient(businessType, name, offer, price,
+                                                                        supplements, discount, phoneNumber, comment)
+                                                clientDialog.open()
+                                            }
+                                        }
+
+                                        ToolButton {
+                                            text: "Remove"
+                                            icon.source: "qrc:/icons/delete.svg"
+                                            icon.width: 16
+                                            icon.height: 16
+                                            icon.color: Material.color(Material.Red)
+                                            Layout.preferredHeight: 40
+                                            onClicked: {
+                                                var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
+                                                clientModel.removeEntry(sourceIndex.row)
+                                            }
                                         }
                                     }
                                 }
@@ -1036,10 +1077,10 @@ ApplicationWindow {
                     }
                 }
             }
-        }
 
-        // Initialize with the first tab
-        initialItem: employeeComponent
+            // Initialize with the first tab
+            initialItem: employeeComponent
+        }
     }
 
     // Handle tab changes
