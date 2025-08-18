@@ -20,6 +20,7 @@ public:
         PhoneNumberRole,
         CommentRole
     };
+
     enum BusinessType {
         Business = 0,
         Consumer = 1

@@ -32,7 +32,18 @@ ApplicationWindow {
         function onCheckoutCompleted(description, amount) {
             console.log("pass")
             transactionModel.addTransactionFromCheckout(description, amount)
-            UserSettings.money += amount
+            // Money will be updated when transaction is added
+        }
+    }
+
+    Connections {
+        target: transactionModel
+        function onRowsInserted(parent, first, last) {
+            // When transactions are added, update money
+            for (var i = first; i <= last; i++) {
+                var amount = transactionModel.getTransactionAmount(i)
+                UserSettings.money += amount
+            }
         }
     }
 
@@ -49,63 +60,50 @@ ApplicationWindow {
     }
 
     // Header with menu
-    menuBar: MenuBar {
-        Menu {
-            title: "&File"
+    header: ToolBar {
+        height: 41
+        Material.primary: Material.dialogColor
+        RowLayout {
+            anchors.fill: parent
+            MenuBar {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Menu {
+                    title: "File"
 
-            MenuItem {
-                text: "&New Employee..."
-                onTriggered: employeeDialog.open()
-            }
-            MenuItem {
-                text: "New &Transaction..."
-                onTriggered: transactionDialog.open()
-            }
-            MenuItem {
-                text: "New &Client..."
-                onTriggered: clientDialog.open()
+                    MenuItem {
+                        text: "New Employee..."
+                        onTriggered: employeeDialog.open()
+                    }
+                    MenuItem {
+                        text: "New Transaction..."
+                        onTriggered: transactionDialog.open()
+                    }
+                    MenuItem {
+                        text: "New Client..."
+                        onTriggered: clientDialog.open()
+                    }
+
+                    MenuSeparator { }
+
+                    MenuItem {
+                        text: "Clear All Data"
+                        onTriggered: clearAllDialog.open()
+                    }
+
+                    MenuSeparator { }
+
+                    MenuItem {
+                        text: "Exit"
+                        onTriggered: Qt.quit()
+                    }
+                }
             }
 
-            MenuSeparator { }
-
-            MenuItem {
-                text: "&Clear All Data"
-                onTriggered: clearAllDialog.open()
+            Label {
+                text: UserSettings.money
+                Layout.rightMargin: 10
             }
-
-            MenuSeparator { }
-
-            MenuItem {
-                text: "E&xit"
-                onTriggered: Qt.quit()
-            }
-        }
-
-        Menu {
-            title: "&View"
-
-            MenuItem {
-                text: "&Employees"
-                checkable: true
-                checked: tabBar.currentIndex === 0
-                onTriggered: tabBar.currentIndex = 0
-            }
-            MenuItem {
-                text: "&Transactions"
-                checkable: true
-                checked: tabBar.currentIndex === 1
-                onTriggered: tabBar.currentIndex = 1
-            }
-            MenuItem {
-                text: "&Clients"
-                checkable: true
-                checked: tabBar.currentIndex === 2
-                onTriggered: tabBar.currentIndex = 2
-            }
-        }
-
-        Menu {
-            title: UserSettings.money
         }
     }
 
@@ -293,7 +291,10 @@ ApplicationWindow {
 
                             ToolButton {
                                 text: "Remove"
-                                onClicked: transactionModel.removeEntry(index)
+                                onClicked: {
+                                    UserSettings.money -= amount
+                                    transactionModel.removeEntry(index)
+                                }
                             }
                         }
                     }
@@ -313,11 +314,11 @@ ApplicationWindow {
         Column {
             spacing: 0
 
-            Rectangle {
+            ToolBar {
                 width: parent.width
                 height: 35
-                color: Material.accent
-                opacity: 0.3
+                //color: Material.accent
+                //opacity: 0.3
 
                 RowLayout {
                     anchors.fill: parent
@@ -426,10 +427,10 @@ ApplicationWindow {
                                 Label {
                                     text: {
                                         switch(offer) {
-                                            case 0: return "Bronze"
-                                            case 1: return "Silver"
-                                            case 2: return "Gold"
-                                            default: return "Bronze"
+                                        case 0: return "Bronze"
+                                        case 1: return "Silver"
+                                        case 2: return "Gold"
+                                        default: return "Bronze"
                                         }
                                     }
                                     Layout.preferredWidth: 80
@@ -777,10 +778,16 @@ ApplicationWindow {
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                 onClicked: {
                     if (transactionDialog.editMode) {
+                        // Get the old amount and calculate difference
+                        var oldAmount = transactionModel.getTransactionAmount(transactionDialog.editIndex)
+                        var difference = transAmount.value - oldAmount
+                        UserSettings.money += difference
+
                         transactionModel.updateTransaction(transactionDialog.editIndex, transDesc.text,
                                                            transAmount.value, transDate.text)
                     } else {
                         transactionModel.addTransaction(transDesc.text, transAmount.value, transDate.text)
+                        // Money will be updated automatically via onRowsInserted
                     }
                     transactionDialog.close()
                 }
@@ -865,10 +872,10 @@ ApplicationWindow {
                 id: calculatedPrice
                 Layout.fillWidth: true
                 text: "$" + (clientModel.calculatePrice(
-                    clientOfferCombo.currentIndex,
-                    clientDialog.selectedSupplements,
-                    clientDiscount.value
-                )).toFixed(2)
+                                 clientOfferCombo.currentIndex,
+                                 clientDialog.selectedSupplements,
+                                 clientDiscount.value
+                                 )).toFixed(2)
 
                 Rectangle {
                     anchors.fill: parent
@@ -945,10 +952,10 @@ ApplicationWindow {
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                 onClicked: {
                     var calculatedPriceValue = clientModel.calculatePrice(
-                        clientOfferCombo.currentIndex,
-                        clientDialog.selectedSupplements,
-                        clientDiscount.value
-                    )
+                                clientOfferCombo.currentIndex,
+                                clientDialog.selectedSupplements,
+                                clientDiscount.value
+                                )
 
                     if (clientDialog.editMode) {
                         clientModel.updateClient(clientDialog.editIndex, businessTypeCombo.currentIndex,
@@ -1000,6 +1007,7 @@ ApplicationWindow {
                     employeeModel.clear()
                     transactionModel.clear()
                     clientModel.clear()
+                    UserSettings.money = 0
                     clearAllDialog.close()
                 }
             }

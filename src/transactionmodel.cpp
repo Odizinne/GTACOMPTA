@@ -59,6 +59,14 @@ void TransactionModel::updateTransaction(int index, const QString &description, 
     saveToFile();
 }
 
+double TransactionModel::getTransactionAmount(int index) const
+{
+    if (index < 0 || index >= m_transactions.size())
+        return 0.0;
+
+    return m_transactions.at(index).amount;
+}
+
 QJsonObject TransactionModel::entryToJson(int index) const
 {
     if (index < 0 || index >= m_transactions.size())

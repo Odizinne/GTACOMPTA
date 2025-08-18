@@ -24,7 +24,7 @@ QVariant ClientModel::data(const QModelIndex &index, int role) const
         return static_cast<int>(client.businessType);
     case NameRole:
         return client.name;
-    case OfferRole:  // Added offer case
+    case OfferRole:
         return static_cast<int>(client.offer);
     case PriceRole:
         return client.price;
@@ -48,7 +48,7 @@ QHash<int, QByteArray> ClientModel::roleNames() const
     QHash<int, QByteArray> roles;
     roles[BusinessTypeRole] = "businessType";
     roles[NameRole] = "name";
-    roles[OfferRole] = "offer";  // Added offer role name
+    roles[OfferRole] = "offer";
     roles[PriceRole] = "price";
     roles[SupplementsRole] = "supplements";
     roles[ChestIDRole] = "chestID";
@@ -67,7 +67,7 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
     Client client;
     client.businessType = static_cast<BusinessType>(businessType);
     client.name = name;
-    client.offer = static_cast<Offer>(offer);  // Added offer assignment
+    client.offer = static_cast<Offer>(offer);
     client.price = price;
     client.supplements = supplements;
     client.chestID = chestID;
@@ -92,7 +92,7 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     Client &client = m_clients[index];
     client.businessType = static_cast<BusinessType>(businessType);
     client.name = name;
-    client.offer = static_cast<Offer>(offer);  // Added offer assignment
+    client.offer = static_cast<Offer>(offer);
     client.price = price;
     client.supplements = supplements;
     client.chestID = chestID;
@@ -113,7 +113,7 @@ QJsonObject ClientModel::entryToJson(int index) const
     QJsonObject obj;
     obj["businessType"] = static_cast<int>(client.businessType);
     obj["name"] = client.name;
-    obj["offer"] = static_cast<int>(client.offer);  // Added offer to JSON
+    obj["offer"] = static_cast<int>(client.offer);
     obj["price"] = client.price;
 
     QJsonArray supplementsArray;
@@ -134,7 +134,7 @@ void ClientModel::entryFromJson(const QJsonObject &obj)
     Client client;
     client.businessType = static_cast<BusinessType>(obj["businessType"].toInt());
     client.name = obj["name"].toString();
-    client.offer = static_cast<Offer>(obj["offer"].toInt(0));  // Added offer from JSON with default 0 (Bronze)
+    client.offer = static_cast<Offer>(obj["offer"].toInt(0));
     client.price = obj["price"].toInt();
 
     QJsonArray supplementsArray = obj["supplements"].toArray();
@@ -177,11 +177,9 @@ int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int di
     default: basePrice = BRONZE_BASE_PRICE; break;
     }
 
-    // Calculate supplements total (you'll need to get supplement prices from your model)
+    // Calculate supplements total
     int supplementsTotal = 0;
     for (int supplementId : supplements) {
-        // This assumes you have a way to get supplement price by ID
-        // You might need to modify this based on how you store supplement prices
         supplementsTotal += getSupplementPrice(supplementId);
     }
 
@@ -194,10 +192,8 @@ int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int di
     return finalPrice;
 }
 
-// Helper method to get supplement price (you'll need to implement this)
 int ClientModel::getSupplementPrice(int supplementId)
 {
-    // This is a simple mapping - you might want to make this more sophisticated
     switch (supplementId) {
     case 1: return 250; // Extra Cheese $2.50 as cents
     case 2: return 300; // Bacon $3.00 as cents
