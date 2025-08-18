@@ -23,6 +23,7 @@ set(HEADERS
     include/VersionGetter.h
     include/supplementmodel.h
     include/offermodel.h
+    include/filterproxymodel.h
 )
 
 set(SOURCES
@@ -34,6 +35,7 @@ set(SOURCES
     src/VersionGetter.cpp
     src/supplementmodel.cpp
     src/offermodel.cpp
+    src/filterproxymodel.cpp
 )
 
 # Get git commit hash
