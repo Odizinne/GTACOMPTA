@@ -30,10 +30,17 @@ set(SOURCES
     src/awaitingtransactionmodel.cpp
 )
 
+set(APP_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/icon.ico")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/windows_metadata.rc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
+    @ONLY
+)
+
 qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
     src/main.cpp
     resources/icons/icons.qrc
-    resources/appicon.rc
+    "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
 )
 
 set(QML_FILES
