@@ -7,9 +7,9 @@ import Odizinne.GTACOMPTA
 ApplicationWindow {
     id: window
     visible: true
-    width: 1000
-    height: 700
-    title: "Multi-Model Management"
+    width: 1280
+    height: 720
+    title: "GTACOMPTA"
     Material.theme: Material.Dark
 
     EmployeeModel {
@@ -30,6 +30,10 @@ ApplicationWindow {
     ClientModel {
         id: clientModel
         Component.onCompleted: loadFromFile()
+    }
+
+    FakeUpgradeDialog {
+        id: fakeUpgradeDialog
     }
 
     Connections {
@@ -116,11 +120,43 @@ ApplicationWindow {
                         onTriggered: Qt.quit()
                     }
                 }
+
+                Menu {
+                    title: "Additions"
+
+                    MenuItem {
+                        text: "Connect to FiveM"
+                        onTriggered: fakeUpgradeDialog.open()
+                    }
+                }
             }
 
-            Label {
-                text: UserSettings.money
+            RowLayout {
                 Layout.rightMargin: 10
+
+                Label {
+                    text: "Sold: "
+                }
+
+                Label {
+                    text: "$" + UserSettings.money.toLocaleString()
+                    color: UserSettings.money >= 0 ? Constants.creditColor : Constants.debitColor
+                    font.bold: true
+                }
+
+                Label {
+                    text: {
+                        var awaitingSum = 0
+                        for (var i = 0; i < awaitingTransactionModel.count; i++) {
+                            awaitingSum += awaitingTransactionModel.getAwaitingTransactionAmount(i)
+                        }
+                        var virtualTotal = UserSettings.money + awaitingSum
+                        return "($" + virtualTotal.toLocaleString() + ")"
+                    }
+                    color: Material.color(Material.Orange)
+                    font.bold: true
+                    visible: awaitingTransactionModel.count > 0
+                }
             }
         }
     }
@@ -167,51 +203,51 @@ ApplicationWindow {
                     spacing: 10
 
                     SortableLabel {
-                            headerText: "Name"
-                            sortColumn: EmployeeModel.SortByName
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 120
-                        }
+                        headerText: "Name"
+                        sortColumn: EmployeeModel.SortByName
+                        sortModel: employeeModel
+                        Layout.preferredWidth: 120
+                    }
 
-                        SortableLabel {
-                            headerText: "Phone"
-                            sortColumn: EmployeeModel.SortByPhone
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 100
-                        }
+                    SortableLabel {
+                        headerText: "Phone"
+                        sortColumn: EmployeeModel.SortByPhone
+                        sortModel: employeeModel
+                        Layout.preferredWidth: 100
+                    }
 
-                        SortableLabel {
-                            headerText: "Role"
-                            sortColumn: EmployeeModel.SortByRole
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 100
-                        }
+                    SortableLabel {
+                        headerText: "Role"
+                        sortColumn: EmployeeModel.SortByRole
+                        sortModel: employeeModel
+                        Layout.preferredWidth: 100
+                    }
 
-                        SortableLabel {
-                            headerText: "Salary"
-                            sortColumn: EmployeeModel.SortBySalary
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 80
-                        }
+                    SortableLabel {
+                        headerText: "Salary"
+                        sortColumn: EmployeeModel.SortBySalary
+                        sortModel: employeeModel
+                        Layout.preferredWidth: 80
+                    }
 
-                        SortableLabel {
-                            headerText: "Added Date"
-                            sortColumn: EmployeeModel.SortByAddedDate
-                            sortModel: employeeModel
-                            Layout.preferredWidth: 90
-                        }
+                    SortableLabel {
+                        headerText: "Added Date"
+                        sortColumn: EmployeeModel.SortByAddedDate
+                        sortModel: employeeModel
+                        Layout.preferredWidth: 90
+                    }
 
-                        SortableLabel {
-                            headerText: "Comment"
-                            sortColumn: EmployeeModel.SortByComment
-                            sortModel: employeeModel
-                            Layout.fillWidth: true
-                        }
+                    SortableLabel {
+                        headerText: "Comment"
+                        sortColumn: EmployeeModel.SortByComment
+                        sortModel: employeeModel
+                        Layout.fillWidth: true
+                    }
 
-                        Label {
-                            text: "Actions"
-                            font.bold: true
-                        }
+                    Label {
+                        text: "Actions"
+                        font.bold: true
+                    }
                 }
             }
 
@@ -228,6 +264,13 @@ ApplicationWindow {
                         height: parent.parent.height
                         model: employeeModel
                         spacing: 0
+                        Label {
+                            anchors.centerIn: parent
+                            text: "No employees added yet.\nUse File → New Employee to add one."
+                            visible: employeeModel.count === 0
+                            horizontalAlignment: Text.AlignHCenter
+                            color: "gray"
+                        }
 
                         delegate: Rectangle {
                             width: employeeListView.width
@@ -300,14 +343,6 @@ ApplicationWindow {
                             }
                         }
                     }
-
-                    Label {
-                        anchors.centerIn: parent
-                        text: "No employees added yet.\nUse File → New Employee to add one."
-                        visible: employeeModel.count === 0
-                        horizontalAlignment: Text.AlignHCenter
-                        color: "gray"
-                    }
                 }
             }
         }
@@ -363,6 +398,13 @@ ApplicationWindow {
                         height: parent.parent.height
                         model: transactionModel
                         spacing: 0
+                        Label {
+                            anchors.centerIn: parent
+                            text: "No transactions added yet.\nUse File → New Transaction to add one."
+                            visible: transactionModel.count === 0
+                            horizontalAlignment: Text.AlignHCenter
+                            color: "gray"
+                        }
 
                         delegate: Rectangle {
                             width: transactionListView.width
@@ -415,14 +457,6 @@ ApplicationWindow {
                                 }
                             }
                         }
-                    }
-
-                    Label {
-                        anchors.centerIn: parent
-                        text: "No transactions added yet.\nUse File → New Transaction to add one."
-                        visible: transactionModel.count === 0
-                        horizontalAlignment: Text.AlignHCenter
-                        color: "gray"
                     }
                 }
             }
@@ -480,6 +514,14 @@ ApplicationWindow {
                         model: awaitingTransactionModel
                         spacing: 0
 
+                        Label {
+                            anchors.centerIn: parent
+                            text: "No awaiting transactions.\nTransactions will appear here when clients checkout or employees are paid."
+                            visible: awaitingTransactionModel.count === 0
+                            horizontalAlignment: Text.AlignHCenter
+                            color: "gray"
+                        }
+
                         delegate: Rectangle {
                             width: awaitingTransactionListView.width
                             height: 40
@@ -534,14 +576,6 @@ ApplicationWindow {
                                 }
                             }
                         }
-                    }
-
-                    Label {
-                        anchors.centerIn: parent
-                        text: "No awaiting transactions.\nTransactions will appear here when clients checkout or employees are paid."
-                        visible: awaitingTransactionModel.count === 0
-                        horizontalAlignment: Text.AlignHCenter
-                        color: "gray"
                     }
                 }
             }
@@ -644,6 +678,13 @@ ApplicationWindow {
                         height: parent.parent.height //- 35
                         model: clientModel
                         spacing: 0
+                        Label {
+                            anchors.centerIn: parent
+                            text: "No clients added yet.\nUse File → New Client to add one."
+                            visible: clientModel.count === 0
+                            horizontalAlignment: Text.AlignHCenter
+                            color: "gray"
+                        }
 
                         delegate: Rectangle {
                             width: clientListView.width
@@ -744,14 +785,6 @@ ApplicationWindow {
                                 }
                             }
                         }
-                    }
-
-                    Label {
-                        anchors.centerIn: parent
-                        text: "No clients added yet.\nUse File → New Client to add one."
-                        visible: clientModel.count === 0
-                        horizontalAlignment: Text.AlignHCenter
-                        color: "gray"
                     }
                 }
             }

@@ -57,6 +57,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
     QML_FILES qml/SortableLabel.qml
+    QML_FILES qml/FakeUpgradeDialog.qml
 )
 
 set_target_properties(GTACOMPTA PROPERTIES
