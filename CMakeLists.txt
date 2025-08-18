@@ -19,7 +19,6 @@ set(SOURCES
     src/employeemodel.cpp
     src/transactionmodel.cpp
     src/clientmodel.cpp
-    src/main.cpp
 )
 
 set(HEADERS
@@ -30,8 +29,9 @@ set(HEADERS
 )
 
 qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
-    ${SOURCES}
-    ${HEADERS}
+    #${SOURCES}
+    #${HEADERS}
+    src/main.cpp
 )
 
 set(QML_FILES
@@ -54,6 +54,7 @@ qt_add_qml_module(GTACOMPTA
     URI Odizinne.GTACOMPTA
     VERSION 1.0
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
+    SOURCES ${SOURCES} ${HEADERS}
 )
 
 set_target_properties(GTACOMPTA PROPERTIES

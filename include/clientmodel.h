@@ -4,6 +4,8 @@
 class ClientModel : public BaseModel
 {
     Q_OBJECT
+    QML_ELEMENT
+
 public:
     enum Roles {
         BusinessTypeRole = Qt::UserRole + 1,

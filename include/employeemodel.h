@@ -6,6 +6,7 @@
 class EmployeeModel : public BaseModel
 {
     Q_OBJECT
+    QML_ELEMENT
 
 public:
     enum Roles {

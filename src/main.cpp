@@ -9,9 +9,9 @@ int main(int argc, char *argv[])
     qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
     QGuiApplication app(argc, argv);
 
-    qmlRegisterType<EmployeeModel>("Odizinne.GTACOMPTA", 1, 0, "EmployeeModel");
-    qmlRegisterType<TransactionModel>("Odizinne.GTACOMPTA", 1, 0, "TransactionModel");
-    qmlRegisterType<ClientModel>("Odizinne.GTACOMPTA", 1, 0, "ClientModel");
+    //qmlRegisterType<EmployeeModel>("Odizinne.GTACOMPTA", 1, 0, "EmployeeModel");
+    //qmlRegisterType<TransactionModel>("Odizinne.GTACOMPTA", 1, 0, "TransactionModel");
+    //qmlRegisterType<ClientModel>("Odizinne.GTACOMPTA", 1, 0, "ClientModel");
 
     app.setOrganizationName("Odizinne");
     app.setApplicationName("GTACOMPTA");

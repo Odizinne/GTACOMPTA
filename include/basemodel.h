@@ -8,10 +8,12 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QtQml/qqmlregistration.h>
 
 class BaseModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
 
 public:
