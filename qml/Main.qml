@@ -12,6 +12,12 @@ ApplicationWindow {
     title: "GTACOMPTA"
     Material.theme: Material.Dark
 
+    Component.onCompleted: {
+        if (UserSettings.firstRun) {
+            welcomeDialog.open()
+        }
+    }
+
     EmployeeModel {
         id: employeeModel
         Component.onCompleted: loadFromFile()
@@ -34,6 +40,10 @@ ApplicationWindow {
 
     FakeUpgradeDialog {
         id: fakeUpgradeDialog
+    }
+
+    WelcomeDialog {
+        id: welcomeDialog
     }
 
     Connections {
