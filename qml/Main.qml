@@ -26,6 +26,15 @@ ApplicationWindow {
     Material.accent: "#4CAF50"
     color: "#1A1A1A"
 
+    function toUiPrice(priceInCents) {
+        return "$" + (priceInCents / 100).toFixed(2)
+    }
+
+    function toModelPrice(priceString) {
+        var cleanPrice = priceString.toString().replace('$', '')
+        return Math.round(parseFloat(cleanPrice) * 100)
+    }
+
     EmployeeModel {
         id: employeeModel
         Component.onCompleted: loadFromFile()
@@ -134,13 +143,13 @@ ApplicationWindow {
 
     // Header with menu
     header: ToolBar {
-        height: 41
+        height: 40
         Material.primary: Material.dialogColor
         Item {
             anchors.fill: parent
             MenuBar {
                 anchors.left: parent.left
-                height: 41
+                height: 40
                 Menu {
                     title: "File"
 
@@ -200,7 +209,7 @@ ApplicationWindow {
                 }
 
                 Label {
-                    text: "$" + UserSettings.money.toLocaleString()
+                    text: window.toUiPrice(UserSettings.money)
                     color: UserSettings.money >= 0 ? Constants.creditColor : Constants.debitColor
                     font.bold: true
                     font.pixelSize: 16
@@ -213,7 +222,7 @@ ApplicationWindow {
                             awaitingSum += awaitingTransactionModel.getAwaitingTransactionAmount(i)
                         }
                         var virtualTotal = UserSettings.money + awaitingSum
-                        return "($" + virtualTotal.toLocaleString() + ")"
+                        return "(" + window.toUiPrice(virtualTotal) + ")"
                     }
                     color: Material.color(Material.Orange)
                     font.bold: true
@@ -251,37 +260,44 @@ ApplicationWindow {
                 onTextChanged: window.filterText = text
             }
 
-            Image {
+            Item {
                 id: logo
                 anchors.right: parent.right
                 anchors.rightMargin: 5
                 anchors.verticalCenter: parent.verticalCenter
-                height: 32
-                width: 32
-                sourceSize.width: 32
-                sourceSize.height: 32
-                mipmap: true
-                source: "qrc:/icons/icon.png"
-                transform: Rotation {
-                    id: rotation3d
-                    origin.x: logo.width / 2
-                    origin.y: logo.height / 2
-                    axis { x: 0; y: 1; z: 0 }
-                    angle: 0
-                }
-
-                PropertyAnimation {
-                    target: rotation3d
-                    property: "angle"
-                    from: 0
-                    to: 360
-                    duration: 5000
-                    loops: Animation.Infinite
-                    running: true
-                }
+                height: 40
+                width: 40
                 MouseArea {
                     anchors.fill: parent
                     onClicked: versionDialog.open()
+                }
+
+                Image {
+                    id: logoImage
+                    anchors.centerIn: parent
+                    height: 32
+                    width: 32
+                    sourceSize.width: 32
+                    sourceSize.height: 32
+                    mipmap: true
+                    source: "qrc:/icons/icon.png"
+                    transform: Rotation {
+                        id: rotation3d
+                        origin.x: logoImage.width / 2
+                        origin.y: logoImage.height / 2
+                        axis { x: 0; y: 1; z: 0 }
+                        angle: 0
+                    }
+
+                    PropertyAnimation {
+                        target: rotation3d
+                        property: "angle"
+                        from: 0
+                        to: 360
+                        duration: 5000
+                        loops: Animation.Infinite
+                        running: true
+                    }
                 }
             }
         }
@@ -471,7 +487,7 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: "$" + salary.toLocaleString()
+                                    text: window.toUiPrice(salary.toLocaleString)
                                     color: "lightgreen"
                                     Layout.preferredWidth: 80
                                 }
@@ -608,7 +624,7 @@ ApplicationWindow {
                                 spacing: 10
 
                                 Label {
-                                    text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
+                                    text: (amount >= 0 ? "+" : "") + window.toUiPrice(amount)
                                     color: amount >= 0 ? "lightgreen" : "lightcoral"
                                     font.bold: true
                                     Layout.preferredWidth: 120
@@ -736,7 +752,7 @@ ApplicationWindow {
                                 spacing: 10
 
                                 Label {
-                                    text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
+                                    text: (amount >= 0 ? "+" : "") + window.toUiPrice(amount)
                                     color: amount >= 0 ? "lightgreen" : "lightcoral"
                                     font.bold: true
                                     Layout.preferredWidth: 120
@@ -944,7 +960,7 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: "$" + (price / 100).toFixed(2)
+                                    text: window.toUiPrice(price)
                                     Layout.preferredWidth: 60
                                 }
 
@@ -1101,13 +1117,13 @@ ApplicationWindow {
                     CheckBox {
                         width: parent.width
                         enabled: !supplementDialog.readOnly
-                        text: model.name + " - $" + (model.price / 100).toFixed(2)
+                        text: model.name + " - " + window.toUiPrice(model.price)
 
-                        background: Rectangle {
-                            color: parent.checked ? Material.accent : "transparent"
-                            opacity: 0.2
-                            radius: 4
-                        }
+                        //background: Rectangle {
+                        //    color: parent.checked ? Material.accent : "transparent"
+                        //    opacity: 0.2
+                        //    radius: 4
+                        //}
                     }
                 }
             }
@@ -1594,12 +1610,12 @@ ApplicationWindow {
                     id: calculatedPrice
                     Layout.preferredHeight: Constants.comboHeight
                     Layout.preferredWidth: implicitWidth + 20
-                    text: "$" + (clientDialog.calculatePrice() / 100).toFixed(2)
+                    text: window.toUiPrice(clientDialog.calculatePrice())
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
 
                     function updatePrice() {
-                        text = "$" + (clientDialog.calculatePrice() / 100).toFixed(2)
+                        text = window.toUiPrice(clientDialog.calculatePrice())
                     }
 
                     Rectangle {
@@ -1805,7 +1821,7 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: "$" + (model.price / 100).toFixed(2)
+                                    text: window.toUiPrice(model.price)
                                     color: "lightgreen"
                                     Layout.preferredWidth: 80
                                 }
@@ -1868,7 +1884,7 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: "$" + (model.price / 100).toFixed(2)
+                                    text: window.toUiPrice(model.price)
                                     color: "lightgreen"
                                     Layout.preferredWidth: 80
                                 }
@@ -1990,12 +2006,6 @@ ApplicationWindow {
                 to: 999999
                 value: 100
                 editable: true
-                textFromValue: function(value, locale) {
-                    return "$" + (value / 100).toFixed(2)
-                }
-                valueFromText: function(text, locale) {
-                    return Math.round(parseFloat(text.replace('$', '')) * 100)
-                }
             }
         }
 
