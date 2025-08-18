@@ -21,14 +21,16 @@ QVariant EmployeeModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case NameRole:
         return employee.name;
-    case EmailRole:
-        return employee.email;
     case PhoneRole:
         return employee.phone;
-    case DepartmentRole:
-        return employee.department;
+    case RoleRole:
+        return employee.role;
     case SalaryRole:
         return employee.salary;
+    case AddedDateRole:
+        return employee.addedDate;
+    case CommentRole:
+        return employee.comment;
     default:
         return QVariant();
     }
@@ -38,33 +40,45 @@ QHash<int, QByteArray> EmployeeModel::roleNames() const
 {
     QHash<int, QByteArray> roles;
     roles[NameRole] = "name";
-    roles[EmailRole] = "email";
     roles[PhoneRole] = "phone";
-    roles[DepartmentRole] = "department";
+    roles[RoleRole] = "role";
     roles[SalaryRole] = "salary";
+    roles[AddedDateRole] = "addedDate";
+    roles[CommentRole] = "comment";
     return roles;
 }
 
-void EmployeeModel::addEmployee(const QString &name, const QString &email,
-                                const QString &phone, const QString &department, double salary)
+void EmployeeModel::addEmployee(const QString &name, const QString &phone,
+                                const QString &role, int salary, const QString &addedDate, const QString &comment)
 {
     beginInsertRows(QModelIndex(), m_employees.size(), m_employees.size());
-    m_employees.append({name, email, phone, department, salary});
+    m_employees.append({name, phone, role, salary, addedDate, comment});
     endInsertRows();
 
     emit countChanged();
     saveToFile();
 }
 
-void EmployeeModel::updateEmployee(int index, const QString &name, const QString &email,
-                                   const QString &phone, const QString &department, double salary)
+void EmployeeModel::updateEmployee(int index, const QString &name, const QString &phone,
+                                   const QString &role, int salary, const QString &addedDate, const QString &comment)
 {
     if (index < 0 || index >= m_employees.size())
         return;
 
-    m_employees[index] = {name, email, phone, department, salary};
+    m_employees[index] = {name, phone, role, salary, addedDate, comment};
     emit dataChanged(createIndex(index, 0), createIndex(index, 0));
     saveToFile();
+}
+
+void EmployeeModel::payEmployee(int employeeIndex)
+{
+    if (employeeIndex < 0 || employeeIndex >= m_employees.size())
+        return;
+
+    const Employee &employee = m_employees.at(employeeIndex);
+    QString description = QString("Salary payment for %1").arg(employee.name);
+
+    emit paymentCompleted(description, -employee.salary); // Negative because it's an expense
 }
 
 QJsonObject EmployeeModel::entryToJson(int index) const
@@ -75,10 +89,11 @@ QJsonObject EmployeeModel::entryToJson(int index) const
     const Employee &emp = m_employees.at(index);
     QJsonObject obj;
     obj["name"] = emp.name;
-    obj["email"] = emp.email;
     obj["phone"] = emp.phone;
-    obj["department"] = emp.department;
+    obj["role"] = emp.role;
     obj["salary"] = emp.salary;
+    obj["addedDate"] = emp.addedDate;
+    obj["comment"] = emp.comment;
     return obj;
 }
 
@@ -86,10 +101,11 @@ void EmployeeModel::entryFromJson(const QJsonObject &obj)
 {
     Employee emp;
     emp.name = obj["name"].toString();
-    emp.email = obj["email"].toString();
     emp.phone = obj["phone"].toString();
-    emp.department = obj["department"].toString();
-    emp.salary = obj["salary"].toDouble();
+    emp.role = obj["role"].toString();
+    emp.salary = obj["salary"].toInt();
+    emp.addedDate = obj["addedDate"].toString();
+    emp.comment = obj["comment"].toString();
     m_employees.append(emp);
 }
 

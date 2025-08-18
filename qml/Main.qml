@@ -47,6 +47,14 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: employeeModel
+        function onPaymentCompleted(description, amount) {
+            transactionModel.addTransactionFromCheckout(description, amount)
+            // Money will be updated when transaction is added
+        }
+    }
+
     ListModel {
         id: supplementModel
         Component.onCompleted: {
@@ -136,74 +144,141 @@ ApplicationWindow {
         Column {
             spacing: 0
 
-            Rectangle {
+            ToolBar {
                 width: parent.width
-                height: 40
-                color: Material.primary
+                height: 35
 
-                Label {
-                    anchors.centerIn: parent
-                    text: "EMPLOYEES"
-                    font.bold: true
-                    font.pixelSize: 16
-                    color: "white"
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    spacing: 10
+
+                    Label {
+                        text: "Name"
+                        font.bold: true
+                        Layout.preferredWidth: 120
+                    }
+
+                    Label {
+                        text: "Phone"
+                        font.bold: true
+                        Layout.preferredWidth: 100
+                    }
+
+                    Label {
+                        text: "Role"
+                        font.bold: true
+                        Layout.preferredWidth: 100
+                    }
+
+                    Label {
+                        text: "Salary"
+                        font.bold: true
+                        Layout.preferredWidth: 80
+                    }
+
+                    Label {
+                        text: "Added Date"
+                        font.bold: true
+                        Layout.preferredWidth: 90
+                    }
+
+                    Label {
+                        text: "Comment"
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: "Actions"
+                        font.bold: true
+                        Layout.preferredWidth: 150
+                    }
                 }
             }
 
             ScrollView {
                 width: parent.width
-                height: parent.height - 40
+                height: parent.height - 35
 
-                ListView {
-                    anchors.fill: parent
-                    model: employeeModel
-                    spacing: 5
+                Column {
+                    width: parent.width
 
-                    delegate: Rectangle {
+                    ListView {
+                        id: employeeListView
                         width: parent.width
-                        height: 80
-                        border.color: "lightgray"
-                        border.width: 1
-                        radius: 5
+                        height: parent.parent.height
+                        model: employeeModel
+                        spacing: 0
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 10
+                        delegate: Rectangle {
+                            width: employeeListView.width
+                            height: 50
+                            color: (index % 2 === 0) ? "#404040" : "#303030"
 
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 2
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                spacing: 10
 
                                 Label {
                                     text: name
                                     font.bold: true
-                                    font.pixelSize: 16
+                                    Layout.preferredWidth: 120
+                                    elide: Text.ElideRight
                                 }
-                                Label {
-                                    text: email + " | " + phone
-                                    color: "gray"
-                                    font.pixelSize: 12
-                                }
-                                Label {
-                                    text: department + " - $" + salary.toLocaleString()
-                                    color: "blue"
-                                    font.pixelSize: 14
-                                }
-                            }
 
-                            ToolButton {
-                                text: "Edit"
-                                onClicked: {
-                                    employeeDialog.editMode = true
-                                    employeeDialog.editIndex = index
-                                    employeeDialog.loadEmployee(name, email, phone, department, salary)
-                                    employeeDialog.open()
+                                Label {
+                                    text: phone
+                                    Layout.preferredWidth: 100
+                                    elide: Text.ElideRight
                                 }
-                            }
 
-                            ToolButton {
-                                text: "Remove"
-                                onClicked: employeeModel.removeEntry(index)
+                                Label {
+                                    text: role
+                                    Layout.preferredWidth: 100
+                                    elide: Text.ElideRight
+                                }
+
+                                Label {
+                                    text: "$" + salary.toLocaleString()
+                                    color: "lightgreen"
+                                    Layout.preferredWidth: 80
+                                }
+
+                                Label {
+                                    text: addedDate
+                                    Layout.preferredWidth: 90
+                                }
+
+                                Label {
+                                    text: comment
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideRight
+                                }
+
+                                ToolButton {
+                                    text: "Pay"
+                                    Layout.preferredWidth: 45
+                                    onClicked: employeeModel.payEmployee(index)
+                                }
+
+                                ToolButton {
+                                    text: "Edit"
+                                    Layout.preferredWidth: 40
+                                    onClicked: {
+                                        employeeDialog.editMode = true
+                                        employeeDialog.editIndex = index
+                                        employeeDialog.loadEmployee(name, phone, role, salary, addedDate, comment)
+                                        employeeDialog.open()
+                                    }
+                                }
+
+                                ToolButton {
+                                    text: "Remove"
+                                    Layout.preferredWidth: 60
+                                    onClicked: employeeModel.removeEntry(index)
+                                }
                             }
                         }
                     }
@@ -223,77 +298,103 @@ ApplicationWindow {
         Column {
             spacing: 0
 
-            Rectangle {
+            ToolBar {
                 width: parent.width
-                height: 40
-                color: Material.primary
+                height: 35
 
-                Label {
-                    anchors.centerIn: parent
-                    text: "TRANSACTIONS"
-                    font.bold: true
-                    font.pixelSize: 16
-                    color: "white"
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    spacing: 10
+
+                    Label {
+                        text: "Description"
+                        font.bold: true
+                        Layout.preferredWidth: 200
+                    }
+
+                    Label {
+                        text: "Date"
+                        font.bold: true
+                        Layout.preferredWidth: 100
+                    }
+
+                    Label {
+                        text: "Amount"
+                        font.bold: true
+                        Layout.preferredWidth: 120
+                    }
+
+                    Label {
+                        text: "Actions"
+                        font.bold: true
+                        Layout.preferredWidth: 100
+                    }
                 }
             }
 
             ScrollView {
                 width: parent.width
-                height: parent.height - 40
+                height: parent.height - 35
 
-                ListView {
-                    anchors.fill: parent
-                    model: transactionModel
-                    spacing: 0
+                Column {
+                    width: parent.width
 
-                    delegate: Rectangle {
+                    ListView {
+                        id: transactionListView
                         width: parent.width
-                        height: 70
-                        color: (index % 2 === 0) ? "#404040" : "#303030"  // Mid grey for even, dark grey for odd
-                        // Remove the border properties since you're using the same style as clients
+                        height: parent.parent.height
+                        model: transactionModel
+                        spacing: 0
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 10
+                        delegate: Rectangle {
+                            width: transactionListView.width
+                            height: 50
+                            color: (index % 2 === 0) ? "#404040" : "#303030"
 
-                            Column {
-                                Layout.fillWidth: true
-                                spacing: 2
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                spacing: 10
 
                                 Label {
                                     text: description
                                     font.bold: true
-                                    font.pixelSize: 16
+                                    Layout.preferredWidth: 200
+                                    elide: Text.ElideRight
                                 }
+
                                 Label {
                                     text: date
                                     color: "gray"
-                                    font.pixelSize: 12
+                                    Layout.preferredWidth: 100
                                 }
-                            }
 
-                            Label {
-                                text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
-                                color: amount >= 0 ? "green" : "red"
-                                font.bold: true
-                                font.pixelSize: 16
-                            }
-
-                            ToolButton {
-                                text: "Edit"
-                                onClicked: {
-                                    transactionDialog.editMode = true
-                                    transactionDialog.editIndex = index
-                                    transactionDialog.loadTransaction(description, amount, date)
-                                    transactionDialog.open()
+                                Label {
+                                    text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
+                                    color: amount >= 0 ? "lightgreen" : "lightcoral"
+                                    font.bold: true
+                                    Layout.preferredWidth: 120
                                 }
-                            }
 
-                            ToolButton {
-                                text: "Remove"
-                                onClicked: {
-                                    UserSettings.money -= amount
-                                    transactionModel.removeEntry(index)
+                                ToolButton {
+                                    text: "Edit"
+                                    Layout.preferredWidth: 40
+                                    onClicked: {
+                                        transactionDialog.editMode = true
+                                        transactionDialog.editIndex = index
+                                        transactionDialog.loadTransaction(description, amount, date)
+                                        transactionDialog.open()
+                                    }
+                                }
+
+                                ToolButton {
+                                    text: "Remove"
+                                    Layout.preferredWidth: 60
+                                    onClicked: {
+                                        UserSettings.money -= amount
+                                        transactionModel.removeEntry(index)
+                                    }
                                 }
                             }
                         }
@@ -613,20 +714,22 @@ ApplicationWindow {
         property bool editMode: false
         property int editIndex: -1
 
-        function loadEmployee(name, email, phone, department, salary) {
+        function loadEmployee(name, phone, role, salary, addedDate, comment) {
             empName.text = name
-            empEmail.text = email
             empPhone.text = phone
-            empDepartment.text = department
+            empRole.text = role
             empSalary.value = salary
+            empAddedDate.text = addedDate
+            empComment.text = comment
         }
 
         function clearFields() {
             empName.clear()
-            empEmail.clear()
             empPhone.clear()
-            empDepartment.clear()
+            empRole.clear()
             empSalary.value = 50000
+            empAddedDate.text = Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+            empComment.clear()
         }
 
         onClosed: {
@@ -638,37 +741,35 @@ ApplicationWindow {
         GridLayout {
             anchors.fill: parent
             columns: 2
+            rowSpacing: 10
 
             Label { text: "Name:" }
             TextField {
+                Layout.preferredHeight: Constants.comboHeight
                 id: empName
                 Layout.fillWidth: true
                 placeholderText: "John Doe"
             }
 
-            Label { text: "Email:" }
-            TextField {
-                id: empEmail
-                Layout.fillWidth: true
-                placeholderText: "john@company.com"
-            }
-
             Label { text: "Phone:" }
             TextField {
+                Layout.preferredHeight: Constants.comboHeight
                 id: empPhone
                 Layout.fillWidth: true
                 placeholderText: "+1234567890"
             }
 
-            Label { text: "Department:" }
+            Label { text: "Role:" }
             TextField {
-                id: empDepartment
+                Layout.preferredHeight: Constants.comboHeight
+                id: empRole
                 Layout.fillWidth: true
-                placeholderText: "Engineering"
+                placeholderText: "Developer"
             }
 
             Label { text: "Salary:" }
             SpinBox {
+                Layout.preferredHeight: Constants.comboHeight
                 id: empSalary
                 Layout.fillWidth: true
                 from: 0
@@ -676,8 +777,28 @@ ApplicationWindow {
                 stepSize: 1000
                 value: 50000
                 editable: true
-                textFromValue: function(value, locale) {
-                    return "$" + value.toLocaleString(locale, 'f', 0)
+                //textFromValue: function(value, locale) {
+                //    return "$" + value.toLocaleString(locale, 'f', 0)
+                //}
+            }
+
+            Label { text: "Added Date:" }
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                id: empAddedDate
+                Layout.fillWidth: true
+                placeholderText: "YYYY-MM-DD"
+                text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+            }
+
+            Label { text: "Comment:" }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+                TextArea {
+                    id: empComment
+                    placeholderText: "Additional comments..."
+                    wrapMode: TextArea.Wrap
                 }
             }
         }
@@ -691,10 +812,12 @@ ApplicationWindow {
                 onClicked: {
                     if (employeeDialog.editMode) {
                         employeeModel.updateEmployee(employeeDialog.editIndex, empName.text,
-                                                     empEmail.text, empPhone.text, empDepartment.text, empSalary.value)
+                                                     empPhone.text, empRole.text, empSalary.value,
+                                                     empAddedDate.text, empComment.text)
                     } else {
-                        employeeModel.addEmployee(empName.text, empEmail.text,
-                                                  empPhone.text, empDepartment.text, empSalary.value)
+                        employeeModel.addEmployee(empName.text, empPhone.text,
+                                                  empRole.text, empSalary.value,
+                                                  empAddedDate.text, empComment.text)
                     }
                     employeeDialog.close()
                 }
@@ -756,9 +879,9 @@ ApplicationWindow {
                 to: 999999
                 value: 100
                 editable: true
-                textFromValue: function(value, locale) {
-                    return "$" + value.toLocaleString(locale, 'f', 0)
-                }
+                //textFromValue: function(value, locale) {
+                //    return "$" + value.toLocaleString(locale, 'f', 0)
+                //}
             }
 
             Label { text: "Date:" }
@@ -845,6 +968,7 @@ ApplicationWindow {
         GridLayout {
             anchors.fill: parent
             columns: 2
+            rowSpacing: 10
 
             Label { text: "Type:"; }
             ComboBox {

@@ -12,10 +12,11 @@ class EmployeeModel : public BaseModel
 public:
     enum Roles {
         NameRole = Qt::UserRole + 1,
-        EmailRole,
         PhoneRole,
-        DepartmentRole,
-        SalaryRole
+        RoleRole,
+        SalaryRole,
+        AddedDateRole,
+        CommentRole
     };
 
     explicit EmployeeModel(QObject *parent = nullptr);
@@ -26,10 +27,11 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     // Employee-specific methods
-    Q_INVOKABLE void addEmployee(const QString &name, const QString &email,
-                                 const QString &phone, const QString &department, double salary);
-    Q_INVOKABLE void updateEmployee(int index, const QString &name, const QString &email,
-                                    const QString &phone, const QString &department, double salary);
+    Q_INVOKABLE void addEmployee(const QString &name, const QString &phone,
+                                 const QString &role, int salary, const QString &addedDate, const QString &comment);
+    Q_INVOKABLE void updateEmployee(int index, const QString &name, const QString &phone,
+                                    const QString &role, int salary, const QString &addedDate, const QString &comment);
+    Q_INVOKABLE void payEmployee(int employeeIndex);
 
 protected:
     QJsonObject entryToJson(int index) const override;
@@ -38,13 +40,17 @@ protected:
     void removeEntryFromModel(int index) override;
     void clearModel() override;
 
+signals:
+    void paymentCompleted(const QString &employeeName, double amount);
+
 private:
     struct Employee {
         QString name;
-        QString email;
         QString phone;
-        QString department;
-        double salary;
+        QString role;
+        int salary;
+        QString addedDate;
+        QString comment;
     };
 
     QList<Employee> m_employees;
