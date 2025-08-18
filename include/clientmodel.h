@@ -42,6 +42,7 @@ public:
                                   int chestID, int discount, const QString &phoneNumber,
                                   const QString &comment);
     Q_INVOKABLE int calculatePrice(int offer, const QList<int> &supplements, int discount);
+    Q_INVOKABLE void checkout(int clientIndex);
 
 protected:
     QJsonObject entryToJson(int index) const override;
@@ -49,6 +50,10 @@ protected:
     void addEntryToModel() override;
     void removeEntryFromModel(int index) override;
     void clearModel() override;
+
+signals:
+    void checkoutCompleted(const QString &clientName, double amount);
+
 private:
     static const int BRONZE_BASE_PRICE = 1000;
     static const int SILVER_BASE_PRICE = 2000;

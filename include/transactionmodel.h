@@ -24,6 +24,7 @@ public:
     // Transaction-specific methods
     Q_INVOKABLE void addTransaction(const QString &description, double amount, const QString &date);
     Q_INVOKABLE void updateTransaction(int index, const QString &description, double amount, const QString &date);
+    Q_INVOKABLE void addTransactionFromCheckout(const QString &description, double amount);
 
 protected:
     QJsonObject entryToJson(int index) const override;

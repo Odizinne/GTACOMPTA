@@ -208,3 +208,14 @@ int ClientModel::getSupplementPrice(int supplementId)
     default: return 0;
     }
 }
+
+void ClientModel::checkout(int clientIndex)
+{
+    if (clientIndex < 0 || clientIndex >= m_clients.size())
+        return;
+
+    const Client &client = m_clients.at(clientIndex);
+    QString description = QString("Checkout for %1").arg(client.name);
+
+    emit checkoutCompleted(description, client.price);
+}

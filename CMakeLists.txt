@@ -1,8 +1,14 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.30)
 
 project(GTACOMPTA VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(QT_QML_GENERATE_QMLLS_INI ON)
+set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick)
 
@@ -59,8 +65,16 @@ target_link_libraries(GTACOMPTA
 )
 
 include(GNUInstallDirs)
+
 install(TARGETS GTACOMPTA
     BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+qt_generate_deploy_qml_app_script(
+    TARGET GTACOMPTA
+    OUTPUT_SCRIPT deploy_script
+    NO_TRANSLATIONS
+    DEPLOY_TOOL_OPTIONS --no-compiler-runtime --no-opengl-sw --no-system-dxc-compiler --no-system-d3d-compiler --skip-plugin-types designer,iconengines,qmllint,generic,networkinformation,help,qmltooling,sqldrivers,qmlls
+)
+install(SCRIPT ${deploy_script})

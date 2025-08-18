@@ -1,8 +1,8 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Controls.Material
-import QtQuick.Layouts 1.15
+import QtQuick.Layouts
 import QtQuick.Dialogs
-import GTACOMPTA 1.0
+import Odizinne.GTACOMPTA
 
 ApplicationWindow {
     id: window
@@ -25,6 +25,15 @@ ApplicationWindow {
     ClientModel {
         id: clientModel
         Component.onCompleted: loadFromFile()
+    }
+
+    Connections {
+        target: clientModel
+        function onCheckoutCompleted(description, amount) {
+            console.log("pass")
+            transactionModel.addTransactionFromCheckout(description, amount)
+            UserSettings.money += amount
+        }
     }
 
     // Supplement List Model
@@ -95,6 +104,10 @@ ApplicationWindow {
                 checked: tabBar.currentIndex === 2
                 onTriggered: tabBar.currentIndex = 2
             }
+        }
+
+        Menu {
+            title: UserSettings.money
         }
     }
 
@@ -235,14 +248,13 @@ ApplicationWindow {
                 ListView {
                     anchors.fill: parent
                     model: transactionModel
-                    spacing: 5
+                    spacing: 0
 
                     delegate: Rectangle {
                         width: parent.width
                         height: 70
-                        border.color: "lightgray"
-                        border.width: 1
-                        radius: 5
+                        color: (index % 2 === 0) ? "#404040" : "#303030"  // Mid grey for even, dark grey for odd
+                        // Remove the border properties since you're using the same style as clients
 
                         RowLayout {
                             anchors.fill: parent
@@ -265,7 +277,7 @@ ApplicationWindow {
                             }
 
                             Label {
-                                text: "$" + amount.toLocaleString()
+                                text: (amount >= 0 ? "+" : "") + "$" + Math.abs(amount).toLocaleString()
                                 color: amount >= 0 ? "green" : "red"
                                 font.bold: true
                                 font.pixelSize: 16
@@ -460,6 +472,12 @@ ApplicationWindow {
                                     text: comment
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
+                                }
+
+                                ToolButton {
+                                    text: "Checkout"
+                                    Layout.preferredWidth: 70
+                                    onClicked: clientModel.checkout(index)
                                 }
 
                                 ToolButton {
@@ -779,7 +797,7 @@ ApplicationWindow {
         id: clientDialog
         title: editMode ? "Edit Client" : "Add New Client"
         width: 500
-        height: 450
+        //height: 450
         anchors.centerIn: parent
         modal: true
 
@@ -956,7 +974,6 @@ ApplicationWindow {
         id: clearAllDialog
         title: "Clear All Data"
         width: 300
-        height: 150
         anchors.centerIn: parent
         modal: true
 

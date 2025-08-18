@@ -13,6 +13,9 @@ int main(int argc, char *argv[])
     qmlRegisterType<TransactionModel>("Odizinne.GTACOMPTA", 1, 0, "TransactionModel");
     qmlRegisterType<ClientModel>("Odizinne.GTACOMPTA", 1, 0, "ClientModel");
 
+    app.setOrganizationName("Odizinne");
+    app.setApplicationName("GTACOMPTA");
+
     QQmlApplicationEngine engine;
     QObject::connect(
         &engine,

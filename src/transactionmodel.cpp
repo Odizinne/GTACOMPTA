@@ -97,3 +97,9 @@ void TransactionModel::clearModel()
 {
     m_transactions.clear();
 }
+
+void TransactionModel::addTransactionFromCheckout(const QString &description, double amount)
+{
+    QString currentDate = QDate::currentDate().toString("yyyy-MM-dd");
+    addTransaction(description, amount, currentDate);
+}
