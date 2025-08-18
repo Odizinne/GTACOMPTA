@@ -84,16 +84,12 @@ bool FilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &source
         double priceValue = model->data(index, ClientModel::PriceRole).toDouble();
         QString price = QString::number(priceValue / 100.0, 'f', 2);
 
-        // Format chest ID
-        int chestIdValue = model->data(index, ClientModel::ChestIDRole).toInt();
-        QString chestId = "C" + QString::number(chestIdValue);
-
         // Format business type
         int businessTypeValue = model->data(index, ClientModel::BusinessTypeRole).toInt();
         QString businessType = (businessTypeValue == 0) ? "Pro" : "Part";
 
         return matchesFilter(name) || matchesFilter(phone) || matchesFilter(comment) ||
-               matchesFilter(price) || matchesFilter(chestId) || matchesFilter(businessType);
+               matchesFilter(price) || matchesFilter(businessType);
     }
 
     return false;

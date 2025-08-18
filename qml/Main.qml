@@ -29,12 +29,11 @@ ApplicationWindow {
     color: "#1A1A1A"
 
     function toUiPrice(priceInCents) {
-        return "$" + (priceInCents / 100).toFixed(2)
+        return "$" + (priceInCents).toLocaleString();
     }
 
     function toModelPrice(priceString) {
-        var cleanPrice = priceString.toString().replace('$', '')
-        return Math.round(parseFloat(cleanPrice) * 100)
+        return parseInt(priceString.replace(/\D/g, ''), 10);
     }
 
     EmployeeModel {
@@ -489,7 +488,7 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: window.toUiPrice(salary.toLocaleString)
+                                    text: window.toUiPrice(salary)
                                     color: "lightgreen"
                                     Layout.preferredWidth: 80
                                 }
@@ -874,13 +873,6 @@ ApplicationWindow {
                         }
 
                         SortableLabel {
-                            headerText: "Chest"
-                            sortColumn: ClientModel.SortByChestID
-                            sortModel: clientModel
-                            Layout.preferredWidth: 40
-                        }
-
-                        SortableLabel {
                             headerText: "Disc"
                             sortColumn: ClientModel.SortByDiscount
                             sortModel: clientModel
@@ -978,11 +970,6 @@ ApplicationWindow {
                                 }
 
                                 Label {
-                                    text: "C" + chestID
-                                    Layout.preferredWidth: 40
-                                }
-
-                                Label {
                                     text: discount + "%"
                                     Layout.preferredWidth: 40
                                 }
@@ -1026,7 +1013,7 @@ ApplicationWindow {
                                             clientDialog.editMode = true
                                             clientDialog.editIndex = sourceIndex.row
                                             clientDialog.loadClient(businessType, name, offer, price,
-                                                                    supplements, chestID, discount, phoneNumber, comment)
+                                                                    supplements, discount, phoneNumber, comment)
                                             clientDialog.open()
                                         }
                                     }
@@ -1226,7 +1213,7 @@ ApplicationWindow {
                 from: 0
                 to: 999999
                 stepSize: 1000
-                value: 50000
+                value: 500
                 editable: true
             }
 
@@ -1490,12 +1477,11 @@ ApplicationWindow {
             return finalPrice
         }
 
-        function loadClient(businessType, name, offer, price, supplements, chestID, discount, phoneNumber, comment) {
+        function loadClient(businessType, name, offer, price, supplements, discount, phoneNumber, comment) {
             businessTypeCombo.currentIndex = businessType
             clientName.text = name
             clientOfferCombo.currentIndex = offer
             clientDialog.selectedSupplements = supplements
-            clientChestID.value = chestID
             clientDiscount.value = discount
             clientPhone.text = phoneNumber
             clientComment.text = comment
@@ -1506,7 +1492,6 @@ ApplicationWindow {
             clientName.clear()
             clientOfferCombo.currentIndex = 0
             clientDialog.selectedSupplements = []
-            clientChestID.value = 1
             clientDiscount.value = 0
             clientPhone.clear()
             clientComment.clear()
@@ -1537,17 +1522,6 @@ ApplicationWindow {
                 id: clientName
                 Layout.fillWidth: true
                 placeholderText: "Client name"
-            }
-
-            Label { text: "Chest ID:" }
-            SpinBox {
-                Layout.preferredHeight: Constants.comboHeight
-                id: clientChestID
-                Layout.fillWidth: true
-                from: 1
-                to: 999
-                value: 1
-                editable: true
             }
 
             Label { text: "Discount (%):" }
@@ -1661,14 +1635,12 @@ ApplicationWindow {
                     if (clientDialog.editMode) {
                         clientModel.updateClient(clientDialog.editIndex, businessTypeCombo.currentIndex,
                                                  clientName.text, clientOfferCombo.currentIndex, calculatedPriceValue,
-                                                 clientDialog.selectedSupplements,
-                                                 clientChestID.value, clientDiscount.value,
+                                                 clientDialog.selectedSupplements, clientDiscount.value,
                                                  clientPhone.text, clientComment.text)
                     } else {
                         clientModel.addClient(businessTypeCombo.currentIndex, clientName.text,
                                               clientOfferCombo.currentIndex, calculatedPriceValue,
-                                              clientDialog.selectedSupplements,
-                                              clientChestID.value, clientDiscount.value,
+                                              clientDialog.selectedSupplements, clientDiscount.value,
                                               clientPhone.text, clientComment.text)
                     }
                     clientDialog.close()

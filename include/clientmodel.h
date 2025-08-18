@@ -15,7 +15,6 @@ public:
         OfferRole,
         PriceRole,
         SupplementsRole,
-        ChestIDRole,
         DiscountRole,
         PhoneNumberRole,
         CommentRole
@@ -39,10 +38,9 @@ public:
         SortByName = 1,
         SortByOffer = 2,
         SortByPrice = 3,
-        SortByChestID = 5,
-        SortByDiscount = 6,
-        SortByPhone = 7,
-        SortByComment = 8
+        SortByDiscount = 5,
+        SortByPhone = 6,
+        SortByComment = 7
     };
     Q_ENUM(SortColumns)
 
@@ -51,12 +49,10 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
     Q_INVOKABLE void addClient(int businessType, const QString &name, int offer, int price,
-                               const QList<int> &supplements,
-                               int chestID, int discount, const QString &phoneNumber,
+                               const QList<int> &supplements, int discount, const QString &phoneNumber,
                                const QString &comment);
     Q_INVOKABLE void updateClient(int index, int businessType, const QString &name, int offer, int price,
-                                  const QList<int> &supplements,
-                                  int chestID, int discount, const QString &phoneNumber,
+                                  const QList<int> &supplements, int discount, const QString &phoneNumber,
                                   const QString &comment);
     //Q_INVOKABLE int calculatePrice(int offer, const QList<int> &supplements, int discount);
     Q_INVOKABLE void checkout(int clientIndex);
@@ -85,7 +81,6 @@ private:
         Offer offer;
         int price;
         QList<int> supplements;
-        int chestID;
         int discount;
         QString phoneNumber;
         QString comment;

@@ -32,8 +32,6 @@ QVariant ClientModel::data(const QModelIndex &index, int role) const
         return client.price;
     case SupplementsRole:
         return QVariant::fromValue(client.supplements);
-    case ChestIDRole:
-        return client.chestID;
     case DiscountRole:
         return client.discount;
     case PhoneNumberRole:
@@ -53,7 +51,6 @@ QHash<int, QByteArray> ClientModel::roleNames() const
     roles[OfferRole] = "offer";
     roles[PriceRole] = "price";
     roles[SupplementsRole] = "supplements";
-    roles[ChestIDRole] = "chestID";
     roles[DiscountRole] = "discount";
     roles[PhoneNumberRole] = "phoneNumber";
     roles[CommentRole] = "comment";
@@ -61,8 +58,7 @@ QHash<int, QByteArray> ClientModel::roleNames() const
 }
 
 void ClientModel::addClient(int businessType, const QString &name, int offer, int price,
-                            const QList<int> &supplements,
-                            int chestID, int discount, const QString &phoneNumber,
+                            const QList<int> &supplements, int discount, const QString &phoneNumber,
                             const QString &comment)
 {
     beginInsertRows(QModelIndex(), m_clients.size(), m_clients.size());
@@ -72,7 +68,6 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
     client.offer = static_cast<Offer>(offer);
     client.price = price;
     client.supplements = supplements;
-    client.chestID = chestID;
     client.discount = discount;
     client.phoneNumber = phoneNumber;
     client.comment = comment;
@@ -89,8 +84,7 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
 }
 
 void ClientModel::updateClient(int index, int businessType, const QString &name, int offer, int price,
-                               const QList<int> &supplements,
-                               int chestID, int discount, const QString &phoneNumber,
+                               const QList<int> &supplements, int discount, const QString &phoneNumber,
                                const QString &comment)
 {
     if (index < 0 || index >= m_clients.size())
@@ -102,7 +96,6 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     client.offer = static_cast<Offer>(offer);
     client.price = price;
     client.supplements = supplements;
-    client.chestID = chestID;
     client.discount = discount;
     client.phoneNumber = phoneNumber;
     client.comment = comment;
@@ -132,9 +125,6 @@ void ClientModel::performSort()
             break;
         case SortByPrice:
             result = a.price < b.price;
-            break;
-        case SortByChestID:
-            result = a.chestID < b.chestID;
             break;
         case SortByDiscount:
             result = a.discount < b.discount;
@@ -171,8 +161,6 @@ QJsonObject ClientModel::entryToJson(int index) const
         supplementsArray.append(supplement);
     }
     obj["supplements"] = supplementsArray;
-
-    obj["chestID"] = client.chestID;
     obj["discount"] = client.discount;
     obj["phoneNumber"] = client.phoneNumber;
     obj["comment"] = client.comment;
@@ -192,7 +180,6 @@ void ClientModel::entryFromJson(const QJsonObject &obj)
         client.supplements.append(value.toInt());
     }
 
-    client.chestID = obj["chestID"].toInt();
     client.discount = obj["discount"].toInt();
     client.phoneNumber = obj["phoneNumber"].toString();
     client.comment = obj["comment"].toString();
@@ -215,27 +202,6 @@ void ClientModel::clearModel()
 {
     m_clients.clear();
 }
-
-//int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int discount)
-//{
-//    int basePrice = 0;
-//    switch (offer) {
-//    case Bronze: basePrice = BRONZE_BASE_PRICE; break;
-//    case Silver: basePrice = SILVER_BASE_PRICE; break;
-//    case Gold: basePrice = GOLD_BASE_PRICE; break;
-//    default: basePrice = BRONZE_BASE_PRICE; break;
-//    }
-//
-//    int supplementsTotal = 0;
-//    for (int supplementId : supplements) {
-//        supplementsTotal += getSupplementPrice(supplementId);
-//    }
-//
-//    int totalBeforeDiscount = basePrice + supplementsTotal;
-//    int finalPrice = totalBeforeDiscount * (100 - discount) / 100;
-//
-//    return finalPrice;
-//}
 
 int ClientModel::getSupplementCount() const
 {
