@@ -37,6 +37,23 @@ ApplicationWindow {
         return parseInt(priceString.replace(/\D/g, ''), 10);
     }
 
+    Dialog {
+        title: "Notes"
+        id: notesDialog
+        width: 950
+        height: 650
+        anchors.centerIn: parent
+        ScrollView {
+            anchors.fill: parent
+            TextArea {
+                text: UserSettings.notes
+                onTextChanged: UserSettings.notes = text
+                wrapMode: TextArea.Wrap
+                width: parent.width
+            }
+        }
+    }
+
     EmployeeModel {
         id: employeeModel
         Component.onCompleted: loadFromFile()
@@ -230,6 +247,10 @@ ApplicationWindow {
 
                     Menu {
                         title: "Additions"
+                        MenuItem {
+                            text: "Notes"
+                            onTriggered: notesDialog.open()
+                        }
 
                         MenuItem {
                             text: "Connect to FiveM"
