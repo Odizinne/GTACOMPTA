@@ -4,12 +4,14 @@
 BaseModel::BaseModel(const QString &fileName, QObject *parent)
     : QAbstractListModel(parent)
     , m_fileName(fileName)
+    , m_sortColumn(0)
+    , m_sortAscending(true)
 {
 }
 
 int BaseModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
     return 0; // Override in derived classes
 }
 
@@ -58,6 +60,9 @@ void BaseModel::loadFromFile()
         entryFromJson(obj);
     }
 
+    // Sort after loading
+    performSort();
+
     endResetModel();
     emit countChanged();
 
@@ -75,6 +80,23 @@ void BaseModel::clear()
 
     emit countChanged();
     saveToFile();
+}
+
+void BaseModel::sortBy(int column)
+{
+    if (m_sortColumn == column) {
+        m_sortAscending = !m_sortAscending;
+        emit sortAscendingChanged();
+    } else {
+        m_sortColumn = column;
+        m_sortAscending = true;
+        emit sortColumnChanged();
+        emit sortAscendingChanged();
+    }
+
+    beginResetModel();
+    performSort();
+    endResetModel();
 }
 
 void BaseModel::saveToFile()

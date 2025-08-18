@@ -166,46 +166,52 @@ ApplicationWindow {
                     anchors.margins: 5
                     spacing: 10
 
-                    Label {
-                        text: "Name"
-                        font.bold: true
-                        Layout.preferredWidth: 120
-                    }
+                    SortableLabel {
+                            headerText: "Name"
+                            sortColumn: EmployeeModel.SortByName
+                            sortModel: employeeModel
+                            Layout.preferredWidth: 120
+                        }
 
-                    Label {
-                        text: "Phone"
-                        font.bold: true
-                        Layout.preferredWidth: 100
-                    }
+                        SortableLabel {
+                            headerText: "Phone"
+                            sortColumn: EmployeeModel.SortByPhone
+                            sortModel: employeeModel
+                            Layout.preferredWidth: 100
+                        }
 
-                    Label {
-                        text: "Role"
-                        font.bold: true
-                        Layout.preferredWidth: 100
-                    }
+                        SortableLabel {
+                            headerText: "Role"
+                            sortColumn: EmployeeModel.SortByRole
+                            sortModel: employeeModel
+                            Layout.preferredWidth: 100
+                        }
 
-                    Label {
-                        text: "Salary"
-                        font.bold: true
-                        Layout.preferredWidth: 80
-                    }
+                        SortableLabel {
+                            headerText: "Salary"
+                            sortColumn: EmployeeModel.SortBySalary
+                            sortModel: employeeModel
+                            Layout.preferredWidth: 80
+                        }
 
-                    Label {
-                        text: "Added Date"
-                        font.bold: true
-                        Layout.preferredWidth: 90
-                    }
+                        SortableLabel {
+                            headerText: "Added Date"
+                            sortColumn: EmployeeModel.SortByAddedDate
+                            sortModel: employeeModel
+                            Layout.preferredWidth: 90
+                        }
 
-                    Label {
-                        text: "Comment"
-                        font.bold: true
-                        Layout.fillWidth: true
-                    }
+                        SortableLabel {
+                            headerText: "Comment"
+                            sortColumn: EmployeeModel.SortByComment
+                            sortModel: employeeModel
+                            Layout.fillWidth: true
+                        }
 
-                    Label {
-                        text: "Actions"
-                        font.bold: true
-                    }
+                        Label {
+                            text: "Actions"
+                            font.bold: true
+                        }
                 }
             }
 
@@ -556,26 +562,31 @@ ApplicationWindow {
                     anchors.margins: 5
                     spacing: 10
 
-                    Label {
-                        text: "Type"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Type"
+                        sortColumn: ClientModel.SortByBusinessType
+                        sortModel: clientModel
                         Layout.preferredWidth: 30
                     }
 
-                    Label {
-                        text: "Name"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Name"
+                        sortColumn: ClientModel.SortByName
+                        sortModel: clientModel
                         Layout.preferredWidth: 120
                     }
 
-                    Label  {
-                        text: "Offer"
+                    SortableLabel {
+                        headerText: "Offer"
+                        sortColumn: ClientModel.SortByOffer
+                        sortModel: clientModel
                         Layout.preferredWidth: 80
                     }
 
-                    Label {
-                        text: "Price"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Price"
+                        sortColumn: ClientModel.SortByPrice
+                        sortModel: clientModel
                         Layout.preferredWidth: 60
                     }
 
@@ -585,27 +596,31 @@ ApplicationWindow {
                         Layout.preferredWidth: 80
                     }
 
-                    Label {
-                        text: "Chest"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Chest"
+                        sortColumn: ClientModel.SortByChestID
+                        sortModel: clientModel
                         Layout.preferredWidth: 40
                     }
 
-                    Label {
-                        text: "Disc"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Disc"
+                        sortColumn: ClientModel.SortByDiscount
+                        sortModel: clientModel
                         Layout.preferredWidth: 40
                     }
 
-                    Label {
-                        text: "Phone"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Phone"
+                        sortColumn: ClientModel.SortByPhone
+                        sortModel: clientModel
                         Layout.preferredWidth: 100
                     }
 
-                    Label {
-                        text: "Comment"
-                        font.bold: true
+                    SortableLabel {
+                        headerText: "Comment"
+                        sortColumn: ClientModel.SortByComment
+                        sortModel: clientModel
                         Layout.fillWidth: true
                     }
 

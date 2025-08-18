@@ -17,6 +17,13 @@ public:
     };
     Q_ENUM(Roles)
 
+    enum SortColumns {
+        SortByDescription = 0,
+        SortByAmount = 1,
+        SortByDate = 2
+    };
+    Q_ENUM(SortColumns)
+
     explicit AwaitingTransactionModel(QObject *parent = nullptr);
 
     // QAbstractListModel interface
@@ -36,6 +43,7 @@ protected:
     void addEntryToModel() override;
     void removeEntryFromModel(int index) override;
     void clearModel() override;
+    void performSort() override;
 
 signals:
     void transactionApproved(const QString &description, double amount, const QString &date);

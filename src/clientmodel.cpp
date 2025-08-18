@@ -1,14 +1,16 @@
 #include "clientmodel.h"
 #include <QJsonArray>
+#include <algorithm>
 
 ClientModel::ClientModel(QObject *parent)
     : BaseModel("clients.json", parent)
 {
+    m_sortColumn = SortByName; // Default sort by name
 }
 
 int ClientModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
     return m_clients.size();
 }
 
@@ -77,6 +79,11 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
     m_clients.append(client);
     endInsertRows();
 
+    // Sort after adding
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     emit countChanged();
     saveToFile();
 }
@@ -100,8 +107,51 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     client.phoneNumber = phoneNumber;
     client.comment = comment;
 
-    emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+    // Resort after updating
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     saveToFile();
+}
+
+void ClientModel::performSort()
+{
+    std::sort(m_clients.begin(), m_clients.end(), [this](const Client &a, const Client &b) {
+        bool result = false;
+
+        switch (m_sortColumn) {
+        case SortByBusinessType:
+            result = a.businessType < b.businessType;
+            break;
+        case SortByName:
+            result = a.name.toLower() < b.name.toLower();
+            break;
+        case SortByOffer:
+            result = a.offer < b.offer;
+            break;
+        case SortByPrice:
+            result = a.price < b.price;
+            break;
+        case SortByChestID:
+            result = a.chestID < b.chestID;
+            break;
+        case SortByDiscount:
+            result = a.discount < b.discount;
+            break;
+        case SortByPhone:
+            result = a.phoneNumber.toLower() < b.phoneNumber.toLower();
+            break;
+        case SortByComment:
+            result = a.comment.toLower() < b.comment.toLower();
+            break;
+        default:
+            result = a.name.toLower() < b.name.toLower();
+            break;
+        }
+
+        return m_sortAscending ? result : !result;
+    });
 }
 
 QJsonObject ClientModel::entryToJson(int index) const

@@ -1,13 +1,15 @@
 #include "awaitingtransactionmodel.h"
+#include <algorithm>
 
 AwaitingTransactionModel::AwaitingTransactionModel(QObject *parent)
     : BaseModel("awaiting_transactions.json", parent)
 {
+    m_sortColumn = SortByDate; // Default sort by date
 }
 
 int AwaitingTransactionModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
     return m_awaitingTransactions.size();
 }
 
@@ -45,6 +47,11 @@ void AwaitingTransactionModel::addAwaitingTransaction(const QString &description
     m_awaitingTransactions.append({description, amount, date});
     endInsertRows();
 
+    // Sort after adding
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     emit countChanged();
     saveToFile();
 }
@@ -55,7 +62,12 @@ void AwaitingTransactionModel::updateAwaitingTransaction(int index, const QStrin
         return;
 
     m_awaitingTransactions[index] = {description, amount, date};
-    emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+
+    // Resort after updating
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     saveToFile();
 }
 
@@ -79,6 +91,30 @@ void AwaitingTransactionModel::approveTransaction(int index)
 
     // Remove from awaiting list
     removeEntry(index);
+}
+
+void AwaitingTransactionModel::performSort()
+{
+    std::sort(m_awaitingTransactions.begin(), m_awaitingTransactions.end(), [this](const AwaitingTransaction &a, const AwaitingTransaction &b) {
+        bool result = false;
+
+        switch (m_sortColumn) {
+        case SortByDescription:
+            result = a.description.toLower() < b.description.toLower();
+            break;
+        case SortByAmount:
+            result = a.amount < b.amount;
+            break;
+        case SortByDate:
+            result = a.date < b.date;
+            break;
+        default:
+            result = a.date < b.date; // Default sort by date
+            break;
+        }
+
+        return m_sortAscending ? result : !result;
+    });
 }
 
 QJsonObject AwaitingTransactionModel::entryToJson(int index) const

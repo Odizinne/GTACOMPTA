@@ -34,6 +34,18 @@ public:
     };
     Q_ENUM(Offer)
 
+    enum SortColumns {
+        SortByBusinessType = 0,
+        SortByName = 1,
+        SortByOffer = 2,
+        SortByPrice = 3,
+        SortByChestID = 5,
+        SortByDiscount = 6,
+        SortByPhone = 7,
+        SortByComment = 8
+    };
+    Q_ENUM(SortColumns)
+
     explicit ClientModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -55,6 +67,7 @@ protected:
     void addEntryToModel() override;
     void removeEntryFromModel(int index) override;
     void clearModel() override;
+    void performSort() override;
 
 signals:
     void checkoutCompleted(const QString &description, double amount);

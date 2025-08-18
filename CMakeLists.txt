@@ -56,6 +56,7 @@ qt_add_qml_module(GTACOMPTA
     VERSION 1.0
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
+    QML_FILES qml/SortableLabel.qml
 )
 
 set_target_properties(GTACOMPTA PROPERTIES

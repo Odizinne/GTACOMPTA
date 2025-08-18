@@ -8,27 +8,34 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QtQml/qqmlregistration.h>
 
 class BaseModel : public QAbstractListModel
 {
     Q_OBJECT
+    QML_UNCREATABLE("BaseModel is abstract")
     Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(int sortColumn READ sortColumn NOTIFY sortColumnChanged)
+    Q_PROPERTY(bool sortAscending READ sortAscending NOTIFY sortAscendingChanged)
 
 public:
     explicit BaseModel(const QString &fileName, QObject *parent = nullptr);
 
-    // QAbstractListModel interface
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    // Common methods
     Q_INVOKABLE void removeEntry(int index);
     Q_INVOKABLE void loadFromFile();
     Q_INVOKABLE void clear();
+    Q_INVOKABLE virtual void sortBy(int column);
 
     int count() const { return rowCount(); }
+    int sortColumn() const { return m_sortColumn; }
+    bool sortAscending() const { return m_sortAscending; }
 
 signals:
     void countChanged();
+    void sortColumnChanged();
+    void sortAscendingChanged();
 
 protected:
     virtual QJsonObject entryToJson(int index) const = 0;
@@ -36,9 +43,13 @@ protected:
     virtual void addEntryToModel() = 0;
     virtual void removeEntryFromModel(int index) = 0;
     virtual void clearModel() = 0;
+    virtual void performSort() = 0;
 
     void saveToFile();
     QString getDataFilePath() const;
+
+    int m_sortColumn;
+    bool m_sortAscending;
 
 private:
     QString m_fileName;

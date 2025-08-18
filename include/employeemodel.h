@@ -18,6 +18,17 @@ public:
         AddedDateRole,
         CommentRole
     };
+
+    enum SortColumns {
+        SortByName = 0,
+        SortByPhone = 1,
+        SortByRole = 2,
+        SortBySalary = 3,
+        SortByAddedDate = 4,
+        SortByComment = 5
+    };
+    Q_ENUM(SortColumns)
+
     explicit EmployeeModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
@@ -34,6 +45,7 @@ protected:
     void addEntryToModel() override;
     void removeEntryFromModel(int index) override;
     void clearModel() override;
+    void performSort() override;
 
 signals:
     void paymentCompleted(const QString &description, double amount);

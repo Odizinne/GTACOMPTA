@@ -1,13 +1,15 @@
 #include "employeemodel.h"
+#include <algorithm>
 
 EmployeeModel::EmployeeModel(QObject *parent)
     : BaseModel("employees.json", parent)
 {
+    m_sortColumn = SortByName; // Default sort by name
 }
 
 int EmployeeModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
     return m_employees.size();
 }
 
@@ -55,6 +57,11 @@ void EmployeeModel::addEmployee(const QString &name, const QString &phone,
     m_employees.append({name, phone, role, salary, addedDate, comment});
     endInsertRows();
 
+    // Sort after adding
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     emit countChanged();
     saveToFile();
 }
@@ -66,7 +73,12 @@ void EmployeeModel::updateEmployee(int index, const QString &name, const QString
         return;
 
     m_employees[index] = {name, phone, role, salary, addedDate, comment};
-    emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+
+    // Resort after updating
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     saveToFile();
 }
 
@@ -79,6 +91,39 @@ void EmployeeModel::payEmployee(int employeeIndex)
     QString description = QString("Salary payment for %1").arg(employee.name);
 
     emit paymentCompleted(description, -employee.salary);
+}
+
+void EmployeeModel::performSort()
+{
+    std::sort(m_employees.begin(), m_employees.end(), [this](const Employee &a, const Employee &b) {
+        bool result = false;
+
+        switch (m_sortColumn) {
+        case SortByName:
+            result = a.name.toLower() < b.name.toLower();
+            break;
+        case SortByPhone:
+            result = a.phone < b.phone;
+            break;
+        case SortByRole:
+            result = a.role.toLower() < b.role.toLower();
+            break;
+        case SortBySalary:
+            result = a.salary < b.salary;
+            break;
+        case SortByAddedDate:
+            result = a.addedDate < b.addedDate;
+            break;
+        case SortByComment:
+            result = a.comment.toLower() < b.comment.toLower();
+            break;
+        default:
+            result = a.name.toLower() < b.name.toLower();
+            break;
+        }
+
+        return m_sortAscending ? result : !result;
+    });
 }
 
 QJsonObject EmployeeModel::entryToJson(int index) const

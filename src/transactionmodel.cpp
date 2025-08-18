@@ -1,13 +1,16 @@
 #include "transactionmodel.h"
+#include <QDate>
+#include <algorithm>
 
 TransactionModel::TransactionModel(QObject *parent)
     : BaseModel("transactions.json", parent)
 {
+    m_sortColumn = SortByDate; // Default sort by date
 }
 
 int TransactionModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
     return m_transactions.size();
 }
 
@@ -45,6 +48,11 @@ void TransactionModel::addTransaction(const QString &description, double amount,
     m_transactions.append({description, amount, date});
     endInsertRows();
 
+    // Sort after adding
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     emit countChanged();
     saveToFile();
 }
@@ -55,7 +63,12 @@ void TransactionModel::updateTransaction(int index, const QString &description, 
         return;
 
     m_transactions[index] = {description, amount, date};
-    emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+
+    // Resort after updating
+    beginResetModel();
+    performSort();
+    endResetModel();
+
     saveToFile();
 }
 
@@ -65,6 +78,30 @@ double TransactionModel::getTransactionAmount(int index) const
         return 0.0;
 
     return m_transactions.at(index).amount;
+}
+
+void TransactionModel::performSort()
+{
+    std::sort(m_transactions.begin(), m_transactions.end(), [this](const Transaction &a, const Transaction &b) {
+        bool result = false;
+
+        switch (m_sortColumn) {
+        case SortByDescription:
+            result = a.description.toLower() < b.description.toLower();
+            break;
+        case SortByAmount:
+            result = a.amount < b.amount;
+            break;
+        case SortByDate:
+            result = a.date < b.date;
+            break;
+        default:
+            result = a.date < b.date; // Default sort by date
+            break;
+        }
+
+        return m_sortAscending ? result : !result;
+    });
 }
 
 QJsonObject TransactionModel::entryToJson(int index) const
