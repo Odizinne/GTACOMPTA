@@ -1765,13 +1765,45 @@ ApplicationWindow {
             }
         }
 
-        StackView {
-            id: managementStackView
+        ToolBar {
+            id: managmentHeader
+            width: parent.width
             anchors.top: headerRow.bottom
-            anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.topMargin: 4
+            height: 35
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 5
+                spacing: 10
+
+                Label {
+                    Layout.leftMargin: 5
+                    text: "Name"
+                    Layout.fillWidth: true
+                }
+
+                Label {
+                    text: "Price"
+                    Layout.preferredWidth: 160
+                }
+
+                Label {
+                    text: "Actions"
+                    font.bold: true
+                    Layout.alignment: Qt.AlignRight
+                }
+            }
+        }
+
+        StackView {
+            id: managementStackView
+            anchors.top: managmentHeader.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
 
             // Fade transitions
             replaceEnter: Transition {
@@ -1826,30 +1858,33 @@ ApplicationWindow {
                                     Layout.preferredWidth: 80
                                 }
 
-                                ToolButton {
-                                    text: "Edit"
-                                    icon.source: "qrc:/icons/edit.svg"
-                                    icon.width: 16
-                                    icon.height: 16
-                                    icon.color: Material.color(Material.Blue)
-                                    Layout.preferredHeight: 40
-                                    onClicked: {
-                                        supplementOfferDialog.isOffer = false
-                                        supplementOfferDialog.editMode = true
-                                        supplementOfferDialog.editIndex = index
-                                        supplementOfferDialog.loadItem(model.name, model.price)
-                                        supplementOfferDialog.open()
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        text: "Edit"
+                                        icon.source: "qrc:/icons/edit.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Blue)
+                                        Layout.preferredHeight: 40
+                                        onClicked: {
+                                            supplementOfferDialog.isOffer = false
+                                            supplementOfferDialog.editMode = true
+                                            supplementOfferDialog.editIndex = index
+                                            supplementOfferDialog.loadItem(model.name, model.price)
+                                            supplementOfferDialog.open()
+                                        }
                                     }
-                                }
 
-                                ToolButton {
-                                    text: "Remove"
-                                    icon.source: "qrc:/icons/delete.svg"
-                                    icon.width: 16
-                                    icon.height: 16
-                                    icon.color: Material.color(Material.Red)
-                                    Layout.preferredHeight: 40
-                                    onClicked: supplementModel.removeEntry(index)
+                                    ToolButton {
+                                        text: "Remove"
+                                        icon.source: "qrc:/icons/delete.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Red)
+                                        Layout.preferredHeight: 40
+                                        onClicked: supplementModel.removeEntry(index)
+                                    }
                                 }
                             }
                         }
@@ -1888,31 +1923,33 @@ ApplicationWindow {
                                     color: "lightgreen"
                                     Layout.preferredWidth: 80
                                 }
-
-                                ToolButton {
-                                    text: "Edit"
-                                    icon.source: "qrc:/icons/edit.svg"
-                                    icon.width: 16
-                                    icon.height: 16
-                                    icon.color: Material.color(Material.Blue)
-                                    Layout.preferredHeight: 40
-                                    onClicked: {
-                                        supplementOfferDialog.isOffer = true
-                                        supplementOfferDialog.editMode = true
-                                        supplementOfferDialog.editIndex = index
-                                        supplementOfferDialog.loadItem(model.name, model.price)
-                                        supplementOfferDialog.open()
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        text: "Edit"
+                                        icon.source: "qrc:/icons/edit.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Blue)
+                                        Layout.preferredHeight: 40
+                                        onClicked: {
+                                            supplementOfferDialog.isOffer = true
+                                            supplementOfferDialog.editMode = true
+                                            supplementOfferDialog.editIndex = index
+                                            supplementOfferDialog.loadItem(model.name, model.price)
+                                            supplementOfferDialog.open()
+                                        }
                                     }
-                                }
 
-                                ToolButton {
-                                    text: "Remove"
-                                    icon.source: "qrc:/icons/delete.svg"
-                                    icon.width: 16
-                                    icon.height: 16
-                                    icon.color: Material.color(Material.Red)
-                                    Layout.preferredHeight: 40
-                                    onClicked: offerModel.removeEntry(index)
+                                    ToolButton {
+                                        text: "Remove"
+                                        icon.source: "qrc:/icons/delete.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Red)
+                                        Layout.preferredHeight: 40
+                                        onClicked: offerModel.removeEntry(index)
+                                    }
                                 }
                             }
                         }
