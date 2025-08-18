@@ -18,6 +18,11 @@ ApplicationWindow {
         }
     }
 
+    Material.primary: "#2A2F2A"
+    Material.background: "#232323"
+    Material.accent: "#4CAF50"
+    color: "#1A1A1A"
+
     EmployeeModel {
         id: employeeModel
         Component.onCompleted: loadFromFile()
@@ -95,11 +100,13 @@ ApplicationWindow {
     header: ToolBar {
         height: 41
         Material.primary: Material.dialogColor
-        RowLayout {
+        Item {
             anchors.fill: parent
             MenuBar {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+                anchors.left: parent.left
+                //Layout.fillWidth: true
+                //Layout.fillHeight: true
+                height: 41
                 Menu {
                     title: "File"
 
@@ -142,16 +149,19 @@ ApplicationWindow {
             }
 
             RowLayout {
-                Layout.rightMargin: 10
+                anchors.centerIn: parent
 
                 Label {
                     text: "Sold: "
+                    font.bold: true
+                    font.pixelSize: 16
                 }
 
                 Label {
                     text: "$" + UserSettings.money.toLocaleString()
                     color: UserSettings.money >= 0 ? Constants.creditColor : Constants.debitColor
                     font.bold: true
+                    font.pixelSize: 16
                 }
 
                 Label {
@@ -165,7 +175,38 @@ ApplicationWindow {
                     }
                     color: Material.color(Material.Orange)
                     font.bold: true
+                    font.pixelSize: 16
                     visible: awaitingTransactionModel.count > 0
+                }
+            }
+
+            Image {
+                id: logo
+                anchors.right: parent.right
+                anchors.rightMargin: 5
+                anchors.verticalCenter: parent.verticalCenter
+                height: 32
+                width: 32
+                sourceSize.width: 32
+                sourceSize.height: 32
+                mipmap: true
+                source: "qrc:/icons/icon.png"
+                transform: Rotation {
+                    id: rotation3d
+                    origin.x: logo.width / 2
+                    origin.y: logo.height / 2
+                    axis { x: 0; y: 1; z: 0 }
+                    angle: 0
+                }
+
+                PropertyAnimation {
+                    target: rotation3d
+                    property: "angle"
+                    from: 0
+                    to: 360
+                    duration: 5000
+                    loops: Animation.Infinite
+                    running: true
                 }
             }
         }

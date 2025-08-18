@@ -32,6 +32,8 @@ set(SOURCES
 
 qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
     src/main.cpp
+    resources/icons/icons.qrc
+    resources/appicon.rc
 )
 
 set(QML_FILES
