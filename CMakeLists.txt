@@ -40,6 +40,7 @@ set(QML_FILES
 
 set(QML_SINGLETONS
     qml/Singletons/UserSettings.qml
+    qml/Singletons/Constants.qml
 )
 
 set_source_files_properties(${QML_SINGLETONS}

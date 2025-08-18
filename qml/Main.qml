@@ -846,53 +846,70 @@ ApplicationWindow {
             anchors.fill: parent
             columns: 2
 
-            Label { text: "Type:" }
+            Label { text: "Type:"; }
             ComboBox {
+                Layout.preferredHeight: Constants.comboHeight
                 id: businessTypeCombo
                 Layout.fillWidth: true
-                model: ["Business", "Consumer"]
+                model: ["Pro", "Part"]
             }
 
             Label { text: "Name:" }
             TextField {
+                Layout.preferredHeight: Constants.comboHeight
                 id: clientName
                 Layout.fillWidth: true
                 placeholderText: "Client name"
             }
 
+            Label { text: "Chest ID:" }
+            SpinBox {
+                Layout.preferredHeight: Constants.comboHeight
+                id: clientChestID
+                Layout.fillWidth: true
+                from: 1
+                to: 999
+                value: 1
+                editable: true
+            }
+
+            Label { text: "Discount (%):" }
+            SpinBox {
+                Layout.preferredHeight: Constants.comboHeight
+                id: clientDiscount
+                Layout.fillWidth: true
+                from: -100
+                to: 100
+                value: 0
+                editable: true
+            }
+
+            Label { text: "Phone:" }
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                id: clientPhone
+                Layout.fillWidth: true
+                placeholderText: "+1234567890"
+            }
+
             Label { text: "Offer:" }
             ComboBox {
+                Layout.preferredHeight: Constants.comboHeight
                 id: clientOfferCombo
                 Layout.fillWidth: true
                 model: ["Bronze", "Silver", "Gold"]
-            }
-
-            Label { text: "Price:" }
-            Label {
-                id: calculatedPrice
-                Layout.fillWidth: true
-                text: "$" + (clientModel.calculatePrice(
-                                 clientOfferCombo.currentIndex,
-                                 clientDialog.selectedSupplements,
-                                 clientDiscount.value
-                                 )).toFixed(2)
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    border.color: Material.accent
-                    border.width: 1
-                    radius: 4
-                }
             }
 
             Label { text: "Supplements:" }
             RowLayout {
                 Layout.fillWidth: true
 
+                Item {
+                    Layout.fillWidth: true
+                }
+
                 Label {
                     text: clientDialog.selectedSupplements.length + " selected"
-                    Layout.fillWidth: true
                 }
 
                 Button {
@@ -905,31 +922,32 @@ ApplicationWindow {
                 }
             }
 
-            Label { text: "Chest ID:" }
-            SpinBox {
-                id: clientChestID
-                Layout.fillWidth: true
-                from: 1
-                to: 999
-                value: 1
-                editable: true
-            }
+            Label { text: "Final Price:" }
+            RowLayout {
+                Item {
+                    Layout.fillWidth: true
+                }
 
-            Label { text: "Discount (%):" }
-            SpinBox {
-                id: clientDiscount
-                Layout.fillWidth: true
-                from: -100
-                to: 100
-                value: 0
-                editable: true
-            }
+                Label {
+                    id: calculatedPrice
+                    Layout.preferredHeight: Constants.comboHeight
+                    Layout.preferredWidth: implicitWidth + 20
+                    text: "$" + (clientModel.calculatePrice(
+                                     clientOfferCombo.currentIndex,
+                                     clientDialog.selectedSupplements,
+                                     clientDiscount.value
+                                     )).toFixed(2)
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
 
-            Label { text: "Phone:" }
-            TextField {
-                id: clientPhone
-                Layout.fillWidth: true
-                placeholderText: "+1234567890"
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "transparent"
+                        border.color: Material.accent
+                        border.width: 1
+                        radius: 4
+                    }
+                }
             }
 
             Label { text: "Comment:" }
