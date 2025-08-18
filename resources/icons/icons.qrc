@@ -6,5 +6,6 @@
         <file>edit.svg</file>
         <file>checkmark.svg</file>
         <file>new.svg</file>
+        <file>search.svg</file>
     </qresource>
 </RCC>
