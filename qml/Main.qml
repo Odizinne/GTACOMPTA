@@ -376,28 +376,42 @@ ApplicationWindow {
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
-
-                                ToolButton {
-                                    text: "Pay"
-                                    Layout.preferredHeight: 40
-                                    onClicked: employeeModel.payEmployee(index)
-                                }
-
-                                ToolButton {
-                                    text: "Edit"
-                                    Layout.preferredHeight: 40
-                                    onClicked: {
-                                        employeeDialog.editMode = true
-                                        employeeDialog.editIndex = index
-                                        employeeDialog.loadEmployee(name, phone, role, salary, addedDate, comment)
-                                        employeeDialog.open()
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        text: "Pay"
+                                        Layout.preferredHeight: 40
+                                        icon.source: "qrc:/icons/dollar.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Orange)
+                                        onClicked: employeeModel.payEmployee(index)
                                     }
-                                }
 
-                                ToolButton {
-                                    text: "Remove"
-                                    Layout.preferredHeight: 40
-                                    onClicked: employeeModel.removeEntry(index)
+                                    ToolButton {
+                                        text: "Edit"
+                                        icon.source: "qrc:/icons/edit.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Blue)
+                                        Layout.preferredHeight: 40
+                                        onClicked: {
+                                            employeeDialog.editMode = true
+                                            employeeDialog.editIndex = index
+                                            employeeDialog.loadEmployee(name, phone, role, salary, addedDate, comment)
+                                            employeeDialog.open()
+                                        }
+                                    }
+
+                                    ToolButton {
+                                        text: "Remove"
+                                        icon.source: "qrc:/icons/delete.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Red)
+                                        Layout.preferredHeight: 40
+                                        onClicked: employeeModel.removeEntry(index)
+                                    }
                                 }
                             }
                         }
@@ -495,23 +509,34 @@ ApplicationWindow {
                                     elide: Text.ElideRight
                                 }
 
-                                ToolButton {
-                                    Layout.preferredHeight: 40
-                                    text: "Edit"
-                                    onClicked: {
-                                        transactionDialog.editMode = true
-                                        transactionDialog.editIndex = index
-                                        transactionDialog.loadTransaction(description, amount, date)
-                                        transactionDialog.open()
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        Layout.preferredHeight: 40
+                                        text: "Edit"
+                                        icon.source: "qrc:/icons/edit.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Blue)
+                                        onClicked: {
+                                            transactionDialog.editMode = true
+                                            transactionDialog.editIndex = index
+                                            transactionDialog.loadTransaction(description, amount, date)
+                                            transactionDialog.open()
+                                        }
                                     }
-                                }
 
-                                ToolButton {
-                                    Layout.preferredHeight: 40
-                                    text: "Remove"
-                                    onClicked: {
-                                        UserSettings.money -= amount
-                                        transactionModel.removeEntry(index)
+                                    ToolButton {
+                                        Layout.preferredHeight: 40
+                                        text: "Remove"
+                                        icon.source: "qrc:/icons/delete.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Red)
+                                        onClicked: {
+                                            UserSettings.money -= amount
+                                            transactionModel.removeEntry(index)
+                                        }
                                     }
                                 }
                             }
@@ -611,27 +636,42 @@ ApplicationWindow {
                                     elide: Text.ElideRight
                                 }
 
-                                ToolButton {
-                                    Layout.preferredHeight: 40
-                                    text: "Approve"
-                                    onClicked: awaitingTransactionModel.approveTransaction(index)
-                                }
-
-                                ToolButton {
-                                    Layout.preferredHeight: 40
-                                    text: "Edit"
-                                    onClicked: {
-                                        awaitingTransactionDialog.editMode = true
-                                        awaitingTransactionDialog.editIndex = index
-                                        awaitingTransactionDialog.loadTransaction(description, amount, date)
-                                        awaitingTransactionDialog.open()
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        Layout.preferredHeight: 40
+                                        text: "Approve"
+                                        icon.source: "qrc:/icons/checkmark.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Green)
+                                        onClicked: awaitingTransactionModel.approveTransaction(index)
                                     }
-                                }
 
-                                ToolButton {
-                                    Layout.preferredHeight: 40
-                                    text: "Remove"
-                                    onClicked: awaitingTransactionModel.removeEntry(index)
+                                    ToolButton {
+                                        Layout.preferredHeight: 40
+                                        text: "Edit"
+                                        icon.source: "qrc:/icons/edit.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Blue)
+                                        onClicked: {
+                                            awaitingTransactionDialog.editMode = true
+                                            awaitingTransactionDialog.editIndex = index
+                                            awaitingTransactionDialog.loadTransaction(description, amount, date)
+                                            awaitingTransactionDialog.open()
+                                        }
+                                    }
+
+                                    ToolButton {
+                                        Layout.preferredHeight: 40
+                                        text: "Remove"
+                                        icon.source: "qrc:/icons/delete.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Red)
+                                        onClicked: awaitingTransactionModel.removeEntry(index)
+                                    }
                                 }
                             }
                         }
@@ -819,28 +859,43 @@ ApplicationWindow {
                                     elide: Text.ElideRight
                                 }
 
-                                ToolButton {
-                                    text: "Checkout"
-                                    Layout.preferredHeight: 40
-                                    onClicked: clientModel.checkout(index)
-                                }
-
-                                ToolButton {
-                                    text: "Edit"
-                                    Layout.preferredHeight: 40
-                                    onClicked: {
-                                        clientDialog.editMode = true
-                                        clientDialog.editIndex = index
-                                        clientDialog.loadClient(businessType, name, offer, price,
-                                                                supplements, chestID, discount, phoneNumber, comment)
-                                        clientDialog.open()
+                                RowLayout {
+                                    spacing: 0
+                                    ToolButton {
+                                        text: "Checkout"
+                                        icon.source: "qrc:/icons/dollar.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Orange)
+                                        Layout.preferredHeight: 40
+                                        onClicked: clientModel.checkout(index)
                                     }
-                                }
 
-                                ToolButton {
-                                    text: "Remove"
-                                    Layout.preferredHeight: 40
-                                    onClicked: clientModel.removeEntry(index)
+                                    ToolButton {
+                                        text: "Edit"
+                                        icon.source: "qrc:/icons/edit.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Blue)
+                                        Layout.preferredHeight: 40
+                                        onClicked: {
+                                            clientDialog.editMode = true
+                                            clientDialog.editIndex = index
+                                            clientDialog.loadClient(businessType, name, offer, price,
+                                                                    supplements, chestID, discount, phoneNumber, comment)
+                                            clientDialog.open()
+                                        }
+                                    }
+
+                                    ToolButton {
+                                        text: "Remove"
+                                        icon.source: "qrc:/icons/delete.svg"
+                                        icon.width: 16
+                                        icon.height: 16
+                                        icon.color: Material.color(Material.Red)
+                                        Layout.preferredHeight: 40
+                                        onClicked: clientModel.removeEntry(index)
+                                    }
                                 }
                             }
                         }
@@ -911,31 +966,23 @@ ApplicationWindow {
         }
 
         footer: DialogButtonBox {
-            Button {
-                flat: true
-                text: "OK"
-                visible: supplementDialog.readOnly
-                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                onClicked: supplementDialog.close()
-            }
+            Repeater {
+                model: supplementDialog.readOnly ? [
+                    {text: "OK", role: DialogButtonBox.AcceptRole, action: function() { supplementDialog.close() }}
+                ] : [
+                    {text: "Apply", role: DialogButtonBox.AcceptRole, action: function() {
+                        clientDialog.selectedSupplements = supplementDialog.getSelectedSupplements()
+                        supplementDialog.close()
+                    }},
+                    {text: "Cancel", role: DialogButtonBox.RejectRole, action: function() { supplementDialog.close() }}
+                ]
 
-            Button {
-                flat: true
-                text: "Apply"
-                visible: !supplementDialog.readOnly
-                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                onClicked: {
-                    clientDialog.selectedSupplements = supplementDialog.getSelectedSupplements()
-                    supplementDialog.close()
+                Button {
+                    flat: true
+                    text: modelData.text
+                    DialogButtonBox.buttonRole: modelData.role
+                    onClicked: modelData.action()
                 }
-            }
-
-            Button {
-                flat: true
-                text: "Cancel"
-                visible: !supplementDialog.readOnly
-                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-                onClicked: supplementDialog.close()
             }
         }
     }

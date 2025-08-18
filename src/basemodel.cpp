@@ -65,8 +65,6 @@ void BaseModel::loadFromFile()
 
     endResetModel();
     emit countChanged();
-
-    qDebug() << "Loaded" << rowCount() << "entries from" << filePath;
 }
 
 void BaseModel::clear()
@@ -121,13 +119,10 @@ void BaseModel::saveToFile()
 
     file.write(doc.toJson());
     file.close();
-
-    qDebug() << "Saved" << rowCount() << "entries to" << filePath;
 }
 
 QString BaseModel::getDataFilePath() const
 {
     QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    qDebug() << dataPath;
     return dataPath + "/" + m_fileName;
 }
