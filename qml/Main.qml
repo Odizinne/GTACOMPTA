@@ -10,6 +10,8 @@ ApplicationWindow {
     visible: true
     width: 1280
     height: 720
+    minimumWidth: 1280
+    minimumHeight: 720
     title: "GTACOMPTA"
     Material.theme: Material.Dark
 
