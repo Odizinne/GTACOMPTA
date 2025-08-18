@@ -217,6 +217,7 @@ ApplicationWindow {
             TextField {
                 id: filterField
                 anchors.right: logo.left
+                anchors.rightMargin: 5
                 anchors.verticalCenter: parent.verticalCenter
                 height: 35
                 width: 180
