@@ -216,36 +216,65 @@ void ClientModel::clearModel()
     m_clients.clear();
 }
 
-int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int discount)
+//int ClientModel::calculatePrice(int offer, const QList<int> &supplements, int discount)
+//{
+//    int basePrice = 0;
+//    switch (offer) {
+//    case Bronze: basePrice = BRONZE_BASE_PRICE; break;
+//    case Silver: basePrice = SILVER_BASE_PRICE; break;
+//    case Gold: basePrice = GOLD_BASE_PRICE; break;
+//    default: basePrice = BRONZE_BASE_PRICE; break;
+//    }
+//
+//    int supplementsTotal = 0;
+//    for (int supplementId : supplements) {
+//        supplementsTotal += getSupplementPrice(supplementId);
+//    }
+//
+//    int totalBeforeDiscount = basePrice + supplementsTotal;
+//    int finalPrice = totalBeforeDiscount * (100 - discount) / 100;
+//
+//    return finalPrice;
+//}
+
+int ClientModel::getSupplementCount() const
 {
-    int basePrice = 0;
-    switch (offer) {
-    case Bronze: basePrice = BRONZE_BASE_PRICE; break;
-    case Silver: basePrice = SILVER_BASE_PRICE; break;
-    case Gold: basePrice = GOLD_BASE_PRICE; break;
-    default: basePrice = BRONZE_BASE_PRICE; break;
-    }
-
-    int supplementsTotal = 0;
-    for (int supplementId : supplements) {
-        supplementsTotal += getSupplementPrice(supplementId);
-    }
-
-    int totalBeforeDiscount = basePrice + supplementsTotal;
-    int finalPrice = totalBeforeDiscount * (100 - discount) / 100;
-
-    return finalPrice;
+    return 9;
 }
 
-int ClientModel::getSupplementPrice(int supplementId)
+QString ClientModel::getSupplementName(int id) const
+{
+    switch (id) {
+    case 1: return "Anti-Natural Spectra-Block Paint";
+    case 2: return "Pure-Human Lock Biometric";
+    case 3: return "Eternal Shield Anti-Rust Coating";
+    case 4: return "Air-Pure Pro Ventilation System";
+    case 5: return "Natural-Detector 3000 Alarm";
+    case 6: return "Essence-Dry Dehumidifier";
+    case 7: return "Psi-Resistant Shielding";
+    case 8: return "Decontam-Plus Cleaning Service";
+    case 9: return "24/7 Emergency Nexus Access";
+    default: return "";
+    }
+}
+
+double ClientModel::getSupplementPriceDisplay(int id) const
+{
+    return getSupplementPrice(id);
+}
+
+int ClientModel::getSupplementPrice(int supplementId) const
 {
     switch (supplementId) {
-    case 1: return 250; // Extra Cheese $2.50 as cents
-    case 2: return 300; // Bacon $3.00 as cents
-    case 3: return 175; // Mushrooms $1.75 as cents
-    case 4: return 225; // Pepperoni $2.25 as cents
-    case 5: return 150; // Olives $1.50 as cents
-    case 6: return 125; // Tomatoes $1.25 as cents
+    case 1: return 200; // $200.00
+    case 2: return 350; // $350.00
+    case 3: return 120; // $120.00
+    case 4: return 180; // $180.00
+    case 5: return 400; // $400.00
+    case 6: return 90;  // $90.00
+    case 7: return 500; // $500.00
+    case 8: return 80;  // $80.00
+    case 9: return 50;  // $50.00
     default: return 0;
     }
 }

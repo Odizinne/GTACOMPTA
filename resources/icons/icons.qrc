@@ -5,5 +5,6 @@
         <file>delete.svg</file>
         <file>edit.svg</file>
         <file>checkmark.svg</file>
+        <file>new.svg</file>
     </qresource>
 </RCC>

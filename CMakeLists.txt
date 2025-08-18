@@ -21,6 +21,8 @@ set(HEADERS
     include/clientmodel.h
     include/awaitingtransactionmodel.h
     include/VersionGetter.h
+    include/supplementmodel.h
+    include/offermodel.h
 )
 
 set(SOURCES
@@ -30,6 +32,8 @@ set(SOURCES
     src/clientmodel.cpp
     src/awaitingtransactionmodel.cpp
     src/VersionGetter.cpp
+    src/supplementmodel.cpp
+    src/offermodel.cpp
 )
 
 # Get git commit hash

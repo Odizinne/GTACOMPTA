@@ -58,8 +58,11 @@ public:
                                   const QList<int> &supplements,
                                   int chestID, int discount, const QString &phoneNumber,
                                   const QString &comment);
-    Q_INVOKABLE int calculatePrice(int offer, const QList<int> &supplements, int discount);
+    //Q_INVOKABLE int calculatePrice(int offer, const QList<int> &supplements, int discount);
     Q_INVOKABLE void checkout(int clientIndex);
+    Q_INVOKABLE int getSupplementCount() const;
+    Q_INVOKABLE QString getSupplementName(int id) const;
+    Q_INVOKABLE double getSupplementPriceDisplay(int id) const;
 
 protected:
     QJsonObject entryToJson(int index) const override;
@@ -88,6 +91,6 @@ private:
         QString comment;
     };
     QList<Client> m_clients;
-    int getSupplementPrice(int supplementId);
+    int getSupplementPrice(int supplementId) const;
 };
 #endif // CLIENTMODEL_H

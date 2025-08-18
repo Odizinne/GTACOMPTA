@@ -43,6 +43,16 @@ ApplicationWindow {
         Component.onCompleted: loadFromFile()
     }
 
+    SupplementModel {
+        id: supplementModel
+        Component.onCompleted: loadFromFile()
+    }
+
+    OfferModel {
+        id: offerModel
+        Component.onCompleted: loadFromFile()
+    }
+
     FakeUpgradeDialog {
         id: fakeUpgradeDialog
     }
@@ -88,18 +98,6 @@ ApplicationWindow {
         }
     }
 
-    ListModel {
-        id: supplementModel
-        Component.onCompleted: {
-            append({index: 1, name: "Extra Cheese", price: "2.50"})
-            append({index: 2, name: "Bacon", price: "3.00"})
-            append({index: 3, name: "Mushrooms", price: "1.75"})
-            append({index: 4, name: "Pepperoni", price: "2.25"})
-            append({index: 5, name: "Olives", price: "1.50"})
-            append({index: 6, name: "Tomatoes", price: "1.25"})
-        }
-    }
-
     // Header with menu
     header: ToolBar {
         height: 41
@@ -125,6 +123,13 @@ ApplicationWindow {
                     MenuItem {
                         text: "New Client..."
                         onTriggered: clientDialog.open()
+                    }
+
+                    MenuSeparator { }
+
+                    MenuItem {
+                        text: "Supplements and Offers..."
+                        onTriggered: supplementOfferManagementDialog.open()
                     }
 
                     MenuSeparator { }
@@ -788,7 +793,7 @@ ApplicationWindow {
                         delegate: Rectangle {
                             width: clientListView.width
                             height: 40
-                            color: (index % 2 === 0) ? "#404040" : "#303030"  // Mid grey for even, dark grey for odd
+                            color: (index % 2 === 0) ? "#404040" : "#303030"
 
                             RowLayout {
                                 anchors.fill: parent
@@ -811,18 +816,16 @@ ApplicationWindow {
 
                                 Label {
                                     text: {
-                                        switch(offer) {
-                                        case 0: return "Bronze"
-                                        case 1: return "Silver"
-                                        case 2: return "Gold"
-                                        default: return "Bronze"
+                                        if (offer >= 0 && offer < offerModel.count) {
+                                            return offerModel.getOfferName(offer)
                                         }
+                                        return "Unknown"
                                     }
                                     Layout.preferredWidth: 80
                                 }
 
                                 Label {
-                                    text: "$" + price
+                                    text: "$" + (price / 100).toFixed(2)
                                     Layout.preferredWidth: 60
                                 }
 
@@ -905,7 +908,7 @@ ApplicationWindow {
         }
     }
 
-    // Supplement Selection Dialog
+    // Replace the existing supplementDialog with this updated version
     Dialog {
         id: supplementDialog
         title: readOnly ? "View Supplements" : "Select Supplements"
@@ -921,7 +924,7 @@ ApplicationWindow {
             for (var i = 0; i < supplementRepeater.count; i++) {
                 var checkbox = supplementRepeater.itemAt(i)
                 if (checkbox.checked) {
-                    selected.push(supplementModel.get(i).index)
+                    selected.push(i) // Use model index instead of hardcoded IDs
                 }
             }
             return selected
@@ -930,8 +933,7 @@ ApplicationWindow {
         function setSelectedSupplements(supplements) {
             for (var i = 0; i < supplementRepeater.count; i++) {
                 var checkbox = supplementRepeater.itemAt(i)
-                var supplementIndex = supplementModel.get(i).index
-                checkbox.checked = supplements.includes(supplementIndex)
+                checkbox.checked = supplements.includes(i)
             }
         }
 
@@ -953,7 +955,7 @@ ApplicationWindow {
                     CheckBox {
                         width: parent.width
                         enabled: !supplementDialog.readOnly
-                        text: model.name + " - $" + model.price
+                        text: model.name + " - $" + (model.price / 100).toFixed(2)
 
                         background: Rectangle {
                             color: parent.checked ? Material.accent : "transparent"
@@ -1296,17 +1298,37 @@ ApplicationWindow {
     }
 
     // Client Dialog
+    // Replace the existing Client Dialog with this updated version
     Dialog {
         id: clientDialog
         title: editMode ? "Edit Client" : "Add New Client"
         width: 500
-        //height: 450
         anchors.centerIn: parent
         modal: true
 
         property bool editMode: false
         property int editIndex: -1
         property var selectedSupplements: []
+
+        function calculatePrice() {
+            var basePrice = 0
+            if (clientOfferCombo.currentIndex >= 0 && clientOfferCombo.currentIndex < offerModel.count) {
+                basePrice = offerModel.getOfferPrice(clientOfferCombo.currentIndex)
+            }
+
+            var supplementsTotal = 0
+            for (var i = 0; i < selectedSupplements.length; i++) {
+                var suppIndex = selectedSupplements[i]
+                if (suppIndex >= 0 && suppIndex < supplementModel.count) {
+                    supplementsTotal += supplementModel.getSupplementPrice(suppIndex)
+                }
+            }
+
+            var totalBeforeDiscount = basePrice + supplementsTotal
+            var finalPrice = totalBeforeDiscount * (100 - clientDiscount.value) / 100
+
+            return finalPrice
+        }
 
         function loadClient(businessType, name, offer, price, supplements, chestID, discount, phoneNumber, comment) {
             businessTypeCombo.currentIndex = businessType
@@ -1377,6 +1399,7 @@ ApplicationWindow {
                 to: 100
                 value: 0
                 editable: true
+                onValueChanged: calculatedPrice.updatePrice()
             }
 
             Label { text: "Phone:" }
@@ -1392,7 +1415,9 @@ ApplicationWindow {
                 Layout.preferredHeight: Constants.comboHeight
                 id: clientOfferCombo
                 Layout.fillWidth: true
-                model: ["Bronze", "Silver", "Gold"]
+                model: offerModel
+                textRole: "name"
+                onCurrentIndexChanged: calculatedPrice.updatePrice()
             }
 
             Label { text: "Supplements:" }
@@ -1427,13 +1452,13 @@ ApplicationWindow {
                     id: calculatedPrice
                     Layout.preferredHeight: Constants.comboHeight
                     Layout.preferredWidth: implicitWidth + 20
-                    text: "$" + (clientModel.calculatePrice(
-                                     clientOfferCombo.currentIndex,
-                                     clientDialog.selectedSupplements,
-                                     clientDiscount.value
-                                     )).toFixed(2)
+                    text: "$" + (clientDialog.calculatePrice() / 100).toFixed(2)
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+
+                    function updatePrice() {
+                        text = "$" + (clientDialog.calculatePrice() / 100).toFixed(2)
+                    }
 
                     Rectangle {
                         anchors.fill: parent
@@ -1457,6 +1482,14 @@ ApplicationWindow {
             }
         }
 
+        // Update selected supplements when dialog opens/closes
+        Connections {
+            target: clientDialog
+            function onSelectedSupplementsChanged() {
+                calculatedPrice.updatePrice()
+            }
+        }
+
         footer: DialogButtonBox {
             Button {
                 flat: true
@@ -1464,11 +1497,7 @@ ApplicationWindow {
                 enabled: clientName.text.length > 0
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                 onClicked: {
-                    var calculatedPriceValue = clientModel.calculatePrice(
-                                clientOfferCombo.currentIndex,
-                                clientDialog.selectedSupplements,
-                                clientDiscount.value
-                                )
+                    var calculatedPriceValue = clientDialog.calculatePrice()
 
                     if (clientDialog.editMode) {
                         clientModel.updateClient(clientDialog.editIndex, businessTypeCombo.currentIndex,
@@ -1530,6 +1559,291 @@ ApplicationWindow {
                 text: "Cancel"
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: clearAllDialog.close()
+            }
+        }
+    }
+
+    // Add this dialog to Main.qml for managing existing supplements and offers
+    Dialog {
+        id: supplementOfferManagementDialog
+        title: "Manage Supplements & Offers"
+        width: 800
+        height: 600
+        anchors.centerIn: parent
+        modal: true
+
+        RowLayout {
+            id: headerRow
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            height: 40
+            spacing: 0
+
+            ToolButton {
+                text: "New..."
+                icon.source: "qrc:/icons/new.svg"
+                icon.width: 16
+                icon.height: 16
+                icon.color: Material.color(Material.Lime)
+                onClicked: {
+                    supplementOfferDialog.isOffer = managementTabBar.currentIndex === 1
+                    supplementOfferDialog.editMode = false
+                    supplementOfferDialog.open()
+                }
+            }
+
+            TabBar {
+                id: managementTabBar
+                Layout.fillWidth: true
+
+                TabButton {
+                    text: "Supplements (" + supplementModel.count + ")"
+                }
+                TabButton {
+                    text: "Offers (" + offerModel.count + ")"
+                }
+            }
+        }
+
+        StackLayout {
+            anchors.top: headerRow.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            currentIndex: managementTabBar.currentIndex
+            anchors.topMargin: 4
+
+            // Supplements Tab
+            ScrollView {
+                width: parent.width
+
+                ListView {
+                    id: supplListView
+                    width: parent.width
+                    model: supplementModel
+                    spacing: 5
+
+                    delegate: Rectangle {
+                        width: supplListView.width
+                        height: 40
+                        color: (index % 2 === 0) ? "#404040" : "#303030"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+
+                            Label {
+                                text: model.name
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "$" + (model.price / 100).toFixed(2)
+                                color: "lightgreen"
+                                Layout.preferredWidth: 80
+                            }
+
+                            ToolButton {
+                                text: "Edit"
+                                icon.source: "qrc:/icons/edit.svg"
+                                icon.width: 16
+                                icon.height: 16
+                                icon.color: Material.color(Material.Blue)
+                                Layout.preferredHeight: 40
+                                onClicked: {
+                                    supplementOfferDialog.isOffer = false
+                                    supplementOfferDialog.editMode = true
+                                    supplementOfferDialog.editIndex = index
+                                    supplementOfferDialog.loadItem(model.name, model.price)
+                                    supplementOfferDialog.open()
+                                }
+                            }
+
+                            ToolButton {
+                                text: "Remove"
+                                icon.source: "qrc:/icons/delete.svg"
+                                icon.width: 16
+                                icon.height: 16
+                                icon.color: Material.color(Material.Red)
+                                Layout.preferredHeight: 40
+                                onClicked: supplementModel.removeEntry(index)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Offers Tab
+            ScrollView {
+                width: parent.width
+
+                ListView {
+                    width: parent.width
+                    model: offerModel
+                    spacing: 5
+
+                    delegate: Rectangle {
+                        width: parent.width
+                        height: 40
+                        color: (index % 2 === 0) ? "#404040" : "#303030"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+
+                            Label {
+                                text: model.name
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "$" + (model.price / 100).toFixed(2)
+                                color: "lightgreen"
+                                Layout.preferredWidth: 80
+                            }
+
+                            ToolButton {
+                                text: "Edit"
+                                icon.source: "qrc:/icons/edit.svg"
+                                icon.width: 16
+                                icon.height: 16
+                                icon.color: Material.color(Material.Blue)
+                                Layout.preferredHeight: 40
+                                onClicked: {
+                                    supplementOfferDialog.isOffer = true
+                                    supplementOfferDialog.editMode = true
+                                    supplementOfferDialog.editIndex = index
+                                    supplementOfferDialog.loadItem(model.name, model.price)
+                                    supplementOfferDialog.open()
+                                }
+                            }
+
+                            ToolButton {
+                                text: "Remove"
+                                icon.source: "qrc:/icons/delete.svg"
+                                icon.width: 16
+                                icon.height: 16
+                                icon.color: Material.color(Material.Red)
+                                Layout.preferredHeight: 40
+                                onClicked: offerModel.removeEntry(index)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                flat: true
+                text: "Close"
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: supplementOfferManagementDialog.close()
+            }
+        }
+    }
+
+    Dialog {
+        id: supplementOfferDialog
+        title: editMode ? ("Edit " + (isOffer ? "Offer" : "Supplement")) : ("Add New " + (isOffer ? "Offer" : "Supplement"))
+        width: 400
+        anchors.centerIn: parent
+        modal: true
+
+        property bool editMode: false
+        property int editIndex: -1
+        property bool isOffer: false
+
+        function loadItem(name, price) {
+            itemName.text = name
+            itemPrice.value = price
+        }
+
+        function clearFields() {
+            itemName.clear()
+            itemPrice.value = 100
+        }
+
+        onClosed: {
+            editMode = false
+            editIndex = -1
+            clearFields()
+        }
+
+        GridLayout {
+            anchors.fill: parent
+            columns: 2
+            rowSpacing: 10
+
+            Label { text: "Type:" }
+            ComboBox {
+                Layout.preferredHeight: Constants.comboHeight
+                id: typeCombo
+                Layout.fillWidth: true
+                model: ["Supplement", "Offer"]
+                currentIndex: supplementOfferDialog.isOffer ? 1 : 0
+                onCurrentIndexChanged: {
+                    supplementOfferDialog.isOffer = currentIndex === 1
+                }
+            }
+
+            Label { text: "Name:" }
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                id: itemName
+                Layout.fillWidth: true
+                placeholderText: supplementOfferDialog.isOffer ? "Gold Package" : "Anti-Rust Coating"
+            }
+
+            Label { text: "Price ($):" }
+            SpinBox {
+                Layout.preferredHeight: Constants.comboHeight
+                id: itemPrice
+                Layout.fillWidth: true
+                from: 0
+                to: 999999
+                value: 100
+                editable: true
+                textFromValue: function(value, locale) {
+                    return "$" + (value / 100).toFixed(2)
+                }
+                valueFromText: function(text, locale) {
+                    return Math.round(parseFloat(text.replace('$', '')) * 100)
+                }
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                flat: true
+                text: supplementOfferDialog.editMode ? "Update" : "Add"
+                enabled: itemName.text.length > 0
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                onClicked: {
+                    if (supplementOfferDialog.editMode) {
+                        if (supplementOfferDialog.isOffer) {
+                            offerModel.updateOffer(supplementOfferDialog.editIndex, itemName.text, itemPrice.value)
+                        } else {
+                            supplementModel.updateSupplement(supplementOfferDialog.editIndex, itemName.text, itemPrice.value)
+                        }
+                    } else {
+                        if (supplementOfferDialog.isOffer) {
+                            offerModel.addOffer(itemName.text, itemPrice.value)
+                        } else {
+                            supplementModel.addSupplement(itemName.text, itemPrice.value)
+                        }
+                    }
+                    supplementOfferDialog.close()
+                }
+            }
+            Button {
+                flat: true
+                text: "Cancel"
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: supplementOfferDialog.close()
             }
         }
     }
