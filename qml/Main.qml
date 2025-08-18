@@ -1803,7 +1803,7 @@ ApplicationWindow {
                         id: supplListView
                         width: parent.width
                         model: supplementModel
-                        spacing: 5
+                        spacing: 0
 
                         delegate: Rectangle {
                             width: supplListView.width
@@ -1866,7 +1866,7 @@ ApplicationWindow {
                         id: offerView
                         width: parent.width
                         model: offerModel
-                        spacing: 5
+                        spacing: 0
 
                         delegate: Rectangle {
                             width: offerView.width
