@@ -51,6 +51,10 @@ ApplicationWindow {
         id: welcomeDialog
     }
 
+    VersionDialog {
+        id: versionDialog
+    }
+
     Connections {
         target: clientModel
         function onCheckoutCompleted(description, amount) {
@@ -207,6 +211,10 @@ ApplicationWindow {
                     duration: 5000
                     loops: Animation.Infinite
                     running: true
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: versionDialog.open()
                 }
             }
         }

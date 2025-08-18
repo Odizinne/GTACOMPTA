@@ -20,6 +20,7 @@ set(HEADERS
     include/transactionmodel.h
     include/clientmodel.h
     include/awaitingtransactionmodel.h
+    include/VersionGetter.h
 )
 
 set(SOURCES
@@ -28,13 +29,35 @@ set(SOURCES
     src/transactionmodel.cpp
     src/clientmodel.cpp
     src/awaitingtransactionmodel.cpp
+    src/VersionGetter.cpp
 )
+
+# Get git commit hash
+find_package(Git QUIET)
+if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_COMMIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+else()
+    set(GIT_COMMIT_HASH "unknown")
+endif()
+
+string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%d %H:%M:%S UTC" UTC)
 
 set(APP_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/icon.ico")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/windows_metadata.rc.in"
     "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
     @ONLY
+)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/version.h"
 )
 
 qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
@@ -58,6 +81,7 @@ set_source_files_properties(${QML_SINGLETONS}
 
 target_include_directories(GTACOMPTA PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 qt_add_qml_module(GTACOMPTA
@@ -68,6 +92,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES qml/SortableLabel.qml
     QML_FILES qml/FakeUpgradeDialog.qml
     QML_FILES qml/WelcomeDialog.qml
+    QML_FILES qml/VersionDialog.qml
 )
 
 set_target_properties(GTACOMPTA PROPERTIES
