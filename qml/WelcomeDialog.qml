@@ -11,6 +11,8 @@ Dialog {
     modal: true
     closePolicy: Dialog.NoAutoClose
 
+    property int initialAmount: 0
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 20
@@ -57,6 +59,7 @@ Dialog {
                 value: 0
                 editable: true
                 stepSize: 1000
+                onValueChanged: welcomeDialog.initialAmount = value
             }
         }
     }
@@ -66,8 +69,8 @@ Dialog {
             flat: true
             text: "Start"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+            enabled: UserSettings.companyName !== ""
             onClicked: {
-                UserSettings.money = startingMoneySpinBox.value
                 UserSettings.firstRun = false
                 welcomeDialog.close()
             }

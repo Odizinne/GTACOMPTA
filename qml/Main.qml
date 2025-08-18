@@ -119,6 +119,9 @@ ApplicationWindow {
         Material.roundedScale: Material.ExtraSmallScale
 
         id: welcomeDialog
+        onAccepted: {
+            transactionModel.addTransaction("Initial transfer", initialAmount, Qt.formatDateTime(new Date(), "yyyy-MM-dd"))
+        }
     }
 
     VersionDialog {
