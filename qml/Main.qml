@@ -189,6 +189,14 @@ ApplicationWindow {
                 }
             }
 
+            TextField {
+                anchors.right: logo.left
+                anchors.verticalCenter: parent.verticalCenter
+                height: 35
+                width: 180
+                placeholderText: "Filter..."
+            }
+
             Image {
                 id: logo
                 anchors.right: parent.right
@@ -250,7 +258,6 @@ ApplicationWindow {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        //anchors.margins: 10
         currentIndex: tabBar.currentIndex
 
         // Employee Tab - Just the list
