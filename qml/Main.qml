@@ -19,12 +19,6 @@ ApplicationWindow {
 
     property string filterText: ""
 
-    Component.onCompleted: {
-        if (UserSettings.firstRun) {
-            welcomeDialog.open()
-        }
-    }
-
     SoundEffect {
         id: introSound
         source: "qrc:/sounds/intro.wav"
@@ -159,6 +153,10 @@ ApplicationWindow {
             function onLoadingFinished() {
                 mainStack.replace(mainPage)
                 introSound.play()
+
+                if (UserSettings.firstRun) {
+                    welcomeDialog.open()
+                }
             }
         }
     }
