@@ -27,11 +27,25 @@ Dialog {
             Layout.fillWidth: true
 
             Label {
-                text: "Starting Balance:"
+                text: "Company name:"
                 Layout.alignment: Qt.AlignVCenter
+                Layout.fillWidth: true
             }
 
-            Item {
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                text: UserSettings.companyName
+                onTextChanged: UserSettings.companyName = text
+                placeholderText: "Company name"
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            Label {
+                text: "Starting balance:"
+                Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
             }
 

@@ -186,7 +186,7 @@ ApplicationWindow {
                 anchors.centerIn: parent
 
                 Label {
-                    text: "Sold: "
+                    text: UserSettings.companyName + " - " + "Balance: "
                     font.bold: true
                     font.pixelSize: 16
                 }

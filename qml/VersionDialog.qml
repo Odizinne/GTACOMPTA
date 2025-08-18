@@ -27,6 +27,31 @@ Dialog {
             Layout.alignment: Qt.AlignCenter
         }
 
+        Label {
+            text: "Basic Standard Demo Evaluation Edition"
+            font.pixelSize: 12
+            opacity: 0.7
+            Layout.topMargin: -8
+            Layout.alignment: Qt.AlignCenter
+        }
+
+        RowLayout {
+            Layout.topMargin: 5
+            Layout.fillWidth: true
+
+            Label {
+                text: "License holder"
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                text: UserSettings.companyName
+                onTextChanged: UserSettings.companyName = text
+                Layout.fillWidth: true
+            }
+        }
+
         MenuSeparator {
             Layout.fillWidth: true
         }
