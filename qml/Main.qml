@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import QtQml
 import Odizinne.GTACOMPTA
 
 ApplicationWindow {
@@ -35,10 +36,8 @@ ApplicationWindow {
         }
     }
 
-    // Supplement List Model
     ListModel {
         id: supplementModel
-
         Component.onCompleted: {
             append({index: 1, name: "Extra Cheese", price: "2.50"})
             append({index: 2, name: "Bacon", price: "3.00"})
@@ -517,7 +516,6 @@ ApplicationWindow {
         id: supplementDialog
         title: readOnly ? "View Supplements" : "Select Supplements"
         width: 400
-        height: 500
         anchors.centerIn: parent
         modal: true
 
@@ -575,6 +573,7 @@ ApplicationWindow {
 
         footer: DialogButtonBox {
             Button {
+                flat: true
                 text: "OK"
                 visible: supplementDialog.readOnly
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
@@ -582,6 +581,7 @@ ApplicationWindow {
             }
 
             Button {
+                flat: true
                 text: "Apply"
                 visible: !supplementDialog.readOnly
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
@@ -592,6 +592,7 @@ ApplicationWindow {
             }
 
             Button {
+                flat: true
                 text: "Cancel"
                 visible: !supplementDialog.readOnly
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
@@ -605,7 +606,6 @@ ApplicationWindow {
         id: employeeDialog
         title: editMode ? "Edit Employee" : "Add New Employee"
         width: 400
-        height: 350
         anchors.centerIn: parent
         modal: true
 
@@ -674,7 +674,7 @@ ApplicationWindow {
                 to: 999999
                 stepSize: 1000
                 value: 50000
-
+                editable: true
                 textFromValue: function(value, locale) {
                     return "$" + value.toLocaleString(locale, 'f', 0)
                 }
@@ -683,6 +683,7 @@ ApplicationWindow {
 
         footer: DialogButtonBox {
             Button {
+                flat: true
                 text: employeeDialog.editMode ? "Update" : "Add"
                 enabled: empName.text.length > 0
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
@@ -698,6 +699,7 @@ ApplicationWindow {
                 }
             }
             Button {
+                flat: true
                 text: "Cancel"
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: employeeDialog.close()
@@ -710,7 +712,6 @@ ApplicationWindow {
         id: transactionDialog
         title: editMode ? "Edit Transaction" : "Add New Transaction"
         width: 400
-        height: 250
         anchors.centerIn: parent
         modal: true
 
@@ -753,7 +754,7 @@ ApplicationWindow {
                 from: -999999
                 to: 999999
                 value: 100
-
+                editable: true
                 textFromValue: function(value, locale) {
                     return "$" + value.toLocaleString(locale, 'f', 0)
                 }
@@ -770,6 +771,7 @@ ApplicationWindow {
 
         footer: DialogButtonBox {
             Button {
+                flat: true
                 text: transactionDialog.editMode ? "Update" : "Add"
                 enabled: transDesc.text.length > 0
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
@@ -784,6 +786,7 @@ ApplicationWindow {
                 }
             }
             Button {
+                flat: true
                 text: "Cancel"
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: transactionDialog.close()
@@ -902,15 +905,17 @@ ApplicationWindow {
                 from: 1
                 to: 999
                 value: 1
+                editable: true
             }
 
             Label { text: "Discount (%):" }
             SpinBox {
                 id: clientDiscount
                 Layout.fillWidth: true
-                from: 0
+                from: -100
                 to: 100
                 value: 0
+                editable: true
             }
 
             Label { text: "Phone:" }
@@ -934,6 +939,7 @@ ApplicationWindow {
 
         footer: DialogButtonBox {
             Button {
+                flat: true
                 text: clientDialog.editMode ? "Update" : "Add"
                 enabled: clientName.text.length > 0
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
@@ -961,6 +967,7 @@ ApplicationWindow {
                 }
             }
             Button {
+                flat: true
                 text: "Cancel"
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: clientDialog.close()
@@ -986,6 +993,7 @@ ApplicationWindow {
 
         footer: DialogButtonBox {
             Button {
+                flat: true
                 text: "Clear All"
                 DialogButtonBox.buttonRole: DialogButtonBox.DestructiveRole
                 onClicked: {
@@ -996,6 +1004,7 @@ ApplicationWindow {
                 }
             }
             Button {
+                flat: true
                 text: "Cancel"
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: clearAllDialog.close()

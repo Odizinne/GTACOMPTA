@@ -2,6 +2,7 @@
 #define EMPLOYEEMODEL_H
 
 #include "basemodel.h"
+#include <QtQml/qqmlregistration.h>
 
 class EmployeeModel : public BaseModel
 {

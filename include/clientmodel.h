@@ -1,6 +1,8 @@
 #ifndef CLIENTMODEL_H
 #define CLIENTMODEL_H
 #include "basemodel.h"
+#include <QtQml/qqmlregistration.h>
+
 class ClientModel : public BaseModel
 {
     Q_OBJECT
