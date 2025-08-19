@@ -9,6 +9,7 @@ Dialog {
     width: 300
     anchors.centerIn: parent
     modal: true
+    Material.roundedScale: Material.ExtraSmallScale
     onVisibleChanged: {
         if (visible) {
             noticeEffect.play()

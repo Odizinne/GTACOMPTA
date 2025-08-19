@@ -113,19 +113,36 @@ endif()
 
 set(QML_FILES
     qml/Main.qml
-    qml/SortableLabel.qml
-    qml/FakeUpgradeDialog.qml
-    qml/WelcomeDialog.qml
-    qml/VersionDialog.qml
-    qml/SplashScreen.qml
-    qml/DatePicker.qml
-    qml/SettingsDialog.qml
-    qml/ConfirmDialog.qml
+    qml/Components/DatePicker.qml
+    qml/Components/SortableLabel.qml
+    qml/Dialogs/AwaitingTransactionDialog.qml
+    qml/Dialogs/ClearAllDialog.qml
+    qml/Dialogs/ClientDialog.qml
+    qml/Dialogs/ConfirmDialog.qml
+    qml/Dialogs/EmployeeDialog.qml
+    qml/Dialogs/ExportDialog.qml
+    qml/Dialogs/FakeUpgradeDialog.qml
+    qml/Dialogs/ImportDialog.qml
+    qml/Dialogs/MessageDialog.qml
+    qml/Dialogs/NotesDialog.qml
+    qml/Dialogs/SettingsDialog.qml
+    qml/Dialogs/SupplementOfferManagementDialog.qml
+    qml/Dialogs/SupplementSelectionDialog.qml
+    qml/Dialogs/TransactionDialog.qml
+    qml/Dialogs/VersionDialog.qml
+    qml/Dialogs/WelcomeDialog.qml
+    qml/Pages/MainPage.qml
+    qml/Pages/SplashScreen.qml
+    qml/Tabs/AwaitingTransactionTab.qml
+    qml/Tabs/ClientTab.qml
+    qml/Tabs/EmployeeTab.qml
+    qml/Tabs/TransactionTab.qml
 )
 
 set(QML_SINGLETONS
     qml/Singletons/UserSettings.qml
     qml/Singletons/Constants.qml
+    qml/Singletons/AppState.qml
 )
 
 set_source_files_properties(${QML_SINGLETONS}

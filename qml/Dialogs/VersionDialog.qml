@@ -7,6 +7,7 @@ Dialog {
     id: dialog
     width: 400
     anchors.centerIn: parent
+    Material.roundedScale: Material.ExtraSmallScale
 
     ColumnLayout {
         anchors.fill: parent

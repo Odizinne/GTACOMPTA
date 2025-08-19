@@ -9,6 +9,7 @@ Dialog {
     width: 500
     anchors.centerIn: parent
     modal: true
+    Material.roundedScale: Material.ExtraSmallScale
 
     property bool updateCheckInProgress: VersionGetter.checkingForUpdates
     property bool updateDownloadInProgress: VersionGetter.downloadingUpdate
