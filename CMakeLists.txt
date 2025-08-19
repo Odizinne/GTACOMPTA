@@ -20,11 +20,12 @@ set(HEADERS
     include/transactionmodel.h
     include/clientmodel.h
     include/awaitingtransactionmodel.h
-    include/VersionGetter.h
+    include/versiongetter.h
     include/supplementmodel.h
     include/offermodel.h
     include/filterproxymodel.h
     include/datamanager.h
+    include/wasmfilehandler.h
 )
 
 set(SOURCES
@@ -33,11 +34,12 @@ set(SOURCES
     src/transactionmodel.cpp
     src/clientmodel.cpp
     src/awaitingtransactionmodel.cpp
-    src/VersionGetter.cpp
+    src/versiongetter.cpp
     src/supplementmodel.cpp
     src/offermodel.cpp
     src/filterproxymodel.cpp
     src/datamanager.cpp
+    src/wasmfilehandler.cpp
 )
 
 # Get git commit hash
@@ -56,24 +58,58 @@ endif()
 
 string(TIMESTAMP BUILD_TIMESTAMP "%Y-%m-%d %H:%M:%S UTC" UTC)
 
-set(APP_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/icon.ico")
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/windows_metadata.rc.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
-    @ONLY
-)
+# Only configure Windows resources for non-WASM builds
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    set(APP_ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/icon.ico")
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/windows_metadata.rc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
+        @ONLY
+    )
+    set(WINDOWS_RESOURCES "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc")
+else()
+    set(WINDOWS_RESOURCES "")
+endif()
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/src/version.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/version.h"
 )
 
-qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
-    src/main.cpp
-    resources/icons/icons.qrc
-    resources/sounds/sounds.qrc
-    "${CMAKE_CURRENT_BINARY_DIR}/windows_metadata.rc"
-)
+# WebAssembly specific settings
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    qt_add_executable(GTACOMPTA
+        src/main.cpp
+        resources/icons/icons.qrc
+        resources/sounds/sounds.qrc
+    )
+
+    set_target_properties(GTACOMPTA PROPERTIES
+        QT_WASM_PTHREAD_POOL_SIZE 4
+        QT_WASM_INITIAL_MEMORY 100MB
+        QT_WASM_MAXIMUM_MEMORY 2GB
+    )
+
+    # Enable file system access for export/import functions
+    target_link_options(GTACOMPTA PRIVATE
+        "-sALLOW_MEMORY_GROWTH=1"
+        "-sFILESYSTEM=1"
+        "-sEXPORTED_RUNTIME_METHODS=['FS','stringToUTF8','lengthBytesUTF8']"
+        "-sEXPORTED_FUNCTIONS=['_main','_saveFileSelectedCallback','_loadFileSelectedCallback','_malloc','_free']"
+    )
+else()
+    # Native platforms
+    qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
+        src/main.cpp
+        resources/icons/icons.qrc
+        resources/sounds/sounds.qrc
+        ${WINDOWS_RESOURCES}
+    )
+
+    set_target_properties(GTACOMPTA PROPERTIES
+        WIN32_EXECUTABLE TRUE
+    )
+endif()
 
 set(QML_FILES
     qml/Main.qml
@@ -84,6 +120,7 @@ set(QML_FILES
     qml/SplashScreen.qml
     qml/DatePicker.qml
     qml/SettingsDialog.qml
+    qml/ConfirmDialog.qml
 )
 
 set(QML_SINGLETONS
@@ -105,28 +142,26 @@ qt_add_qml_module(GTACOMPTA
     VERSION 1.0
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
-    QML_FILES qml/ConfirmDialog.qml
-)
-
-set_target_properties(GTACOMPTA PROPERTIES
-    WIN32_EXECUTABLE TRUE
 )
 
 target_link_libraries(GTACOMPTA
     PRIVATE Qt6::Quick Qt6::Qml Qt6::Network
 )
 
-include(GNUInstallDirs)
+# Only do installation stuff for non-WebAssembly builds
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    include(GNUInstallDirs)
 
-install(TARGETS GTACOMPTA
-    BUNDLE DESTINATION .
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+    install(TARGETS GTACOMPTA
+        BUNDLE DESTINATION .
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 
-qt_generate_deploy_qml_app_script(
-    TARGET GTACOMPTA
-    OUTPUT_SCRIPT deploy_script
-    NO_TRANSLATIONS
-    DEPLOY_TOOL_OPTIONS --no-compiler-runtime --no-opengl-sw --no-system-dxc-compiler --no-system-d3d-compiler --skip-plugin-types designer,iconengines,qmllint,generic,networkinformation,help,qmltooling,sqldrivers,qmlls
-)
-install(SCRIPT ${deploy_script})
+    qt_generate_deploy_qml_app_script(
+        TARGET GTACOMPTA
+        OUTPUT_SCRIPT deploy_script
+        NO_TRANSLATIONS
+        DEPLOY_TOOL_OPTIONS --no-compiler-runtime --no-opengl-sw --no-system-dxc-compiler --no-system-d3d-compiler --skip-plugin-types designer,iconengines,qmllint,generic,networkinformation,help,qmltooling,sqldrivers,qmlls
+    )
+    install(SCRIPT ${deploy_script})
+endif()

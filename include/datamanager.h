@@ -48,6 +48,22 @@ public:
                                 SupplementModel *supplementModel,
                                 OfferModel *offerModel);
 
+    // Add these methods to the public section:
+    Q_INVOKABLE bool exportDataToString(EmployeeModel *employeeModel,
+                                        TransactionModel *transactionModel,
+                                        AwaitingTransactionModel *awaitingTransactionModel,
+                                        ClientModel *clientModel,
+                                        SupplementModel *supplementModel,
+                                        OfferModel *offerModel);
+
+    Q_INVOKABLE bool importDataFromString(const QString &data,
+                                          EmployeeModel *employeeModel,
+                                          TransactionModel *transactionModel,
+                                          AwaitingTransactionModel *awaitingTransactionModel,
+                                          ClientModel *clientModel,
+                                          SupplementModel *supplementModel,
+                                          OfferModel *offerModel);
+
     Q_INVOKABLE QString getDefaultExportPath() const;
     Q_INVOKABLE QString getDefaultImportPath() const;
 
@@ -55,6 +71,7 @@ signals:
     void exportCompleted(bool success, const QString &message);
     void importCompleted(bool success, const QString &message);
     void settingsChanged(int money, bool firstRun, const QString &companyName);
+    void exportDataReady(const QString &data, const QString &fileName);
 
 private:
     QJsonObject collectAllData(EmployeeModel *employeeModel,

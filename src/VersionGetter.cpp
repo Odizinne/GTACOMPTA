@@ -1,4 +1,4 @@
-#include "VersionGetter.h"
+#include "versiongetter.h"
 #include "version.h"
 #include <QNetworkRequest>
 #include <QJsonDocument>

@@ -19,6 +19,7 @@ ApplicationWindow {
     title: "GTACOMPTA"
     Material.theme: Material.Dark
 
+    property bool isWasm: Qt.platform.os === "wasm"
     property string filterText: ""
 
     SoundEffect {
@@ -1280,16 +1281,16 @@ ApplicationWindow {
         footer: DialogButtonBox {
             Repeater {
                 model: supplementDialog.readOnly ? [
-                    {text: "OK", role: DialogButtonBox.AcceptRole, action: function() { supplementDialog.close() }}
-                ] : [
-                    {text: "Apply", role: DialogButtonBox.AcceptRole, action: function() {
-                        var result = supplementDialog.getSelectedSupplements()
-                        clientDialog.selectedSupplements = result.selectedList
-                        clientDialog.supplementQuantities = result.quantities
-                        supplementDialog.close()
-                    }},
-                    {text: "Cancel", role: DialogButtonBox.RejectRole, action: function() { supplementDialog.close() }}
-                ]
+                                                       {text: "OK", role: DialogButtonBox.AcceptRole, action: function() { supplementDialog.close() }}
+                                                   ] : [
+                                                       {text: "Apply", role: DialogButtonBox.AcceptRole, action: function() {
+                                                           var result = supplementDialog.getSelectedSupplements()
+                                                           clientDialog.selectedSupplements = result.selectedList
+                                                           clientDialog.supplementQuantities = result.quantities
+                                                           supplementDialog.close()
+                                                       }},
+                                                       {text: "Cancel", role: DialogButtonBox.RejectRole, action: function() { supplementDialog.close() }}
+                                                   ]
 
                 Button {
                     flat: true
@@ -1407,14 +1408,14 @@ ApplicationWindow {
                 onClicked: {
                     if (employeeDialog.editMode) {
                         employeeModel.updateEmployee(employeeDialog.editIndex, empName.text,
-                                                   empPhone.text, empRole.text, empSalary.value,
-                                                   empAddedDate.formatDate(empAddedDate.selectedDate),
-                                                   empComment.text)
+                                                     empPhone.text, empRole.text, empSalary.value,
+                                                     empAddedDate.formatDate(empAddedDate.selectedDate),
+                                                     empComment.text)
                     } else {
                         employeeModel.addEmployee(empName.text, empPhone.text,
-                                                empRole.text, empSalary.value,
-                                                empAddedDate.formatDate(empAddedDate.selectedDate),
-                                                empComment.text)
+                                                  empRole.text, empSalary.value,
+                                                  empAddedDate.formatDate(empAddedDate.selectedDate),
+                                                  empComment.text)
                     }
                     employeeDialog.close()
                 }
@@ -1503,7 +1504,7 @@ ApplicationWindow {
                         UserSettings.money += difference
 
                         transactionModel.updateTransaction(transactionDialog.editIndex, transDesc.text,
-                                                         transAmount.value, dateString)
+                                                           transAmount.value, dateString)
                     } else {
                         awaitingTransactionModel.addAwaitingTransaction(transDesc.text, transAmount.value, dateString)
                     }
@@ -1758,15 +1759,15 @@ ApplicationWindow {
                 Item {
                     Layout.fillWidth: true
                 }
-            SpinBox {
-                Layout.preferredHeight: Constants.comboHeight
-                id: clientDiscount
-                from: -100
-                to: 100
-                value: 0
-                editable: true
-                onValueChanged: calculatedPrice.updatePrice()
-            }
+                SpinBox {
+                    Layout.preferredHeight: Constants.comboHeight
+                    id: clientDiscount
+                    from: -100
+                    to: 100
+                    value: 0
+                    editable: true
+                    onValueChanged: calculatedPrice.updatePrice()
+                }
             }
 
             Label { text: "Final Price:" }
@@ -1827,14 +1828,14 @@ ApplicationWindow {
 
                     if (clientDialog.editMode) {
                         clientModel.updateClientWithQuantities(clientDialog.editIndex, businessTypeCombo.currentIndex,
-                                                 clientName.text, clientOfferCombo.currentIndex, calculatedPriceValue,
-                                                 clientDialog.supplementQuantities, clientDiscount.value,
-                                                 clientPhone.text, clientComment.text)
+                                                               clientName.text, clientOfferCombo.currentIndex, calculatedPriceValue,
+                                                               clientDialog.supplementQuantities, clientDiscount.value,
+                                                               clientPhone.text, clientComment.text)
                     } else {
                         clientModel.addClientWithQuantities(businessTypeCombo.currentIndex, clientName.text,
-                                              clientOfferCombo.currentIndex, calculatedPriceValue,
-                                              clientDialog.supplementQuantities, clientDiscount.value,
-                                              clientPhone.text, clientComment.text)
+                                                            clientOfferCombo.currentIndex, calculatedPriceValue,
+                                                            clientDialog.supplementQuantities, clientDiscount.value,
+                                                            clientPhone.text, clientComment.text)
                     }
                     clientDialog.close()
                 }
@@ -2275,8 +2276,10 @@ ApplicationWindow {
                 wrapMode: Text.WordWrap
             }
 
+            // Show file path selector only for native platforms
             RowLayout {
                 width: parent.width
+                visible: !window.isWasm
 
                 Label {
                     text: "File path:"
@@ -2314,16 +2317,25 @@ ApplicationWindow {
             Button {
                 flat: true
                 text: "Export"
-                enabled: exportPathField.text.length > 0
+                enabled: window.isWasm || exportPathField.text.length > 0
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                 onClicked: {
-                    DataManager.exportData(exportPathField.text,
-                                           employeeModel,
-                                           transactionModel,
-                                           awaitingTransactionModel,
-                                           clientModel,
-                                           supplementModel,
-                                           offerModel)
+                    if (window.isWasm) {
+                        DataManager.exportDataToString(employeeModel,
+                                                       transactionModel,
+                                                       awaitingTransactionModel,
+                                                       clientModel,
+                                                       supplementModel,
+                                                       offerModel)
+                    } else {
+                        DataManager.exportData(exportPathField.text,
+                                               employeeModel,
+                                               transactionModel,
+                                               awaitingTransactionModel,
+                                               clientModel,
+                                               supplementModel,
+                                               offerModel)
+                    }
                     exportDialog.close()
                 }
             }
@@ -2336,6 +2348,7 @@ ApplicationWindow {
             }
         }
 
+        // Native file dialog - only for non-WASM
         FileDialog {
             id: exportFileDialog
             title: "Save backup file"
@@ -2349,7 +2362,6 @@ ApplicationWindow {
         }
     }
 
-    // Import Dialog
     Dialog {
         Material.roundedScale: Material.ExtraSmallScale
         id: importDialog
@@ -2377,8 +2389,10 @@ ApplicationWindow {
                 font.bold: true
             }
 
+            // Show file path selector only for native platforms
             RowLayout {
                 width: parent.width
+                visible: !window.isWasm
 
                 Label {
                     text: "File path:"
@@ -2415,17 +2429,21 @@ ApplicationWindow {
         footer: DialogButtonBox {
             Button {
                 flat: true
-                text: "Import"
-                enabled: importPathField.text.length > 0
-                DialogButtonBox.buttonRole: DialogButtonBox.DestructiveRole
+                text: window.isWasm ? "Choose File" : "Import"
+                enabled: window.isWasm || importPathField.text.length > 0
+                DialogButtonBox.buttonRole: window.isWasm ? DialogButtonBox.AcceptRole : DialogButtonBox.DestructiveRole
                 onClicked: {
-                    DataManager.importData(importPathField.text,
-                                           employeeModel,
-                                           transactionModel,
-                                           awaitingTransactionModel,
-                                           clientModel,
-                                           supplementModel,
-                                           offerModel)
+                    if (window.isWasm) {
+                        WasmFileHandler.openLoadDialog()
+                    } else {
+                        DataManager.importData(importPathField.text,
+                                               employeeModel,
+                                               transactionModel,
+                                               awaitingTransactionModel,
+                                               clientModel,
+                                               supplementModel,
+                                               offerModel)
+                    }
                     importDialog.close()
                 }
             }
@@ -2438,6 +2456,7 @@ ApplicationWindow {
             }
         }
 
+        // Native file dialog - only for non-WASM
         FileDialog {
             id: importFileDialog
             title: "Open backup file"
@@ -2447,6 +2466,27 @@ ApplicationWindow {
             onAccepted: {
                 importPathField.text = selectedFile.toString().replace("file:///", "").replace("file://", "")
             }
+        }
+    }
+
+    Connections {
+        target: DataManager
+        enabled: window.isWasm
+        function onExportDataReady(data, fileName) {
+            WasmFileHandler.openSaveDialog(fileName, data)
+        }
+    }
+
+    Connections {
+        target: window.isWasm ? WasmFileHandler : null
+        function onLoadFileSelected(content) {
+            DataManager.importDataFromString(content,
+                                             employeeModel,
+                                             transactionModel,
+                                             awaitingTransactionModel,
+                                             clientModel,
+                                             supplementModel,
+                                             offerModel)
         }
     }
 
