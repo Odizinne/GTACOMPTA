@@ -24,6 +24,7 @@ ApplicationWindow {
     SoundEffect {
         id: introSound
         source: "qrc:/sounds/intro.wav"
+        volume: 0.5
     }
 
     Material.primary: "#2A2F2A"
@@ -1678,18 +1679,6 @@ ApplicationWindow {
                 placeholderText: "Client name"
             }
 
-            Label { text: "Discount (%):" }
-            SpinBox {
-                Layout.preferredHeight: Constants.comboHeight
-                id: clientDiscount
-                Layout.fillWidth: true
-                from: -100
-                to: 100
-                value: 0
-                editable: true
-                onValueChanged: calculatedPrice.updatePrice()
-            }
-
             Label { text: "Phone:" }
             TextField {
                 Layout.preferredHeight: Constants.comboHeight
@@ -1699,13 +1688,23 @@ ApplicationWindow {
             }
 
             Label { text: "Offer:" }
-            ComboBox {
-                Layout.preferredHeight: Constants.comboHeight
-                id: clientOfferCombo
+            RowLayout {
                 Layout.fillWidth: true
-                model: offerModel
-                textRole: "name"
-                onCurrentIndexChanged: calculatedPrice.updatePrice()
+
+                ComboBox {
+                    Layout.preferredHeight: Constants.comboHeight
+                    id: clientOfferCombo
+                    Layout.fillWidth: true
+                    model: offerModel
+                    textRole: "name"
+                    onCurrentIndexChanged: calculatedPrice.updatePrice()
+                }
+
+                Button {
+                    id: manageOffersButton
+                    text: "Manage..."
+                    onClicked: supplementOfferManagementDialog.open()
+                }
             }
 
             Label { text: "Supplements:" }
@@ -1716,26 +1715,33 @@ ApplicationWindow {
                     Layout.fillWidth: true
                 }
 
-                Label {
-                    text: {
-                        var count = 0
-                        for (var key in clientDialog.supplementQuantities) {
-                            if (clientDialog.supplementQuantities[key] > 0) {
-                                count += clientDialog.supplementQuantities[key]
-                            }
-                        }
-                        return count + " items"
-                    }
-                }
-
                 Button {
                     text: "Select..."
+                    Layout.preferredWidth: manageOffersButton.width
                     onClicked: {
                         supplementDialog.currentSupplements = clientDialog.supplementQuantities
                         supplementDialog.readOnly = false
                         supplementDialog.open()
                     }
                 }
+            }
+
+            Label { text: "Discount (%):" }
+            RowLayout {
+                Layout.fillWidth: true
+
+                Item {
+                    Layout.fillWidth: true
+                }
+            SpinBox {
+                Layout.preferredHeight: Constants.comboHeight
+                id: clientDiscount
+                from: -100
+                to: 100
+                value: 0
+                editable: true
+                onValueChanged: calculatedPrice.updatePrice()
+            }
             }
 
             Label { text: "Final Price:" }
