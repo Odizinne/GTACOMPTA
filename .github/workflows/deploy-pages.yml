@@ -82,12 +82,13 @@ jobs:
             -DQT_HOST_PATH="$QT_HOST_PATH"
           cmake --build . --parallel
 
-      - name: Copy index.html to build directory
+      - name: Copy index.html and favicon to build directory
         run: |
           cp index.html build/ || echo "No index.html found in root"
+          cp resources/icons/icon.ico build/favicon.ico || echo "No icon.ico found in resources/icons/"
           echo "Files in build directory:"
           ls -la build/
-     
+          
       - name: List build artifacts
         run: |
           echo "Build directory contents:"

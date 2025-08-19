@@ -28,6 +28,12 @@ ApplicationWindow {
         volume: UserSettings.volume
     }
 
+    SoundEffect {
+        id: initSound
+        source: "qrc:/sounds/empty.wav"
+        volume: 1
+    }
+
     Material.primary: "#2A2F2A"
     Material.background: "#232323"
     Material.accent: "#4CAF50"
@@ -39,6 +45,10 @@ ApplicationWindow {
 
     function toModelPrice(priceString) {
         return parseInt(priceString.replace(/\D/g, ''), 10);
+    }
+
+    Component.onCompleted: {
+        initSound.play()
     }
 
     Dialog {
@@ -189,15 +199,17 @@ ApplicationWindow {
             target: splash
             function onLoadingFinished() {
                 mainStack.replace(mainPage)
-                introSound.play()
-
                 if (UserSettings.firstRun) {
                     welcomeDialog.open()
                 }
 
-                if (UserSettings.autoUpdate) {
+                if (UserSettings.autoUpdate && !window.isWasm) {
                     VersionGetter.checkForUpdates()
                 }
+
+                //if (!window.isWasm) {
+                    introSound.play()
+                //}
             }
         }
     }
