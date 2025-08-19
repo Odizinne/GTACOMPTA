@@ -1232,7 +1232,7 @@ ApplicationWindow {
             empPhone.text = phone
             empRole.text = role
             empSalary.value = salary
-            empAddedDate.text = addedDate
+            empAddedDate.selectedDate = new Date(addedDate)
             empComment.text = comment
         }
 
@@ -1240,8 +1240,8 @@ ApplicationWindow {
             empName.clear()
             empPhone.clear()
             empRole.clear()
-            empSalary.value = 50000
-            empAddedDate.text = Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+            empSalary.value = 500
+            empAddedDate.selectedDate = new Date()
             empComment.clear()
         }
 
@@ -1293,12 +1293,11 @@ ApplicationWindow {
             }
 
             Label { text: "Added Date:" }
-            TextField {
-                Layout.preferredHeight: Constants.comboHeight
+            DatePicker {
                 id: empAddedDate
                 Layout.fillWidth: true
-                placeholderText: "YYYY-MM-DD"
-                text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+                selectedDate: new Date()
+                placeholderText: "Select employee start date"
             }
 
             Label { text: "Comment:" }
@@ -1322,12 +1321,14 @@ ApplicationWindow {
                 onClicked: {
                     if (employeeDialog.editMode) {
                         employeeModel.updateEmployee(employeeDialog.editIndex, empName.text,
-                                                     empPhone.text, empRole.text, empSalary.value,
-                                                     empAddedDate.text, empComment.text)
+                                                   empPhone.text, empRole.text, empSalary.value,
+                                                   empAddedDate.formatDate(empAddedDate.selectedDate),
+                                                   empComment.text)
                     } else {
                         employeeModel.addEmployee(empName.text, empPhone.text,
-                                                  empRole.text, empSalary.value,
-                                                  empAddedDate.text, empComment.text)
+                                                empRole.text, empSalary.value,
+                                                empAddedDate.formatDate(empAddedDate.selectedDate),
+                                                empComment.text)
                     }
                     employeeDialog.close()
                 }
@@ -1356,13 +1357,13 @@ ApplicationWindow {
         function loadTransaction(description, amount, date) {
             transDesc.text = description
             transAmount.value = amount
-            transDate.text = date
+            transDate.selectedDate = new Date(date)
         }
 
         function clearFields() {
             transDesc.clear()
             transAmount.value = 100
-            transDate.text = Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+            transDate.selectedDate = new Date()
         }
 
         onClosed: {
@@ -1393,11 +1394,11 @@ ApplicationWindow {
             }
 
             Label { text: "Date:" }
-            TextField {
+            DatePicker {
                 id: transDate
                 Layout.fillWidth: true
-                placeholderText: "YYYY-MM-DD"
-                text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+                selectedDate: new Date()
+                placeholderText: "Select transaction date"
             }
         }
 
