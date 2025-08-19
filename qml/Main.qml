@@ -264,6 +264,9 @@ ApplicationWindow {
 
                         MenuItem {
                             text: "Exit"
+                            enabled: Qt.platform.os !== "wasm"
+                            height: Qt.platform.os !== "wasm" ? implicitHeight : 0
+                            opacity: Qt.platform.os !== "wasm" ? 1.0 : 0.0
                             onTriggered: Qt.quit()
                         }
                     }
