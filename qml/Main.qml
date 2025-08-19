@@ -200,6 +200,7 @@ ApplicationWindow {
     }
 
     SettingsDialog {
+        Material.roundedScale: Material.ExtraSmallScale
         id: settingsDialog
     }
 

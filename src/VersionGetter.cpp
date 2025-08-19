@@ -146,6 +146,7 @@ void VersionGetter::onUpdateCheckFinished()
 
     QJsonObject release = doc.object();
     QString latestVersion = release["tag_name"].toString();
+    QString releaseBody = release["body"].toString();
 
     if (latestVersion.isEmpty()) {
         emit errorOccurred("No version information found in release data");
@@ -153,6 +154,7 @@ void VersionGetter::onUpdateCheckFinished()
     }
 
     setLatestVersion(latestVersion);
+    setReleaseNotes(releaseBody.isEmpty() ? "No release notes available." : releaseBody);
 
     QString currentVersion = getAppVersion();
     bool updateAvailable = compareVersions(currentVersion, latestVersion);
@@ -319,6 +321,14 @@ void VersionGetter::setLatestVersion(const QString& version)
     if (m_latestVersion != version) {
         m_latestVersion = version;
         emit latestVersionChanged();
+    }
+}
+
+void VersionGetter::setReleaseNotes(const QString& notes)
+{
+    if (m_releaseNotes != notes) {
+        m_releaseNotes = notes;
+        emit releaseNotesChanged();
     }
 }
 

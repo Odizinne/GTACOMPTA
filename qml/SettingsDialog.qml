@@ -109,6 +109,8 @@ Dialog {
                         if (updateAvailable) return "qrc:/icons/download.svg"
                         return "qrc:/icons/search.svg"
                     }
+                    icon.width: 16
+                    icon.height: 16
 
                     onClicked: {
                         if (updateAvailable) {
@@ -165,6 +167,43 @@ Dialog {
                     color: {
                         if (updateAvailable) return Material.color(Material.Orange)
                         return "gray"
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    visible: updateAvailable && VersionGetter.releaseNotes !== ""
+                    spacing: 5
+
+                    Label {
+                        text: "What's New:"
+                        font.bold: true
+                        color: Material.accent
+                    }
+
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 80
+                        Layout.maximumHeight: 120
+
+                        background: Rectangle {
+                            color: Material.dialogColor
+                            border.color: Material.dividerColor
+                            border.width: 1
+                            radius: 4
+                        }
+
+                        TextArea {
+                            text: VersionGetter.releaseNotes
+                            readOnly: true
+                            wrapMode: TextArea.Wrap
+                            selectByMouse: true
+                            font.pixelSize: 12
+                            color: Material.foreground
+                            background: Rectangle {
+                                color: "transparent"
+                            }
+                        }
                     }
                 }
             }

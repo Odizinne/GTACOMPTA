@@ -9,5 +9,6 @@
         <file>search.svg</file>
         <file>folder.svg</file>
         <file>date.svg</file>
+        <file>download.svg</file>
     </qresource>
 </RCC>

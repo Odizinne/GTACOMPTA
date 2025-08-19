@@ -16,6 +16,7 @@ class VersionGetter : public QObject
 
     Q_PROPERTY(bool updateAvailable READ updateAvailable NOTIFY updateAvailableChanged)
     Q_PROPERTY(QString latestVersion READ latestVersion NOTIFY latestVersionChanged)
+    Q_PROPERTY(QString releaseNotes READ releaseNotes NOTIFY releaseNotesChanged)
     Q_PROPERTY(bool checkingForUpdates READ checkingForUpdates NOTIFY checkingForUpdatesChanged)
     Q_PROPERTY(bool downloadingUpdate READ downloadingUpdate NOTIFY downloadingUpdateChanged)
     Q_PROPERTY(int downloadProgress READ downloadProgress NOTIFY downloadProgressChanged)
@@ -37,6 +38,7 @@ public:
 
     bool updateAvailable() const { return m_updateAvailable; }
     QString latestVersion() const { return m_latestVersion; }
+    QString releaseNotes() const { return m_releaseNotes; }
     bool checkingForUpdates() const { return m_checkingForUpdates; }
     bool downloadingUpdate() const { return m_downloadingUpdate; }
     int downloadProgress() const { return m_downloadProgress; }
@@ -44,6 +46,7 @@ public:
 signals:
     void updateAvailableChanged();
     void latestVersionChanged();
+    void releaseNotesChanged();
     void checkingForUpdatesChanged();
     void downloadingUpdateChanged();
     void downloadProgressChanged();
@@ -61,6 +64,7 @@ private:
     void launchExecutable(const QString& filePath);
     void setUpdateAvailable(bool available);
     void setLatestVersion(const QString& version);
+    void setReleaseNotes(const QString& notes);
     void setCheckingForUpdates(bool checking);
     void setDownloadingUpdate(bool downloading);
     void setDownloadProgress(int progress);
@@ -71,6 +75,7 @@ private:
 
     bool m_updateAvailable;
     QString m_latestVersion;
+    QString m_releaseNotes;
     bool m_checkingForUpdates;
     bool m_downloadingUpdate;
     int m_downloadProgress;
