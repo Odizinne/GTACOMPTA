@@ -207,9 +207,9 @@ ApplicationWindow {
                     VersionGetter.checkForUpdates()
                 }
 
-                //if (!window.isWasm) {
+                if (!window.isWasm) {
                     introSound.play()
-                //}
+                }
             }
         }
     }
