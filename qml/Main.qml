@@ -1409,15 +1409,17 @@ ApplicationWindow {
                 enabled: transDesc.text.length > 0
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
                 onClicked: {
+                    var dateString = transDate.formatDate(transDate.selectedDate)
+
                     if (transactionDialog.editMode) {
                         var oldAmount = transactionModel.getTransactionAmount(transactionDialog.editIndex)
                         var difference = transAmount.value - oldAmount
                         UserSettings.money += difference
 
                         transactionModel.updateTransaction(transactionDialog.editIndex, transDesc.text,
-                                                           transAmount.value, transDate.text)
+                                                         transAmount.value, dateString)
                     } else {
-                        awaitingTransactionModel.addAwaitingTransaction(transDesc.text, transAmount.value, transDate.text)
+                        awaitingTransactionModel.addAwaitingTransaction(transDesc.text, transAmount.value, dateString)
                     }
                     transactionDialog.close()
                 }
