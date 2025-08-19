@@ -1,4 +1,4 @@
-#include "FilterProxyModel.h"
+#include "filterproxymodel.h"
 #include "employeemodel.h"
 #include "transactionmodel.h"
 #include "awaitingtransactionmodel.h"
