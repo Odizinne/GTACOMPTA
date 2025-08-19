@@ -27,6 +27,40 @@ void BaseModel::removeEntry(int index)
 
 void BaseModel::loadFromFile()
 {
+#ifdef Q_OS_WASM
+    // Use QSettings for WebAssembly (IndexedDB backend)
+    QSettings settings("Odizinne", "GTACOMPTA");
+    QByteArray jsonData = settings.value(m_fileName).toByteArray();
+
+    if (jsonData.isEmpty()) {
+        qDebug() << "No data found for:" << m_fileName;
+        return;
+    }
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
+
+    if (error.error != QJsonParseError::NoError) {
+        qWarning() << "JSON parse error:" << error.errorString();
+        return;
+    }
+
+    beginResetModel();
+    clearModel();
+
+    QJsonArray array = doc.array();
+    for (const QJsonValue &value : array) {
+        QJsonObject obj = value.toObject();
+        entryFromJson(obj);
+    }
+
+    // Sort after loading
+    performSort();
+
+    endResetModel();
+    emit countChanged();
+#else
+    // Use file system for other platforms
     QString filePath = getDataFilePath();
     QFile file(filePath);
 
@@ -65,6 +99,7 @@ void BaseModel::loadFromFile()
 
     endResetModel();
     emit countChanged();
+#endif
 }
 
 void BaseModel::clear()
@@ -107,6 +142,13 @@ void BaseModel::saveToFile()
 
     QJsonDocument doc(array);
 
+#ifdef Q_OS_WASM
+    // Use QSettings for WebAssembly (IndexedDB backend)
+    QSettings settings("Odizinne", "GTACOMPTA");
+    settings.setValue(m_fileName, doc.toJson(QJsonDocument::Compact));
+    settings.sync(); // Important for WebAssembly to ensure data is persisted
+#else
+    // Use file system for other platforms
     QString filePath = getDataFilePath();
     QFileInfo fileInfo(filePath);
     QDir().mkpath(fileInfo.absolutePath());
@@ -119,10 +161,17 @@ void BaseModel::saveToFile()
 
     file.write(doc.toJson());
     file.close();
+#endif
 }
 
 QString BaseModel::getDataFilePath() const
 {
+#ifdef Q_OS_WASM
+    // For WebAssembly, this is only used as a key identifier
+    // The actual storage is handled by QSettings
+    return m_fileName;
+#else
     QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     return dataPath + "/" + m_fileName;
+#endif
 }

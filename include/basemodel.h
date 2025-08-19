@@ -8,6 +8,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QSettings>
 #include <QtQml/qqmlregistration.h>
 
 class DataManager; // Forward declaration

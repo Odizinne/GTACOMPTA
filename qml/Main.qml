@@ -1876,6 +1876,8 @@ ApplicationWindow {
                     transactionModel.clear()
                     awaitingTransactionModel.clear()
                     clientModel.clear()
+                    offerModel.clear()
+                    supplementModel.clear()
                     UserSettings.money = 0
                     clearAllDialog.close()
                 }
@@ -2546,10 +2548,19 @@ ApplicationWindow {
             }
         }
 
-        function onSettingsChanged(money, firstRun, companyName) {
+        function onSettingsChanged(money, firstRun, companyName, notes, autoUpdate, volume) {
             UserSettings.money = money
             UserSettings.firstRun = firstRun
             UserSettings.companyName = companyName
+            UserSettings.notes = notes
+            UserSettings.autoUpdate = autoUpdate
+            UserSettings.volume = volume
+        }
+
+        function onExportCompleted(success, message) {
+            messageDialog.isSuccess = success
+            messageDialog.message = message
+            messageDialog.open()
         }
     }
 }

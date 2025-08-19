@@ -375,6 +375,9 @@ QJsonObject DataManager::collectUserSettings()
     settings["money"] = qsettings.value("money", 0).toInt();
     settings["firstRun"] = qsettings.value("firstRun", true).toBool();
     settings["companyName"] = qsettings.value("companyName", "").toString();
+    settings["notes"] = qsettings.value("notes", "").toString();
+    settings["autoUpdate"] = qsettings.value("autoUpdate", true).toBool();
+    settings["volume"] = qsettings.value("volume", 0.5).toDouble();
 
     return settings;
 }
@@ -383,10 +386,11 @@ void DataManager::restoreUserSettings(const QJsonObject &settings)
 {
     emit settingsChanged(settings["money"].toInt(),
                          settings["firstRun"].toBool(),
-                         settings["companyName"].toString());
+                         settings["companyName"].toString(),
+                         settings["notes"].toString(),
+                         settings["autoUpdate"].toBool(),
+                         settings["volume"].toDouble());
 }
-
-// Add these methods to DataManager implementation:
 
 bool DataManager::exportDataToString(EmployeeModel *employeeModel,
                                      TransactionModel *transactionModel,
