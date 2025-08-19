@@ -298,8 +298,12 @@ void VersionGetter::launchExecutable(const QString& filePath)
 
     qDebug() << "Launching installer:" << filePath;
 
+#ifdef Q_OS_WASM
+    bool success = false;
+#else
     // Launch the installer and exit the application
     bool success = QProcess::startDetached(filePath);
+#endif
 
     if (success) {
         qDebug() << "Installer launched successfully, exiting application";

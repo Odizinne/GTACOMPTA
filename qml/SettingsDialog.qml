@@ -36,10 +36,12 @@ Dialog {
         }
 
         MenuSeparator {
+            visible: Qt.platform.os !== "wasm"
             Layout.fillWidth: true
         }
 
         RowLayout {
+            visible: Qt.platform.os !== "wasm"
             Layout.fillWidth: true
 
             Label {
@@ -56,6 +58,7 @@ Dialog {
         }
 
         Label {
+            visible: Qt.platform.os !== "wasm"
             text: "When enabled, GTACOMPTA will automatically check for updates on startup"
             Layout.fillWidth: true
             wrapMode: Text.WordWrap
@@ -64,11 +67,13 @@ Dialog {
         }
 
         MenuSeparator {
+            visible: Qt.platform.os !== "wasm"
             Layout.fillWidth: true
         }
 
         // Current version info
         RowLayout {
+            visible: Qt.platform.os !== "wasm"
             Layout.fillWidth: true
 
             Label {
@@ -85,8 +90,8 @@ Dialog {
 
         // Latest version info (shown when update is available)
         RowLayout {
+            visible: Qt.platform.os !== "wasm" && updateAvailable
             Layout.fillWidth: true
-            visible: updateAvailable
 
             Label {
                 text: "Latest Version:"
@@ -102,6 +107,7 @@ Dialog {
 
         // Update button and progress
         ColumnLayout {
+            visible: Qt.platform.os !== "wasm"
             Layout.fillWidth: true
             spacing: 10
 
