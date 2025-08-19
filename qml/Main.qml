@@ -1063,10 +1063,17 @@ ApplicationWindow {
 
                                     ToolButton {
                                         Layout.preferredHeight: 40
-                                        text: supplements.length + " supp"
+                                        text: {
+                                            var totalItems = 0
+                                            var suppMap = clientModel.getSupplementQuantities(index)
+                                            for (var key in suppMap) {
+                                                totalItems += suppMap[key]
+                                            }
+                                            return totalItems + " items"
+                                        }
                                         Layout.preferredWidth: 80
                                         onClicked: {
-                                            supplementDialog.currentSupplements = supplements
+                                            supplementDialog.currentSupplements = clientModel.getSupplementQuantities(index)
                                             supplementDialog.readOnly = true
                                             supplementDialog.open()
                                         }
@@ -1168,28 +1175,37 @@ ApplicationWindow {
         Material.roundedScale: Material.ExtraSmallScale
         id: supplementDialog
         title: readOnly ? "View Supplements" : "Select Supplements"
-        width: 400
+        width: 450
         anchors.centerIn: parent
         modal: true
 
-        property var currentSupplements: []
+        property var currentSupplements: ({})
         property bool readOnly: false
 
         function getSelectedSupplements() {
             var selected = []
+            var quantities = {}
+
             for (var i = 0; i < supplementRepeater.count; i++) {
-                var checkbox = supplementRepeater.itemAt(i)
-                if (checkbox.checked) {
+                var spinBox = supplementRepeater.itemAt(i).children[1] // Get the spinbox
+                if (spinBox.value > 0) {
                     selected.push(i)
+                    quantities[i.toString()] = spinBox.value
                 }
             }
-            return selected
+
+            // Return both for the client dialog to use
+            return {
+                selectedList: selected,
+                quantities: quantities
+            }
         }
 
         function setSelectedSupplements(supplements) {
             for (var i = 0; i < supplementRepeater.count; i++) {
-                var checkbox = supplementRepeater.itemAt(i)
-                checkbox.checked = supplements.includes(i)
+                var spinBox = supplementRepeater.itemAt(i).children[1]
+                var quantity = supplements[i.toString()] || 0
+                spinBox.value = quantity
             }
         }
 
@@ -1208,16 +1224,27 @@ ApplicationWindow {
                     id: supplementRepeater
                     model: supplementModel
 
-                    CheckBox {
+                    RowLayout {
                         width: parent.width
-                        enabled: !supplementDialog.readOnly
-                        text: model.name + " - " + window.toUiPrice(model.price)
+                        spacing: 10
 
-                        //background: Rectangle {
-                        //    color: parent.checked ? Material.accent : "transparent"
-                        //    opacity: 0.2
-                        //    radius: 4
-                        //}
+                        Label {
+                            text: model.name + " - " + window.toUiPrice(model.price)
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                        }
+
+                        SpinBox {
+                            Layout.preferredWidth: 120
+                            from: 0
+                            to: 999
+                            value: 0
+                            enabled: !supplementDialog.readOnly
+
+                            textFromValue: function(value, locale) {
+                                return value === 0 ? "None" : value.toString()
+                            }
+                        }
                     }
                 }
             }
@@ -1226,14 +1253,16 @@ ApplicationWindow {
         footer: DialogButtonBox {
             Repeater {
                 model: supplementDialog.readOnly ? [
-                                                       {text: "OK", role: DialogButtonBox.AcceptRole, action: function() { supplementDialog.close() }}
-                                                   ] : [
-                                                       {text: "Apply", role: DialogButtonBox.AcceptRole, action: function() {
-                                                           clientDialog.selectedSupplements = supplementDialog.getSelectedSupplements()
-                                                           supplementDialog.close()
-                                                       }},
-                                                       {text: "Cancel", role: DialogButtonBox.RejectRole, action: function() { supplementDialog.close() }}
-                                                   ]
+                    {text: "OK", role: DialogButtonBox.AcceptRole, action: function() { supplementDialog.close() }}
+                ] : [
+                    {text: "Apply", role: DialogButtonBox.AcceptRole, action: function() {
+                        var result = supplementDialog.getSelectedSupplements()
+                        clientDialog.selectedSupplements = result.selectedList
+                        clientDialog.supplementQuantities = result.quantities
+                        supplementDialog.close()
+                    }},
+                    {text: "Cancel", role: DialogButtonBox.RejectRole, action: function() { supplementDialog.close() }}
+                ]
 
                 Button {
                     flat: true
@@ -1564,6 +1593,7 @@ ApplicationWindow {
         property bool editMode: false
         property int editIndex: -1
         property var selectedSupplements: []
+        property var supplementQuantities: ({}) // New property
 
         function calculatePrice() {
             var basePrice = 0
@@ -1572,10 +1602,11 @@ ApplicationWindow {
             }
 
             var supplementsTotal = 0
-            for (var i = 0; i < selectedSupplements.length; i++) {
-                var suppIndex = selectedSupplements[i]
-                if (suppIndex >= 0 && suppIndex < supplementModel.count) {
-                    supplementsTotal += supplementModel.getSupplementPrice(suppIndex)
+            for (var suppIdStr in supplementQuantities) {
+                var suppId = parseInt(suppIdStr)
+                var quantity = supplementQuantities[suppIdStr]
+                if (suppId >= 0 && suppId < supplementModel.count && quantity > 0) {
+                    supplementsTotal += supplementModel.getSupplementPrice(suppId) * quantity
                 }
             }
 
@@ -1590,6 +1621,19 @@ ApplicationWindow {
             clientName.text = name
             clientOfferCombo.currentIndex = offer
             clientDialog.selectedSupplements = supplements
+
+            // Convert old format to new format if needed
+            if (editMode && editIndex >= 0) {
+                clientDialog.supplementQuantities = clientModel.getSupplementQuantities(editIndex)
+            } else {
+                // For backward compatibility, set quantity to 1 for selected supplements
+                var quantities = {}
+                for (var i = 0; i < supplements.length; i++) {
+                    quantities[supplements[i].toString()] = 1
+                }
+                clientDialog.supplementQuantities = quantities
+            }
+
             clientDiscount.value = discount
             clientPhone.text = phoneNumber
             clientComment.text = comment
@@ -1600,6 +1644,7 @@ ApplicationWindow {
             clientName.clear()
             clientOfferCombo.currentIndex = 0
             clientDialog.selectedSupplements = []
+            clientDialog.supplementQuantities = {}
             clientDiscount.value = 0
             clientPhone.clear()
             clientComment.clear()
@@ -1671,13 +1716,21 @@ ApplicationWindow {
                 }
 
                 Label {
-                    text: clientDialog.selectedSupplements.length + " selected"
+                    text: {
+                        var count = 0
+                        for (var key in clientDialog.supplementQuantities) {
+                            if (clientDialog.supplementQuantities[key] > 0) {
+                                count += clientDialog.supplementQuantities[key]
+                            }
+                        }
+                        return count + " items"
+                    }
                 }
 
                 Button {
                     text: "Select..."
                     onClicked: {
-                        supplementDialog.currentSupplements = clientDialog.selectedSupplements
+                        supplementDialog.currentSupplements = clientDialog.supplementQuantities
                         supplementDialog.readOnly = false
                         supplementDialog.open()
                     }
@@ -1726,7 +1779,7 @@ ApplicationWindow {
 
         Connections {
             target: clientDialog
-            function onSelectedSupplementsChanged() {
+            function onSupplementQuantitiesChanged() {
                 calculatedPrice.updatePrice()
             }
         }
@@ -1741,14 +1794,14 @@ ApplicationWindow {
                     var calculatedPriceValue = clientDialog.calculatePrice()
 
                     if (clientDialog.editMode) {
-                        clientModel.updateClient(clientDialog.editIndex, businessTypeCombo.currentIndex,
+                        clientModel.updateClientWithQuantities(clientDialog.editIndex, businessTypeCombo.currentIndex,
                                                  clientName.text, clientOfferCombo.currentIndex, calculatedPriceValue,
-                                                 clientDialog.selectedSupplements, clientDiscount.value,
+                                                 clientDialog.supplementQuantities, clientDiscount.value,
                                                  clientPhone.text, clientComment.text)
                     } else {
-                        clientModel.addClient(businessTypeCombo.currentIndex, clientName.text,
+                        clientModel.addClientWithQuantities(businessTypeCombo.currentIndex, clientName.text,
                                               clientOfferCombo.currentIndex, calculatedPriceValue,
-                                              clientDialog.selectedSupplements, clientDiscount.value,
+                                              clientDialog.supplementQuantities, clientDiscount.value,
                                               clientPhone.text, clientComment.text)
                     }
                     clientDialog.close()

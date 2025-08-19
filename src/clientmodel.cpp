@@ -67,7 +67,12 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
     client.name = name;
     client.offer = static_cast<Offer>(offer);
     client.price = price;
-    client.supplements = supplements;
+
+    // Convert list to map - for backward compatibility, assume quantity 1
+    for (int suppId : supplements) {
+        client.supplements[suppId] = 1;
+    }
+
     client.discount = discount;
     client.phoneNumber = phoneNumber;
     client.comment = comment;
@@ -95,7 +100,13 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     client.name = name;
     client.offer = static_cast<Offer>(offer);
     client.price = price;
-    client.supplements = supplements;
+
+    // Convert list to map - for backward compatibility, assume quantity 1
+    client.supplements.clear();
+    for (int suppId : supplements) {
+        client.supplements[suppId] = 1;
+    }
+
     client.discount = discount;
     client.phoneNumber = phoneNumber;
     client.comment = comment;
@@ -106,6 +117,59 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     endResetModel();
 
     saveToFile();
+}
+
+QJsonObject ClientModel::entryToJson(int index) const
+{
+    if (index < 0 || index >= m_clients.size())
+        return QJsonObject();
+
+    const Client &client = m_clients.at(index);
+    QJsonObject obj;
+    obj["businessType"] = static_cast<int>(client.businessType);
+    obj["name"] = client.name;
+    obj["offer"] = static_cast<int>(client.offer);
+    obj["price"] = client.price;
+
+    QJsonObject supplementsObj;
+    for (auto it = client.supplements.begin(); it != client.supplements.end(); ++it) {
+        supplementsObj[QString::number(it.key())] = it.value();
+    }
+    obj["supplements"] = supplementsObj;
+
+    obj["discount"] = client.discount;
+    obj["phoneNumber"] = client.phoneNumber;
+    obj["comment"] = client.comment;
+    return obj;
+}
+
+void ClientModel::entryFromJson(const QJsonObject &obj)
+{
+    Client client;
+    client.businessType = static_cast<BusinessType>(obj["businessType"].toInt());
+    client.name = obj["name"].toString();
+    client.offer = static_cast<Offer>(obj["offer"].toInt(0));
+    client.price = obj["price"].toInt();
+
+    // Handle both old format (array) and new format (object)
+    if (obj["supplements"].isArray()) {
+        // Old format - convert to new format with quantity 1
+        QJsonArray supplementsArray = obj["supplements"].toArray();
+        for (const QJsonValue &value : supplementsArray) {
+            client.supplements[value.toInt()] = 1;
+        }
+    } else if (obj["supplements"].isObject()) {
+        // New format
+        QJsonObject supplementsObj = obj["supplements"].toObject();
+        for (auto it = supplementsObj.begin(); it != supplementsObj.end(); ++it) {
+            client.supplements[it.key().toInt()] = it.value().toInt();
+        }
+    }
+
+    client.discount = obj["discount"].toInt();
+    client.phoneNumber = obj["phoneNumber"].toString();
+    client.comment = obj["comment"].toString();
+    m_clients.append(client);
 }
 
 void ClientModel::performSort()
@@ -142,48 +206,6 @@ void ClientModel::performSort()
 
         return m_sortAscending ? result : !result;
     });
-}
-
-QJsonObject ClientModel::entryToJson(int index) const
-{
-    if (index < 0 || index >= m_clients.size())
-        return QJsonObject();
-
-    const Client &client = m_clients.at(index);
-    QJsonObject obj;
-    obj["businessType"] = static_cast<int>(client.businessType);
-    obj["name"] = client.name;
-    obj["offer"] = static_cast<int>(client.offer);
-    obj["price"] = client.price;
-
-    QJsonArray supplementsArray;
-    for (int supplement : client.supplements) {
-        supplementsArray.append(supplement);
-    }
-    obj["supplements"] = supplementsArray;
-    obj["discount"] = client.discount;
-    obj["phoneNumber"] = client.phoneNumber;
-    obj["comment"] = client.comment;
-    return obj;
-}
-
-void ClientModel::entryFromJson(const QJsonObject &obj)
-{
-    Client client;
-    client.businessType = static_cast<BusinessType>(obj["businessType"].toInt());
-    client.name = obj["name"].toString();
-    client.offer = static_cast<Offer>(obj["offer"].toInt(0));
-    client.price = obj["price"].toInt();
-
-    QJsonArray supplementsArray = obj["supplements"].toArray();
-    for (const QJsonValue &value : supplementsArray) {
-        client.supplements.append(value.toInt());
-    }
-
-    client.discount = obj["discount"].toInt();
-    client.phoneNumber = obj["phoneNumber"].toString();
-    client.comment = obj["comment"].toString();
-    m_clients.append(client);
 }
 
 void ClientModel::addEntryToModel()
@@ -254,4 +276,87 @@ void ClientModel::checkout(int clientIndex)
     QString description = QString("Checkout for %1").arg(client.name);
 
     emit checkoutCompleted(description, client.price);
+}
+
+QVariantMap ClientModel::getSupplementQuantities(int clientIndex) const
+{
+    QVariantMap result;
+    if (clientIndex < 0 || clientIndex >= m_clients.size())
+        return result;
+
+    const Client &client = m_clients.at(clientIndex);
+    for (auto it = client.supplements.begin(); it != client.supplements.end(); ++it) {
+        result[QString::number(it.key())] = it.value();
+    }
+    return result;
+}
+
+void ClientModel::addClientWithQuantities(int businessType, const QString &name, int offer, int price,
+                                          const QVariantMap &supplementQuantities, int discount,
+                                          const QString &phoneNumber, const QString &comment)
+{
+    beginInsertRows(QModelIndex(), m_clients.size(), m_clients.size());
+    Client client;
+    client.businessType = static_cast<BusinessType>(businessType);
+    client.name = name;
+    client.offer = static_cast<Offer>(offer);
+    client.price = price;
+
+    // Convert QVariantMap to QMap<int, int>
+    for (auto it = supplementQuantities.begin(); it != supplementQuantities.end(); ++it) {
+        int suppId = it.key().toInt();
+        int quantity = it.value().toInt();
+        if (quantity > 0) {
+            client.supplements[suppId] = quantity;
+        }
+    }
+
+    client.discount = discount;
+    client.phoneNumber = phoneNumber;
+    client.comment = comment;
+    m_clients.append(client);
+    endInsertRows();
+
+    // Sort after adding
+    beginResetModel();
+    performSort();
+    endResetModel();
+
+    emit countChanged();
+    saveToFile();
+}
+
+void ClientModel::updateClientWithQuantities(int index, int businessType, const QString &name, int offer, int price,
+                                             const QVariantMap &supplementQuantities, int discount,
+                                             const QString &phoneNumber, const QString &comment)
+{
+    if (index < 0 || index >= m_clients.size())
+        return;
+
+    Client &client = m_clients[index];
+    client.businessType = static_cast<BusinessType>(businessType);
+    client.name = name;
+    client.offer = static_cast<Offer>(offer);
+    client.price = price;
+
+    // Convert QVariantMap to QMap<int, int>
+    client.supplements.clear();
+    for (auto it = supplementQuantities.begin(); it != supplementQuantities.end(); ++it) {
+        int suppId = it.key().toInt();
+        int quantity = it.value().toInt();
+        if (quantity > 0) {
+            client.supplements[suppId] = quantity;
+        }
+    }
+
+    client.discount = discount;
+    client.phoneNumber = phoneNumber;
+    client.comment = comment;
+
+    // Resort after updating
+    beginResetModel();
+    performSort();
+    endResetModel();
+
+    saveToFile();
 }

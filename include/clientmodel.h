@@ -59,6 +59,13 @@ public:
     Q_INVOKABLE int getSupplementCount() const;
     Q_INVOKABLE QString getSupplementName(int id) const;
     Q_INVOKABLE double getSupplementPriceDisplay(int id) const;
+    Q_INVOKABLE QVariantMap getSupplementQuantities(int clientIndex) const;
+    Q_INVOKABLE void addClientWithQuantities(int businessType, const QString &name, int offer, int price,
+                                             const QVariantMap &supplementQuantities, int discount,
+                                             const QString &phoneNumber, const QString &comment);
+    Q_INVOKABLE void updateClientWithQuantities(int index, int businessType, const QString &name, int offer, int price,
+                                                const QVariantMap &supplementQuantities, int discount,
+                                                const QString &phoneNumber, const QString &comment);
 
 protected:
     QJsonObject entryToJson(int index) const override;
@@ -80,7 +87,7 @@ private:
         QString name;
         Offer offer;
         int price;
-        QList<int> supplements;
+        QMap<int, int> supplements;
         int discount;
         QString phoneNumber;
         QString comment;
