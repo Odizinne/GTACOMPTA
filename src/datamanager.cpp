@@ -62,9 +62,6 @@ bool DataManager::exportData(const QString &filePath,
         QJsonDocument doc(rootObject);
         QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
 
-        // Encrypt the data
-        QByteArray encryptedData = encryptData(jsonData);
-
         // Ensure directory exists
         QFileInfo fileInfo(filePath);
         QDir().mkpath(fileInfo.absolutePath());
@@ -75,7 +72,7 @@ bool DataManager::exportData(const QString &filePath,
             return false;
         }
 
-        qint64 bytesWritten = file.write(encryptedData);
+        qint64 bytesWritten = file.write(jsonData);
         file.close();
 
         if (bytesWritten == -1) {
@@ -117,21 +114,14 @@ bool DataManager::importData(const QString &filePath,
     }
 
     try {
-        QByteArray encryptedData = file.readAll();
+        QByteArray jsonData = file.readAll();
         file.close();
-
-        // Decrypt the data
-        QByteArray jsonData = decryptData(encryptedData);
-        if (jsonData.isEmpty()) {
-            emit importCompleted(false, "Failed to decrypt file or invalid file format");
-            return false;
-        }
 
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
 
         if (error.error != QJsonParseError::NoError) {
-            emit importCompleted(false, "Invalid backup file format or corrupted data");
+            emit importCompleted(false, "Invalid backup file format: " + error.errorString());
             return false;
         }
 
@@ -191,6 +181,111 @@ bool DataManager::importData(const QString &filePath,
     }
 }
 
+bool DataManager::exportDataToString(EmployeeModel *employeeModel,
+                                     TransactionModel *transactionModel,
+                                     AwaitingTransactionModel *awaitingTransactionModel,
+                                     ClientModel *clientModel,
+                                     SupplementModel *supplementModel,
+                                     OfferModel *offerModel)
+{
+    try {
+        QJsonObject rootObject = collectAllData(employeeModel, transactionModel,
+                                                awaitingTransactionModel, clientModel,
+                                                supplementModel, offerModel);
+
+        QJsonDocument doc(rootObject);
+        QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
+        QString jsonString = QString::fromUtf8(jsonData);
+
+        // Generate filename with timestamp
+        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
+        QString fileName = QString("GTACOMPTA_backup_%1.gco").arg(timestamp);
+
+        emit exportDataReady(jsonString, fileName);
+        emit exportCompleted(true, "Data prepared for download");
+        return true;
+
+    } catch (const std::exception &e) {
+        emit exportCompleted(false, "Export failed: " + QString::fromStdString(e.what()));
+        return false;
+    }
+}
+
+bool DataManager::importDataFromString(const QString &data,
+                                       EmployeeModel *employeeModel,
+                                       TransactionModel *transactionModel,
+                                       AwaitingTransactionModel *awaitingTransactionModel,
+                                       ClientModel *clientModel,
+                                       SupplementModel *supplementModel,
+                                       OfferModel *offerModel)
+{
+    try {
+        QByteArray jsonData = data.toUtf8();
+
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
+
+        if (error.error != QJsonParseError::NoError) {
+            emit importCompleted(false, "Invalid backup file format: " + error.errorString());
+            return false;
+        }
+
+        QJsonObject rootObject = doc.object();
+
+        // Verify this is a valid GTACOMPTA backup
+        if (!rootObject.contains("application") || rootObject["application"].toString() != "GTACOMPTA") {
+            emit importCompleted(false, "This is not a valid GTACOMPTA backup file");
+            return false;
+        }
+
+        // Restore user settings first
+        if (rootObject.contains("userSettings")) {
+            restoreUserSettings(rootObject["userSettings"].toObject());
+        }
+
+        // Clear all models before importing
+        if (employeeModel) employeeModel->clear();
+        if (transactionModel) transactionModel->clear();
+        if (awaitingTransactionModel) awaitingTransactionModel->clear();
+        if (clientModel) clientModel->clear();
+        if (supplementModel) supplementModel->clear();
+        if (offerModel) offerModel->clear();
+
+        // Restore model data
+        bool success = true;
+        if (rootObject.contains("employees")) {
+            success &= restoreModelFromJsonArray(employeeModel, rootObject["employees"].toArray());
+        }
+        if (rootObject.contains("transactions")) {
+            success &= restoreModelFromJsonArray(transactionModel, rootObject["transactions"].toArray());
+        }
+        if (rootObject.contains("awaitingTransactions")) {
+            success &= restoreModelFromJsonArray(awaitingTransactionModel, rootObject["awaitingTransactions"].toArray());
+        }
+        if (rootObject.contains("clients")) {
+            success &= restoreModelFromJsonArray(clientModel, rootObject["clients"].toArray());
+        }
+        if (rootObject.contains("supplements")) {
+            success &= restoreModelFromJsonArray(supplementModel, rootObject["supplements"].toArray());
+        }
+        if (rootObject.contains("offers")) {
+            success &= restoreModelFromJsonArray(offerModel, rootObject["offers"].toArray());
+        }
+
+        if (success) {
+            emit importCompleted(true, "Data imported successfully");
+        } else {
+            emit importCompleted(false, "Some data could not be imported properly");
+        }
+
+        return success;
+
+    } catch (const std::exception &e) {
+        emit importCompleted(false, "Import failed: " + QString::fromStdString(e.what()));
+        return false;
+    }
+}
+
 QString DataManager::getDefaultExportPath() const
 {
     QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
@@ -200,88 +295,6 @@ QString DataManager::getDefaultExportPath() const
 QString DataManager::getDefaultImportPath() const
 {
     return getDefaultExportPath();
-}
-
-QByteArray DataManager::encryptData(const QByteArray &data)
-{
-    // Create a signature to verify the file is valid
-    QByteArray signature = "GTACOMPTA_V1";
-
-    // Generate a key based on a fixed string + data length (simple but effective)
-    QString keyBase = "GTACOMPTA_KEY_2025_SECURE_BACKUP";
-    QByteArray key = QCryptographicHash::hash((keyBase + QString::number(data.size())).toUtf8(),
-                                              QCryptographicHash::Sha256);
-
-    QByteArray encrypted;
-    encrypted.append(signature); // Add signature at the beginning
-
-    // XOR encryption with key rotation
-    for (int i = 0; i < data.size(); ++i) {
-        quint8 keyByte = static_cast<quint8>(key.at(i % key.size()));
-        quint8 dataByte = static_cast<quint8>(data.at(i));
-
-        // Add some extra obfuscation by rotating the key byte
-        keyByte = static_cast<quint8>((keyByte + i) % 256);
-
-        encrypted.append(static_cast<char>(dataByte ^ keyByte));
-    }
-
-    return encrypted;
-}
-
-QByteArray DataManager::decryptData(const QByteArray &encryptedData)
-{
-    QByteArray signature = "GTACOMPTA_V1";
-
-    // Check minimum size and signature
-    if (encryptedData.size() < signature.size() + 10) {
-        return QByteArray(); // Too small to be valid
-    }
-
-    // Verify signature
-    if (!encryptedData.startsWith(signature)) {
-        return QByteArray(); // Invalid signature
-    }
-
-    // Extract the encrypted content (without signature)
-    QByteArray content = encryptedData.mid(signature.size());
-
-    // We need to try different key lengths since we don't know the original data size
-    // Try reasonable data sizes (most backups will be between 1KB and 10MB)
-    for (int estimatedSize = content.size() - 100; estimatedSize <= content.size() + 100; ++estimatedSize) {
-        if (estimatedSize <= 0) continue;
-
-        QString keyBase = "GTACOMPTA_KEY_2025_SECURE_BACKUP";
-        QByteArray key = QCryptographicHash::hash((keyBase + QString::number(estimatedSize)).toUtf8(),
-                                                  QCryptographicHash::Sha256);
-
-        QByteArray decrypted;
-
-        // XOR decryption with key rotation
-        for (int i = 0; i < content.size(); ++i) {
-            quint8 keyByte = static_cast<quint8>(key.at(i % key.size()));
-            quint8 encryptedByte = static_cast<quint8>(content.at(i));
-
-            // Apply the same key rotation as in encryption
-            keyByte = static_cast<quint8>((keyByte + i) % 256);
-
-            decrypted.append(static_cast<char>(encryptedByte ^ keyByte));
-        }
-
-        // Try to parse as JSON to verify it's correct
-        QJsonParseError error;
-        QJsonDocument testDoc = QJsonDocument::fromJson(decrypted, &error);
-
-        if (error.error == QJsonParseError::NoError && !testDoc.isNull()) {
-            QJsonObject obj = testDoc.object();
-            // Double-check it's a valid GTACOMPTA file
-            if (obj.contains("application") && obj["application"].toString() == "GTACOMPTA") {
-                return decrypted;
-            }
-        }
-    }
-
-    return QByteArray(); // Decryption failed
 }
 
 QJsonObject DataManager::collectAllData(EmployeeModel *employeeModel,
@@ -390,120 +403,4 @@ void DataManager::restoreUserSettings(const QJsonObject &settings)
                          settings["notes"].toString(),
                          settings["autoUpdate"].toBool(),
                          settings["volume"].toDouble());
-}
-
-bool DataManager::exportDataToString(EmployeeModel *employeeModel,
-                                     TransactionModel *transactionModel,
-                                     AwaitingTransactionModel *awaitingTransactionModel,
-                                     ClientModel *clientModel,
-                                     SupplementModel *supplementModel,
-                                     OfferModel *offerModel)
-{
-    try {
-        QJsonObject rootObject = collectAllData(employeeModel, transactionModel,
-                                                awaitingTransactionModel, clientModel,
-                                                supplementModel, offerModel);
-
-        QJsonDocument doc(rootObject);
-        QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
-
-        // Encrypt the data
-        QByteArray encryptedData = encryptData(jsonData);
-        QString base64Data = encryptedData.toBase64();
-
-        // Generate filename with timestamp
-        QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
-        QString fileName = QString("GTACOMPTA_backup_%1.gco").arg(timestamp);
-
-        emit exportDataReady(base64Data, fileName);
-        emit exportCompleted(true, "Data prepared for download");
-        return true;
-
-    } catch (const std::exception &e) {
-        emit exportCompleted(false, "Export failed: " + QString::fromStdString(e.what()));
-        return false;
-    }
-}
-
-bool DataManager::importDataFromString(const QString &data,
-                                       EmployeeModel *employeeModel,
-                                       TransactionModel *transactionModel,
-                                       AwaitingTransactionModel *awaitingTransactionModel,
-                                       ClientModel *clientModel,
-                                       SupplementModel *supplementModel,
-                                       OfferModel *offerModel)
-{
-    try {
-        // Decode from base64
-        QByteArray encryptedData = QByteArray::fromBase64(data.toUtf8());
-
-        // Decrypt the data
-        QByteArray jsonData = decryptData(encryptedData);
-        if (jsonData.isEmpty()) {
-            emit importCompleted(false, "Failed to decrypt file or invalid file format");
-            return false;
-        }
-
-        QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-
-        if (error.error != QJsonParseError::NoError) {
-            emit importCompleted(false, "Invalid backup file format or corrupted data");
-            return false;
-        }
-
-        QJsonObject rootObject = doc.object();
-
-        // Verify this is a valid GTACOMPTA backup
-        if (!rootObject.contains("application") || rootObject["application"].toString() != "GTACOMPTA") {
-            emit importCompleted(false, "This is not a valid GTACOMPTA backup file");
-            return false;
-        }
-
-        // Restore user settings first
-        if (rootObject.contains("userSettings")) {
-            restoreUserSettings(rootObject["userSettings"].toObject());
-        }
-
-        // Clear all models before importing
-        if (employeeModel) employeeModel->clear();
-        if (transactionModel) transactionModel->clear();
-        if (awaitingTransactionModel) awaitingTransactionModel->clear();
-        if (clientModel) clientModel->clear();
-        if (supplementModel) supplementModel->clear();
-        if (offerModel) offerModel->clear();
-
-        // Restore model data
-        bool success = true;
-        if (rootObject.contains("employees")) {
-            success &= restoreModelFromJsonArray(employeeModel, rootObject["employees"].toArray());
-        }
-        if (rootObject.contains("transactions")) {
-            success &= restoreModelFromJsonArray(transactionModel, rootObject["transactions"].toArray());
-        }
-        if (rootObject.contains("awaitingTransactions")) {
-            success &= restoreModelFromJsonArray(awaitingTransactionModel, rootObject["awaitingTransactions"].toArray());
-        }
-        if (rootObject.contains("clients")) {
-            success &= restoreModelFromJsonArray(clientModel, rootObject["clients"].toArray());
-        }
-        if (rootObject.contains("supplements")) {
-            success &= restoreModelFromJsonArray(supplementModel, rootObject["supplements"].toArray());
-        }
-        if (rootObject.contains("offers")) {
-            success &= restoreModelFromJsonArray(offerModel, rootObject["offers"].toArray());
-        }
-
-        if (success) {
-            emit importCompleted(true, "Data imported successfully");
-        } else {
-            emit importCompleted(false, "Some data could not be imported properly");
-        }
-
-        return success;
-
-    } catch (const std::exception &e) {
-        emit importCompleted(false, "Import failed: " + QString::fromStdString(e.what()));
-        return false;
-    }
 }

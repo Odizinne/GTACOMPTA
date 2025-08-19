@@ -87,10 +87,6 @@ private:
     QJsonObject collectUserSettings();
     void restoreUserSettings(const QJsonObject &settings);
 
-    // Encryption/decryption methods
-    QByteArray encryptData(const QByteArray &data);
-    QByteArray decryptData(const QByteArray &encryptedData);
-
     static DataManager* m_instance;
 };
 
