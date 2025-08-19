@@ -80,6 +80,7 @@ Dialog {
             flat: true
             text: "Exit"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+            visible: Qt.platform.os !== "wasm"
             onClicked: Qt.quit()
         }
     }
