@@ -10,7 +10,7 @@ set(CMAKE_AUTORCC ON)
 set(QT_QML_GENERATE_QMLLS_INI ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Quick Qml Network)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -24,6 +24,7 @@ set(HEADERS
     include/supplementmodel.h
     include/offermodel.h
     include/filterproxymodel.h
+    include/datamanager.h
 )
 
 set(SOURCES
@@ -36,6 +37,7 @@ set(SOURCES
     src/supplementmodel.cpp
     src/offermodel.cpp
     src/filterproxymodel.cpp
+    src/datamanager.cpp
 )
 
 # Get git commit hash
@@ -75,6 +77,13 @@ qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
 
 set(QML_FILES
     qml/Main.qml
+    qml/SortableLabel.qml
+    qml/FakeUpgradeDialog.qml
+    qml/WelcomeDialog.qml
+    qml/VersionDialog.qml
+    qml/SplashScreen.qml
+    qml/DatePicker.qml
+    qml/SettingsDialog.qml
 )
 
 set(QML_SINGLETONS
@@ -96,13 +105,6 @@ qt_add_qml_module(GTACOMPTA
     VERSION 1.0
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
-    QML_FILES qml/SortableLabel.qml
-    QML_FILES qml/FakeUpgradeDialog.qml
-    QML_FILES qml/WelcomeDialog.qml
-    QML_FILES qml/VersionDialog.qml
-    QML_FILES qml/SplashScreen.qml
-    SOURCES include/datamanager.h src/datamanager.cpp
-    QML_FILES qml/DatePicker.qml
 )
 
 set_target_properties(GTACOMPTA PROPERTIES
@@ -110,7 +112,7 @@ set_target_properties(GTACOMPTA PROPERTIES
 )
 
 target_link_libraries(GTACOMPTA
-    PRIVATE Qt6::Quick Qt6::Qml
+    PRIVATE Qt6::Quick Qt6::Qml Qt6::Network
 )
 
 include(GNUInstallDirs)

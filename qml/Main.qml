@@ -128,7 +128,6 @@ ApplicationWindow {
 
     VersionDialog {
         Material.roundedScale: Material.ExtraSmallScale
-
         id: versionDialog
     }
 
@@ -165,6 +164,15 @@ ApplicationWindow {
         }
     }
 
+    Connections {
+        target: VersionGetter
+        function onUpdateCheckCompleted(updateAvailable, latestVersion) {
+            if (!settingsDialog.visible && updateAvailable) {
+                settingsDialog.open()
+            }
+        }
+    }
+
     StackView {
         id: mainStack
         anchors.fill: parent
@@ -179,12 +187,20 @@ ApplicationWindow {
                 if (UserSettings.firstRun) {
                     welcomeDialog.open()
                 }
+
+                if (UserSettings.autoUpdate) {
+                    VersionGetter.checkForUpdates()
+                }
             }
         }
     }
 
     SplashScreen {
         id: splash
+    }
+
+    SettingsDialog {
+        id: settingsDialog
     }
 
     Page {
@@ -215,13 +231,8 @@ ApplicationWindow {
                         title: "File"
 
                         MenuItem {
-                            text: "Export Data..."
-                            onTriggered: exportDialog.open()
-                        }
-
-                        MenuItem {
-                            text: "Import Data..."
-                            onTriggered: importDialog.open()
+                            text: "Settings"
+                            onTriggered: settingsDialog.open()
                         }
 
                         MenuSeparator { }
@@ -257,6 +268,18 @@ ApplicationWindow {
                         MenuItem {
                             text: "Supplements and Offers..."
                             onTriggered: supplementOfferManagementDialog.open()
+                        }
+
+                        MenuSeparator { }
+
+                        MenuItem {
+                            text: "Export Data..."
+                            onTriggered: exportDialog.open()
+                        }
+
+                        MenuItem {
+                            text: "Import Data..."
+                            onTriggered: importDialog.open()
                         }
                     }
 
