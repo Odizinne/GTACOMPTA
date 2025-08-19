@@ -565,6 +565,7 @@ ApplicationWindow {
                                         text: window.toUiPrice(salary)
                                         color: "lightgreen"
                                         Layout.preferredWidth: 80
+                                        elide: Text.ElideRight
                                     }
 
                                     Label {
@@ -703,6 +704,7 @@ ApplicationWindow {
                                         color: amount >= 0 ? "lightgreen" : "lightcoral"
                                         font.bold: true
                                         Layout.preferredWidth: 120
+                                        elide: Text.ElideRight
                                     }
 
                                     Label {
@@ -831,6 +833,7 @@ ApplicationWindow {
                                         color: amount >= 0 ? "lightgreen" : "lightcoral"
                                         font.bold: true
                                         Layout.preferredWidth: 120
+                                        elide: Text.ElideRight
                                     }
 
                                     Label {
@@ -1025,11 +1028,13 @@ ApplicationWindow {
                                             return "Unknown"
                                         }
                                         Layout.preferredWidth: 80
+                                        elide: Text.ElideRight
                                     }
 
                                     Label {
                                         text: window.toUiPrice(price)
                                         Layout.preferredWidth: 60
+                                        elide: Text.ElideRight
                                     }
 
                                     ToolButton {
@@ -1046,6 +1051,7 @@ ApplicationWindow {
                                     Label {
                                         text: discount + "%"
                                         Layout.preferredWidth: 40
+                                        elide: Text.ElideRight
                                     }
 
                                     Label {
