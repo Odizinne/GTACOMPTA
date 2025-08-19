@@ -67,9 +67,18 @@ Dialog {
             }
 
             Label {
+                id: titleLabel
                 text: "Odizinne"
                 font.bold: true
+                font.underline: mouseArea.containsMouse
                 color: Material.accent
+
+                MouseArea {
+                    id: mouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: Qt.openUrlExternally("https://github.com/Odizinne/")
+                }
             }
         }
 
