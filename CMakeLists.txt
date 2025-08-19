@@ -101,6 +101,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES qml/WelcomeDialog.qml
     QML_FILES qml/VersionDialog.qml
     QML_FILES qml/SplashScreen.qml
+    SOURCES include/datamanager.h src/datamanager.cpp
 )
 
 set_target_properties(GTACOMPTA PROPERTIES

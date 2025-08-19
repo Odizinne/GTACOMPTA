@@ -10,6 +10,8 @@
 #include <QFile>
 #include <QtQml/qqmlregistration.h>
 
+class DataManager; // Forward declaration
+
 class BaseModel : public QAbstractListModel
 {
     Q_OBJECT
@@ -17,6 +19,8 @@ class BaseModel : public QAbstractListModel
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(int sortColumn READ sortColumn NOTIFY sortColumnChanged)
     Q_PROPERTY(bool sortAscending READ sortAscending NOTIFY sortAscendingChanged)
+
+    friend class DataManager; // Add friend access for DataManager
 
 public:
     explicit BaseModel(const QString &fileName, QObject *parent = nullptr);

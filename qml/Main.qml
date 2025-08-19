@@ -2,10 +2,12 @@ import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl
 import QtQuick.Controls.impl
+import QtQuick.Dialogs
 import QtQuick.Layouts
 import QtQml
 import Odizinne.GTACOMPTA
 import QtMultimedia
+import QtCore
 
 ApplicationWindow {
     id: window
@@ -213,11 +215,21 @@ ApplicationWindow {
                         title: "File"
 
                         MenuItem {
-                            text: "Clear All Data"
-                            onTriggered: clearAllDialog.open()
+                            text: "Export Data..."
+                            onTriggered: exportDialog.open()
+                        }
+
+                        MenuItem {
+                            text: "Import Data..."
+                            onTriggered: importDialog.open()
                         }
 
                         MenuSeparator { }
+
+                        MenuItem {
+                            text: "Clear All Data"
+                            onTriggered: clearAllDialog.open()
+                        }
 
                         MenuItem {
                             text: "Exit"
@@ -2112,6 +2124,263 @@ ApplicationWindow {
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
                 onClicked: supplementOfferDialog.close()
             }
+        }
+    }
+
+    // Export Dialog
+    Dialog {
+        Material.roundedScale: Material.ExtraSmallScale
+        id: exportDialog
+        title: "Export Data"
+        width: 500
+        anchors.centerIn: parent
+        modal: true
+
+        Column {
+            width: parent.width
+            spacing: 15
+
+            Label {
+                text: "Export all your data to a .gco backup file."
+                width: parent.width
+                wrapMode: Text.WordWrap
+            }
+
+            RowLayout {
+                width: parent.width
+
+                Label {
+                    text: "File path:"
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: exportPathField
+                    Layout.fillWidth: true
+                    text: DataManager.getDefaultExportPath()
+                    Layout.preferredHeight: 35
+                    placeholderText: "Choose export location..."
+                }
+
+                ToolButton {
+                    text: "Browse..."
+                    icon.source: "qrc:/icons/folder.svg"
+                    icon.width: 16
+                    icon.height: 16
+                    Layout.preferredHeight: 40
+                    onClicked: exportFileDialog.open()
+                }
+            }
+
+            Label {
+                text: "This will create a backup containing:\n• All employees, transactions, clients\n• Supplements and offers\n• User settings and balance"
+                width: parent.width
+                wrapMode: Text.WordWrap
+                color: "gray"
+                font.pixelSize: 12
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                flat: true
+                text: "Export"
+                enabled: exportPathField.text.length > 0
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                onClicked: {
+                    DataManager.exportData(exportPathField.text,
+                                           employeeModel,
+                                           transactionModel,
+                                           awaitingTransactionModel,
+                                           clientModel,
+                                           supplementModel,
+                                           offerModel)
+                    exportDialog.close()
+                }
+            }
+
+            Button {
+                flat: true
+                text: "Cancel"
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: exportDialog.close()
+            }
+        }
+
+        FileDialog {
+            id: exportFileDialog
+            title: "Save backup file"
+            fileMode: FileDialog.SaveFile
+            nameFilters: ["GTACOMPTA Backup Files (*.gco)", "All Files (*)"]
+            defaultSuffix: "gco"
+            currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+            onAccepted: {
+                exportPathField.text = selectedFile.toString().replace("file:///", "").replace("file://", "")
+            }
+        }
+    }
+
+    // Import Dialog
+    Dialog {
+        Material.roundedScale: Material.ExtraSmallScale
+        id: importDialog
+        title: "Import Data"
+        width: 500
+        anchors.centerIn: parent
+        modal: true
+
+        Column {
+            width: parent.width
+            spacing: 15
+
+            Label {
+                text: "Import data from a .gco backup file."
+                width: parent.width
+                wrapMode: Text.WordWrap
+                font.bold: true
+            }
+
+            Label {
+                text: "⚠️ WARNING: This will completely replace all your current data!"
+                width: parent.width
+                wrapMode: Text.WordWrap
+                color: Material.color(Material.Red)
+                font.bold: true
+            }
+
+            RowLayout {
+                width: parent.width
+
+                Label {
+                    text: "File path:"
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: importPathField
+                    Layout.fillWidth: true
+                    text: DataManager.getDefaultImportPath()
+                    Layout.preferredHeight: 35
+                    placeholderText: "Choose backup file to import..."
+                }
+
+                ToolButton {
+                    text: "Browse..."
+                    icon.source: "qrc:/icons/folder.svg"
+                    icon.width: 16
+                    icon.height: 16
+                    Layout.preferredHeight: 40
+                    onClicked: importFileDialog.open()
+                }
+            }
+
+            Label {
+                text: "This will restore:\n• All employees, transactions, clients\n• Supplements and offers\n• User settings and balance"
+                width: parent.width
+                wrapMode: Text.WordWrap
+                color: "gray"
+                font.pixelSize: 12
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                flat: true
+                text: "Import"
+                enabled: importPathField.text.length > 0
+                DialogButtonBox.buttonRole: DialogButtonBox.DestructiveRole
+                onClicked: {
+                    DataManager.importData(importPathField.text,
+                                           employeeModel,
+                                           transactionModel,
+                                           awaitingTransactionModel,
+                                           clientModel,
+                                           supplementModel,
+                                           offerModel)
+                    importDialog.close()
+                }
+            }
+
+            Button {
+                flat: true
+                text: "Cancel"
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: importDialog.close()
+            }
+        }
+
+        FileDialog {
+            id: importFileDialog
+            title: "Open backup file"
+            fileMode: FileDialog.OpenFile
+            nameFilters: ["GTACOMPTA Backup Files (*.gco)", "All Files (*)"]
+            currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+            onAccepted: {
+                importPathField.text = selectedFile.toString().replace("file:///", "").replace("file://", "")
+            }
+        }
+    }
+
+    // Success/Error message dialog
+    Dialog {
+        Material.roundedScale: Material.ExtraSmallScale
+        id: messageDialog
+        title: "Operation Result"
+        width: 400
+        anchors.centerIn: parent
+        modal: true
+
+        property string message: ""
+        property bool isSuccess: true
+
+        Label {
+            anchors.fill: parent
+            text: messageDialog.message
+            wrapMode: Text.WordWrap
+            color: messageDialog.isSuccess ? Material.color(Material.Green) : Material.color(Material.Red)
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                flat: true
+                text: "OK"
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                onClicked: messageDialog.close()
+            }
+        }
+    }
+
+    // Connections for DataManager signals
+    Connections {
+        target: DataManager
+        function onExportCompleted(success, message) {
+            messageDialog.isSuccess = success
+            messageDialog.message = message
+            messageDialog.open()
+        }
+    }
+
+    Connections {
+        target: DataManager
+        function onImportCompleted(success, message) {
+            messageDialog.isSuccess = success
+            messageDialog.message = message
+            messageDialog.open()
+
+            if (success) {
+                employeeModel.loadFromFile()
+                transactionModel.loadFromFile()
+                awaitingTransactionModel.loadFromFile()
+                clientModel.loadFromFile()
+                supplementModel.loadFromFile()
+                offerModel.loadFromFile()
+            }
+        }
+
+        function onSettingsChanged(money, firstRun, companyName) {
+            UserSettings.money = money
+            UserSettings.firstRun = firstRun
+            UserSettings.companyName = companyName
         }
     }
 }

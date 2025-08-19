@@ -7,5 +7,6 @@
         <file>checkmark.svg</file>
         <file>new.svg</file>
         <file>search.svg</file>
+        <file>folder.svg</file>
     </qresource>
 </RCC>
