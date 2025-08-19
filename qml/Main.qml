@@ -1240,6 +1240,7 @@ ApplicationWindow {
                             to: 999
                             value: 0
                             enabled: !supplementDialog.readOnly
+                            Layout.preferredHeight: Constants.comboHeight
 
                             textFromValue: function(value, locale) {
                                 return value === 0 ? "None" : value.toString()
