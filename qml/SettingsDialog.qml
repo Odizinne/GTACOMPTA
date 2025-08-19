@@ -18,8 +18,27 @@ Dialog {
         anchors.fill: parent
         spacing: 20
 
+        RowLayout {
+            Layout.fillWidth: true
 
-        // Auto-update toggle
+            Label {
+                text: "Application volume"
+                Layout.fillWidth: true
+                font.bold: true
+            }
+
+            Slider {
+                value: UserSettings.volume
+                onValueChanged : UserSettings.volume = value
+                from: 0
+                to: 1
+            }
+        }
+
+        MenuSeparator {
+            Layout.fillWidth: true
+        }
+
         RowLayout {
             Layout.fillWidth: true
 

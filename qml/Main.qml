@@ -24,7 +24,7 @@ ApplicationWindow {
     SoundEffect {
         id: introSound
         source: "qrc:/sounds/intro.wav"
-        volume: 0.5
+        volume: UserSettings.volume
     }
 
     Material.primary: "#2A2F2A"
@@ -116,6 +116,11 @@ ApplicationWindow {
         Material.roundedScale: Material.ExtraSmallScale
 
         id: fakeUpgradeDialog
+    }
+
+    ConfirmDialog {
+        id: confirmDialog
+        Material.roundedScale: Material.ExtraSmallScale
     }
 
     WelcomeDialog {
@@ -644,7 +649,12 @@ ApplicationWindow {
                                             Layout.preferredHeight: 40
                                             onClicked: {
                                                 var sourceIndex = employeeFilterModel.mapToSource(employeeFilterModel.index(index, 0))
-                                                employeeModel.removeEntry(sourceIndex.row)
+                                                confirmDialog.title = "Remove Employee"
+                                                confirmDialog.confirmed.connect(function() {
+                                                    employeeModel.removeEntry(sourceIndex.row)
+                                                    confirmDialog.confirmed.disconnect(arguments.callee)
+                                                })
+                                                confirmDialog.open()
                                             }
                                         }
                                     }
@@ -772,8 +782,13 @@ ApplicationWindow {
                                             icon.color: Material.color(Material.Red)
                                             onClicked: {
                                                 var sourceIndex = transactionFilterModel.mapToSource(transactionFilterModel.index(index, 0))
-                                                UserSettings.money -= amount
-                                                transactionModel.removeEntry(sourceIndex.row)
+                                                confirmDialog.title = "Remove Transaction"
+                                                confirmDialog.confirmed.connect(function() {
+                                                    UserSettings.money -= amount
+                                                    transactionModel.removeEntry(sourceIndex.row)
+                                                    confirmDialog.confirmed.disconnect(arguments.callee)
+                                                })
+                                                confirmDialog.open()
                                             }
                                         }
                                     }
@@ -914,7 +929,12 @@ ApplicationWindow {
                                             icon.color: Material.color(Material.Red)
                                             onClicked: {
                                                 var sourceIndex = awaitingTransactionFilterModel.mapToSource(awaitingTransactionFilterModel.index(index, 0))
-                                                awaitingTransactionModel.removeEntry(sourceIndex.row)
+                                                confirmDialog.title = "Remove Awaiting Transaction"
+                                                confirmDialog.confirmed.connect(function() {
+                                                    awaitingTransactionModel.removeEntry(sourceIndex.row)
+                                                    confirmDialog.confirmed.disconnect(arguments.callee)
+                                                })
+                                                confirmDialog.open()
                                             }
                                         }
                                     }
@@ -1139,7 +1159,12 @@ ApplicationWindow {
                                             Layout.preferredHeight: 40
                                             onClicked: {
                                                 var sourceIndex = clientFilterModel.mapToSource(clientFilterModel.index(index, 0))
-                                                clientModel.removeEntry(sourceIndex.row)
+                                                confirmDialog.title = "Remove Client"
+                                                confirmDialog.confirmed.connect(function() {
+                                                    clientModel.removeEntry(sourceIndex.row)
+                                                    confirmDialog.confirmed.disconnect(arguments.callee)
+                                                })
+                                                confirmDialog.open()
                                             }
                                         }
                                     }
@@ -2025,7 +2050,18 @@ ApplicationWindow {
                                         icon.height: 16
                                         icon.color: Material.color(Material.Red)
                                         Layout.preferredHeight: 40
-                                        onClicked: supplementModel.removeEntry(index)
+                                        onClicked: {
+                                            confirmDialog.title = managementTabBar.currentIndex === 0 ? "Remove Supplement" : "Remove Offer"
+                                            confirmDialog.confirmed.connect(function() {
+                                                if (managementTabBar.currentIndex === 0) {
+                                                    supplementModel.removeEntry(index)
+                                                } else {
+                                                    offerModel.removeEntry(index)
+                                                }
+                                                confirmDialog.confirmed.disconnect(arguments.callee)
+                                            })
+                                            confirmDialog.open()
+                                        }
                                     }
                                 }
                             }

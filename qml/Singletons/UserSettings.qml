@@ -8,4 +8,5 @@ Settings {
     property string companyName: ""
     property string notes: ""
     property bool autoUpdate: true
+    property real volume: 0.5
 }

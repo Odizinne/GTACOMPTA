@@ -1,22 +1,49 @@
+import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import QtMultimedia
+import Odizinne.GTACOMPTA
+
 Dialog {
     id: dialog
-    width: 400
+    width: 300
     anchors.centerIn: parent
+    modal: true
+    onVisibleChanged: {
+        if (visible) {
+            noticeEffect.play()
+        }
+    }
 
-    ColumnLayout {
+    signal confirmed()
+
+    SoundEffect {
+        id: noticeEffect
+        volume: UserSettings.volume
+        source: "qrc:/sounds/notice.wav"
+    }
+
+    RowLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 20
+
+        Image {
+            source: "qrc:/icons/warning.svg"
+            sourceSize.width: 36
+            sourceSize.height: 36
+        }
+
         Label {
-            text: "This action cannot be undo"
+            text: "Are you sure?\nThis action is definitive."
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
     }
 
     footer: DialogButtonBox {
         Button {
             flat: true
-            text: "Close"
+            text: "Cancel"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
             onClicked: dialog.close()
         }
@@ -25,7 +52,10 @@ Dialog {
             flat: true
             text: "Confirm"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            onClicked: dialog.close()
+            onClicked: {
+                dialog.confirmed()
+                dialog.close()
+            }
         }
     }
 }
