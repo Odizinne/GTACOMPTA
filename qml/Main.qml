@@ -306,7 +306,9 @@ ApplicationWindow {
     WelcomeDialog {
         id: welcomeDialog
         onAccepted: {
-            transactionModel.addTransaction("Initial transfer", welcomeDialog.initialAmount, Qt.formatDateTime(new Date(), "yyyy-MM-dd"))
+            if (!UserSettings.useRemoteDatabase) {
+                transactionModel.addTransaction("Initial transfer", welcomeDialog.initialAmount, Qt.formatDateTime(new Date(), "yyyy-MM-dd"))
+            }
         }
     }
 

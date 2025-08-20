@@ -168,7 +168,6 @@ Dialog {
             Label { text: "Password:"; Layout.fillWidth: true }
             TextField {
                 Layout.preferredHeight: Constants.comboHeight
-                Layout.preferredWidth: portSpin.width
                 text: UserSettings.remotePassword
                 onTextChanged: UserSettings.remotePassword = text
                 echoMode: TextInput.Password
