@@ -121,14 +121,14 @@ Page {
                 anchors.centerIn: parent
 
                 Label {
-                    text: UserSettings.companyName + " - " + "Balance: "
+                    text: AppState.companySummaryModel.companyName + " - " + "Balance: "
                     font.bold: true
                     font.pixelSize: 16
                 }
 
                 Label {
-                    text: AppState.toUiPrice(UserSettings.money)
-                    color: UserSettings.money >= 0 ? Constants.creditColor : Constants.debitColor
+                    text: AppState.toUiPrice(AppState.companySummaryModel.money)
+                    color: AppState.companySummaryModel.money >= 0 ? Constants.creditColor : Constants.debitColor
                     font.bold: true
                     font.pixelSize: 16
                 }
@@ -141,7 +141,7 @@ Page {
                                 awaitingSum += AppState.awaitingTransactionModel.getAwaitingTransactionAmount(i)
                             }
                         }
-                        var virtualTotal = UserSettings.money + awaitingSum
+                        var virtualTotal = AppState.companySummaryModel.money + awaitingSum
                         return "(" + AppState.toUiPrice(virtualTotal) + ")"
                     }
                     color: Material.color(Material.Orange)

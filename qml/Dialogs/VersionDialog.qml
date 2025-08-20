@@ -47,8 +47,12 @@ Dialog {
 
             TextField {
                 Layout.preferredHeight: Constants.comboHeight
-                text: UserSettings.companyName
-                onTextChanged: UserSettings.companyName = text
+                text: AppState.companySummaryModel ? AppState.companySummaryModel.companyName : ""
+                onTextChanged: {
+                    if (AppState.companySummaryModel) {
+                        AppState.companySummaryModel.companyName = text
+                    }
+                }
                 Layout.fillWidth: true
             }
         }

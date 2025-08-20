@@ -105,28 +105,25 @@ Dialog {
                 onClicked: {
                     UserSettings.useRemoteDatabase = checked
                     if (AppState.employeeModel) {
-                        console.log("Reloading employee model")
                         AppState.employeeModel.loadFromFile(checked)
                     }
                     if (AppState.transactionModel) {
-                        console.log("Reloading transaction model")
                         AppState.transactionModel.loadFromFile(checked)
                     }
                     if (AppState.awaitingTransactionModel) {
-                        console.log("Reloading awaiting transaction model")
                         AppState.awaitingTransactionModel.loadFromFile(checked)
                     }
                     if (AppState.clientModel) {
-                        console.log("Reloading client model")
                         AppState.clientModel.loadFromFile(checked)
                     }
                     if (AppState.supplementModel) {
-                        console.log("Reloading supplement model")
                         AppState.supplementModel.loadFromFile(checked)
                     }
                     if (AppState.offerModel) {
-                        console.log("Reloading offer model")
                         AppState.offerModel.loadFromFile(checked)
+                    }
+                    if (AppState.companySummaryModel) {
+                        AppState.companySummaryModel.loadFromFile(checked)
                     }
                 }
             }

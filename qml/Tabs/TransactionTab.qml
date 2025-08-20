@@ -125,7 +125,7 @@ Column {
                                 var sourceIndex = AppState.getSourceIndex(AppState.transactionFilterModel, del.index)
                                 AppState.confirmDialog.title = "Remove Transaction"
                                 AppState.confirmDialog.confirmed.connect(function() {
-                                    UserSettings.money -= amount
+                                    AppState.companySummaryModel.subtractFromMoney(del.model.amount)
                                     AppState.transactionModel.removeEntry(sourceIndex.row)
                                     AppState.confirmDialog.confirmed.disconnect(arguments.callee)
                                 })

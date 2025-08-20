@@ -162,6 +162,7 @@ qt_add_qml_module(GTACOMPTA
     SOURCES ${SOURCES} ${HEADERS}
     DEPENDENCIES QtCore QtQml
     SOURCES
+    SOURCES include/companysummarymodel.h src/companysummarymodel.cpp
 )
 
 target_link_libraries(GTACOMPTA

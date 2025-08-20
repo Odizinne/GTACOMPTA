@@ -27,6 +27,7 @@ ApplicationWindow {
         AppState.clientModel = clientModel
         AppState.supplementModel = supplementModel
         AppState.offerModel = offerModel
+        AppState.companySummaryModel = companySummaryModel
         AppState.employeeFilterModel = employeeFilterModel
         AppState.transactionFilterModel = transactionFilterModel
         AppState.awaitingTransactionFilterModel = awaitingTransactionFilterModel
@@ -67,6 +68,11 @@ ApplicationWindow {
 
     OfferModel {
         id: offerModel
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
+    }
+
+    CompanySummaryModel {
+        id: companySummaryModel
         Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
@@ -117,12 +123,13 @@ ApplicationWindow {
         }
     }
 
+    // In Main.qml, update this connection:
     Connections {
         target: transactionModel
         function onRowsInserted(parent, first, last) {
             for (var i = first; i <= last; i++) {
                 var amount = transactionModel.getTransactionAmount(i)
-                UserSettings.money += amount
+                companySummaryModel.addToMoney(amount)  // Use companySummaryModel instead of UserSettings
             }
         }
     }
@@ -208,7 +215,7 @@ ApplicationWindow {
         onTransactionUpdated: function(index, description, amount, date) {
             var oldAmount = transactionModel.getTransactionAmount(index)
             var difference = amount - oldAmount
-            UserSettings.money += difference
+            companySummaryModel.addToMoney(difference)  // Use companySummaryModel
             transactionModel.updateTransaction(index, description, amount, date)
         }
     }

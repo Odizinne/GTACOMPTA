@@ -35,8 +35,12 @@ Dialog {
 
             TextField {
                 Layout.preferredHeight: Constants.comboHeight
-                text: UserSettings.companyName
-                onTextChanged: UserSettings.companyName = text
+                text: AppState.companySummaryModel ? AppState.companySummaryModel.companyName : ""
+                onTextChanged: {
+                    if (AppState.companySummaryModel) {
+                        AppState.companySummaryModel.companyName = text
+                    }
+                }
                 placeholderText: "Company name"
             }
         }
@@ -68,9 +72,12 @@ Dialog {
             flat: true
             text: "Start"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            enabled: UserSettings.companyName !== ""
+            enabled: AppState.companySummaryModel ? (AppState.companySummaryModel.companyName.length > 0) : false
             onClicked: {
                 UserSettings.firstRun = false
+                //if (AppState.transactionModel && welcomeDialog.initialAmount !== 0) {
+                //    AppState.transactionModel.addTransaction("Initial balance", welcomeDialog.initialAmount, Qt.formatDateTime(new Date(), "yyyy-MM-dd"))
+                //}
                 welcomeDialog.close()
             }
         }

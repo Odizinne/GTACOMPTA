@@ -9,6 +9,7 @@ QtObject {
     property var clientModel: null
     property var supplementModel: null
     property var offerModel: null
+    property var companySummaryModel: null
 
     property var employeeFilterModel: null
     property var transactionFilterModel: null
