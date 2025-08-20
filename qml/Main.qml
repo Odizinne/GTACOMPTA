@@ -130,10 +130,20 @@ ApplicationWindow {
         anchors.fill: parent
         initialItem: splash
 
+        pushEnter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 210; easing.type: Easing.InQuint }
+                NumberAnimation { property: "y"; from: (mainStack.mirrored ? -0.3 : 0.3) * mainStack.width; to: 0; duration: 270; easing.type: Easing.OutCubic }
+            }
+        }
+        pushExit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 150; easing.type: Easing.OutQuint }
+        }
+
         Connections {
             target: splash
             function onLoadingFinished() {
-                mainStack.replace(mainPage)
+                mainStack.push(mainPage)
                 if (UserSettings.firstRun) {
                     welcomeDialog.open()
                 }

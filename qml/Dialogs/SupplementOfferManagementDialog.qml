@@ -95,24 +95,14 @@ Dialog {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        replaceEnter: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 200
-                easing.type: Easing.OutQuad
+        pushEnter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 210; easing.type: Easing.InQuint }
+                NumberAnimation { property: "y"; from: (managementStackView.mirrored ? -0.3 : 0.3) * managementStackView.width; to: 0; duration: 270; easing.type: Easing.OutCubic }
             }
         }
-
-        replaceExit: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 200
-                easing.type: Easing.OutQuad
-            }
+        pushExit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 150; easing.type: Easing.OutQuint }
         }
 
         Component {
@@ -258,8 +248,8 @@ Dialog {
         target: managementTabBar
         function onCurrentIndexChanged() {
             var tabs = [supplementsTab, offersTab]
-            if (managementTabBar.currentIndex < tabs.length) {
-                managementStackView.replace(tabs[managementTabBar.currentIndex])
+            if (managementTabBar.currentIndex < tabs.length && managementTabBar.currentIndex >= 0) {
+                managementStackView.push(tabs[managementTabBar.currentIndex])
             }
         }
     }

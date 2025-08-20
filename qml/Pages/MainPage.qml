@@ -250,25 +250,14 @@ Page {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        property int previousIndex: 0
-        property bool isMovingForward: false
-
-        replaceEnter: Transition {
-            XAnimator {
-                from: stackView.isMovingForward ? stackView.width : -stackView.width
-                to: 0
-                duration: 300
-                easing.type: Easing.OutQuad
+        pushEnter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 210; easing.type: Easing.InQuint }
+                NumberAnimation { property: "y"; from: (stackView.mirrored ? -0.3 : 0.3) * stackView.width; to: 0; duration: 270; easing.type: Easing.OutCubic }
             }
         }
-
-        replaceExit: Transition {
-            XAnimator {
-                from: 0
-                to: stackView.isMovingForward ? -stackView.width : stackView.width
-                duration: 300
-                easing.type: Easing.OutQuad
-            }
+        pushExit: Transition {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 150; easing.type: Easing.OutQuint }
         }
 
         Component {
@@ -298,16 +287,8 @@ Page {
         target: tabBar
         function onCurrentIndexChanged() {
             var components = [employeeComponent, transactionComponent, awaitingComponent, clientComponent]
-            if (tabBar.currentIndex < components.length) {
-                stackView.isMovingForward = tabBar.currentIndex > stackView.previousIndex
-
-                if (stackView.depth === 0) {
-                    stackView.push(components[tabBar.currentIndex])
-                } else {
-                    stackView.replace(components[tabBar.currentIndex])
-                }
-
-                stackView.previousIndex = tabBar.currentIndex
+            if (tabBar.currentIndex < components.length && tabBar.currentIndex >= 0) {
+                stackView.push(components[tabBar.currentIndex])
             }
         }
     }
