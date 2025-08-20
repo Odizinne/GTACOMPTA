@@ -1,0 +1,48 @@
+name: Build Server
+
+on:
+  workflow_dispatch: 
+
+env:
+  QT_VERSION: '6.9.1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: 'linux'
+          target: 'desktop'
+          arch: 'linux_gcc_64'
+          cache: true
+
+      - name: Install CMake and Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Configure (server only)
+        run: |
+          mkdir build-server
+          cd build-server
+          cmake ../server -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build-server --parallel
+
+      - name: List artifacts
+        run: |
+          ls -la build-server/
+
+      - name: Upload server binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: GTACOMPTAServer
+          path: build-server/GTACOMPTAServer

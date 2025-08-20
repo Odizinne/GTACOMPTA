@@ -91,7 +91,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         QT_WASM_MAXIMUM_MEMORY 2GB
     )
 
-    # Enable file system access for export/import functions
     target_link_options(GTACOMPTA PRIVATE
         "-sALLOW_MEMORY_GROWTH=1"
         "-sFILESYSTEM=1"
@@ -185,4 +184,13 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         DEPLOY_TOOL_OPTIONS --no-compiler-runtime --no-opengl-sw --no-system-dxc-compiler --no-system-d3d-compiler --skip-plugin-types designer,iconengines,qmllint,generic,networkinformation,help,qmltooling,sqldrivers,qmlls
     )
     install(SCRIPT ${deploy_script})
+endif()
+
+# -------------------------------------------
+# Optional server subproject
+# -------------------------------------------
+option(BUILD_GTACOMPTA_SERVER "Build the GTACOMPTAServer subproject" OFF)
+
+if(BUILD_GTACOMPTA_SERVER)
+    add_subdirectory(server)
 endif()
