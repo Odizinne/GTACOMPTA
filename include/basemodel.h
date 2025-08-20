@@ -11,17 +11,17 @@
 #include <QSettings>
 #include <QtQml/qqmlregistration.h>
 
-class DataManager; // Forward declaration
+class DataManager;
 
 class BaseModel : public QAbstractListModel
 {
     Q_OBJECT
-    QML_UNCREATABLE("BaseModel is abstract")
+    QML_ANONYMOUS
     Q_PROPERTY(int count READ count NOTIFY countChanged)
     Q_PROPERTY(int sortColumn READ sortColumn NOTIFY sortColumnChanged)
     Q_PROPERTY(bool sortAscending READ sortAscending NOTIFY sortAscendingChanged)
 
-    friend class DataManager; // Add friend access for DataManager
+    friend class DataManager;
 
 public:
     explicit BaseModel(const QString &fileName, QObject *parent = nullptr);
