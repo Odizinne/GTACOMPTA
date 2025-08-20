@@ -215,16 +215,19 @@ QString DatabaseServer::createHttpResponse(int statusCode, const QString &body, 
     default: statusText = "Unknown"; break;
     }
 
-    QString response = QString("HTTP/1.1 %1 %2\r\n"
-                               "Content-Type: %3\r\n"
-                               "Content-Length: %4\r\n"
-                               "Connection: close\r\n"
-                               "\r\n"
+    // Convert to UTF-8 bytes to get the correct length
+    QByteArray bodyBytes = body.toUtf8();
+
+    QString response = QString("HTTP/1.1 %1 %2\\r\\n"
+                               "Content-Type: %3\\r\\n"
+                               "Content-Length: %4\\r\\n"
+                               "Connection: close\\r\\n"
+                               "\\r\\n"
                                "%5")
                            .arg(statusCode)
                            .arg(statusText)
                            .arg(contentType)
-                           .arg(body.length())
+                           .arg(bodyBytes.length())  // Use byte length, not character length
                            .arg(body);
 
     return response;
