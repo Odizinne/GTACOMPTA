@@ -58,9 +58,8 @@ QString RemoteDatabaseManager::getApiUrl(const QString &endpoint) const
 {
     QSettings settings("Odizinne", "GTACOMPTA");
     QString host = settings.value("remoteHost", "localhost").toString();
-    int port = settings.value("remotePort", 3000).toInt();
 
-    return QString("http://%1:%2%3").arg(host).arg(port).arg(endpoint);
+    return QString("https://%1%2").arg(host).arg(endpoint);
 }
 
 void RemoteDatabaseManager::makeRequest(const QString &method, const QString &endpoint, const QJsonObject &data)
