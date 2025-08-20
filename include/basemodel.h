@@ -12,6 +12,7 @@
 #include <QtQml/qqmlregistration.h>
 
 class DataManager;
+class RemoteDatabaseManager;
 
 class BaseModel : public QAbstractListModel
 {
@@ -29,7 +30,7 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     Q_INVOKABLE void removeEntry(int index);
-    Q_INVOKABLE void loadFromFile();
+    Q_INVOKABLE void loadFromFile(bool remote);
     Q_INVOKABLE void clear();
     Q_INVOKABLE virtual void sortBy(int column);
 
@@ -51,13 +52,22 @@ protected:
     virtual void performSort() = 0;
 
     void saveToFile();
+    void loadFromLocal();        // Added this method
+    void loadFromRemote();       // Added this method
+    void saveToLocal(const QJsonArray &array);  // Added this method
     QString getDataFilePath() const;
 
     int m_sortColumn;
     bool m_sortAscending;
 
+private slots:
+    void onRemoteDataLoaded(const QString &collection, const QJsonObject &data);  // Added this slot
+    void onRemoteDataSaved(const QString &collection, bool success);  // Added this slot
+
 private:
+    void ensureRemoteConnection();
     QString m_fileName;
+    bool m_isLoading;  // Added this member variable
 };
 
 #endif // BASEMODEL_H

@@ -19,6 +19,8 @@ ApplicationWindow {
     color: Constants.surfaceColor
 
     Component.onCompleted: {
+        RemoteDatabaseManager
+
         AppState.employeeModel = employeeModel
         AppState.transactionModel = transactionModel
         AppState.awaitingTransactionModel = awaitingTransactionModel
@@ -40,32 +42,32 @@ ApplicationWindow {
     // Models
     EmployeeModel {
         id: employeeModel
-        Component.onCompleted: loadFromFile()
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     TransactionModel {
         id: transactionModel
-        Component.onCompleted: loadFromFile()
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     AwaitingTransactionModel {
         id: awaitingTransactionModel
-        Component.onCompleted: loadFromFile()
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     ClientModel {
         id: clientModel
-        Component.onCompleted: loadFromFile()
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     SupplementModel {
         id: supplementModel
-        Component.onCompleted: loadFromFile()
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     OfferModel {
         id: offerModel
-        Component.onCompleted: loadFromFile()
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     // Filter proxy models
@@ -334,20 +336,19 @@ ApplicationWindow {
         function onImportCompleted(success, message) {
             messageDialog.show(success, message)
             if (success) {
-                employeeModel.loadFromFile()
-                transactionModel.loadFromFile()
-                awaitingTransactionModel.loadFromFile()
-                clientModel.loadFromFile()
-                supplementModel.loadFromFile()
-                offerModel.loadFromFile()
+                employeeModel.loadFromFile(UserSettings.useRemoteDatabase)
+                transactionModel.loadFromFile(UserSettings.useRemoteDatabase)
+                awaitingTransactionModel.loadFromFile(UserSettings.useRemoteDatabase)
+                clientModel.loadFromFile(UserSettings.useRemoteDatabase)
+                supplementModel.loadFromFile(UserSettings.useRemoteDatabase)
+                offerModel.loadFromFile(UserSettings.useRemoteDatabase)
             }
         }
-        function onSettingsChanged(money, firstRun, companyName, notes, autoUpdate, volume) {
+        function onSettingsChanged(money, firstRun, companyName, notes, volume) {
             UserSettings.money = money
             UserSettings.firstRun = firstRun
             UserSettings.companyName = companyName
             UserSettings.notes = notes
-            UserSettings.autoUpdate = autoUpdate
             UserSettings.volume = volume
         }
     }

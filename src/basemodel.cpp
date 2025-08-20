@@ -1,4 +1,5 @@
 #include "basemodel.h"
+#include "remotedatabasemanager.h"
 #include <QDebug>
 
 BaseModel::BaseModel(const QString &fileName, QObject *parent)
@@ -6,12 +7,14 @@ BaseModel::BaseModel(const QString &fileName, QObject *parent)
     , m_fileName(fileName)
     , m_sortColumn(0)
     , m_sortAscending(true)
+    , m_isLoading(false)
 {
+    qDebug() << "BaseModel created for" << m_fileName;
 }
 
 int BaseModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    Q_UNUSED(parent)
     return 0; // Override in derived classes
 }
 
@@ -25,7 +28,44 @@ void BaseModel::removeEntry(int index)
     saveToFile();
 }
 
-void BaseModel::loadFromFile()
+void BaseModel::ensureRemoteConnection()
+{
+    RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
+    if (remoteManager) {
+        // Use Qt::UniqueConnection to prevent duplicate connections
+        bool connected1 = connect(remoteManager, &RemoteDatabaseManager::dataLoaded,
+                                  this, &BaseModel::onRemoteDataLoaded, Qt::UniqueConnection);
+        bool connected2 = connect(remoteManager, &RemoteDatabaseManager::dataSaved,
+                                  this, &BaseModel::onRemoteDataSaved, Qt::UniqueConnection);
+
+        qDebug() << "BaseModel" << m_fileName << "connected to RemoteDatabaseManager";
+        qDebug() << "dataLoaded connection:" << connected1;
+        qDebug() << "dataSaved connection:" << connected2;
+        qDebug() << "RemoteManager pointer:" << remoteManager;
+    }
+}
+
+void BaseModel::loadFromFile(bool remote)
+{
+    if (m_isLoading) {
+        qDebug() << "Already loading" << m_fileName << "- skipping";
+        return; // Prevent recursion
+    }
+
+    m_isLoading = true;
+
+    qDebug() << "Loading" << m_fileName << "- useRemote:" << remote;
+
+    if (remote) {
+        loadFromRemote();
+    } else {
+        loadFromLocal();
+    }
+
+    m_isLoading = false;
+}
+
+void BaseModel::loadFromLocal()
 {
 #ifdef Q_OS_WASM
     // Use QSettings for WebAssembly (IndexedDB backend)
@@ -33,7 +73,7 @@ void BaseModel::loadFromFile()
     QByteArray jsonData = settings.value(m_fileName).toByteArray();
 
     if (jsonData.isEmpty()) {
-        qDebug() << "No data found for:" << m_fileName;
+        qDebug() << "No local data found for:" << m_fileName;
         return;
     }
 
@@ -65,7 +105,7 @@ void BaseModel::loadFromFile()
     QFile file(filePath);
 
     if (!file.exists()) {
-        qDebug() << "No data file found:" << filePath;
+        qDebug() << "No local data file found:" << filePath;
         return;
     }
 
@@ -100,6 +140,20 @@ void BaseModel::loadFromFile()
     endResetModel();
     emit countChanged();
 #endif
+}
+
+void BaseModel::loadFromRemote()
+{
+    ensureRemoteConnection(); // Make sure THIS model is connected
+
+    RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
+    if (remoteManager) {
+        qDebug() << "Loading from remote:" << m_fileName << "using instance:" << remoteManager;
+        remoteManager->loadData(m_fileName);
+    } else {
+        qWarning() << "RemoteDatabaseManager not available, falling back to local";
+        loadFromLocal();
+    }
 }
 
 void BaseModel::clear()
@@ -140,6 +194,31 @@ void BaseModel::saveToFile()
         array.append(entryToJson(i));
     }
 
+    QSettings settings("Odizinne", "GTACOMPTA");
+    bool useRemote = settings.value("useRemoteDatabase", false).toBool();
+
+    if (useRemote) {
+        ensureRemoteConnection(); // Make sure THIS model is connected for saving too
+
+        // Save to remote database
+        RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
+        if (remoteManager) {
+            QJsonObject payload;
+            payload["data"] = array;
+            qDebug() << "Saving to remote:" << m_fileName;
+            remoteManager->saveData(m_fileName, payload);
+        } else {
+            qWarning() << "RemoteDatabaseManager not available, falling back to local";
+            saveToLocal(array);
+        }
+    } else {
+        // Save locally
+        saveToLocal(array);
+    }
+}
+
+void BaseModel::saveToLocal(const QJsonArray &array)
+{
     QJsonDocument doc(array);
 
 #ifdef Q_OS_WASM
@@ -162,6 +241,49 @@ void BaseModel::saveToFile()
     file.write(doc.toJson());
     file.close();
 #endif
+}
+
+void BaseModel::onRemoteDataLoaded(const QString &collection, const QJsonObject &data)
+{
+    qDebug() << "onRemoteDataLoaded called for collection:" << collection << "my filename:" << m_fileName;
+
+    if (collection != m_fileName) {
+        // Don't log this as it's normal - other models will get this signal too
+        return;
+    }
+
+    qDebug() << "Processing remote data for:" << collection;
+
+    beginResetModel();
+    clearModel();
+
+    QJsonArray array = data["data"].toArray();
+    qDebug() << "Array size:" << array.size();
+
+    for (const QJsonValue &value : array) {
+        QJsonObject obj = value.toObject();
+        entryFromJson(obj);
+    }
+
+    // Sort after loading
+    performSort();
+
+    endResetModel();
+    emit countChanged();
+
+    qDebug() << "Model reset complete for" << m_fileName << ". New row count:" << rowCount();
+}
+
+void BaseModel::onRemoteDataSaved(const QString &collection, bool success)
+{
+    if (collection != m_fileName) return;
+
+    qDebug() << "Remote save result for" << collection << ":" << (success ? "SUCCESS" : "FAILED");
+
+    if (!success) {
+        qWarning() << "Failed to save to remote, consider fallback to local storage";
+        // Could implement fallback logic here
+    }
 }
 
 QString BaseModel::getDataFilePath() const

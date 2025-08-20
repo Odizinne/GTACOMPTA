@@ -8,4 +8,9 @@ Settings {
     property string companyName: ""
     property string notes: ""
     property bool darkMode: true
+
+    property bool useRemoteDatabase: false
+    property string remoteHost: "localhost"
+    property int remotePort: 3000
+    property string remotePassword: "1234"
 }

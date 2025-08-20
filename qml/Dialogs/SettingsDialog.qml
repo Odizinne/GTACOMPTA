@@ -1,3 +1,4 @@
+// qml/Dialogs/SettingsDialog.qml
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Controls.impl
@@ -81,7 +82,131 @@ Dialog {
             Switch {
                 id: themeSwitch
                 checked: UserSettings.darkMode
-                onCheckedChanged: UserSettings.darkMode = checked
+                onClicked: UserSettings.darkMode = checked
+            }
+        }
+
+        MenuSeparator {
+            Layout.fillWidth: true
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            Label {
+                text: "Remote Database"
+                Layout.fillWidth: true
+                font.bold: true
+            }
+
+            Switch {
+                id: remoteSwitch
+                checked: UserSettings.useRemoteDatabase
+                onClicked: {
+                    UserSettings.useRemoteDatabase = checked
+                    if (AppState.employeeModel) {
+                        console.log("Reloading employee model")
+                        AppState.employeeModel.loadFromFile(checked)
+                    }
+                    if (AppState.transactionModel) {
+                        console.log("Reloading transaction model")
+                        AppState.transactionModel.loadFromFile(checked)
+                    }
+                    if (AppState.awaitingTransactionModel) {
+                        console.log("Reloading awaiting transaction model")
+                        AppState.awaitingTransactionModel.loadFromFile(checked)
+                    }
+                    if (AppState.clientModel) {
+                        console.log("Reloading client model")
+                        AppState.clientModel.loadFromFile(checked)
+                    }
+                    if (AppState.supplementModel) {
+                        console.log("Reloading supplement model")
+                        AppState.supplementModel.loadFromFile(checked)
+                    }
+                    if (AppState.offerModel) {
+                        console.log("Reloading offer model")
+                        AppState.offerModel.loadFromFile(checked)
+                    }
+                }
+            }
+        }
+
+        // Remote database configuration (visible when enabled)
+        GroupBox {
+            Layout.fillWidth: true
+            title: "Remote Configuration"
+            visible: remoteSwitch.checked
+
+            GridLayout {
+                anchors.fill: parent
+                columns: 2
+                rowSpacing: 10
+
+                Label { text: "Host:" }
+                TextField {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Constants.comboHeight
+                    text: UserSettings.remoteHost
+                    onTextChanged: UserSettings.remoteHost = text
+                    placeholderText: "localhost or 192.168.1.100"
+                }
+
+                Label { text: "Port:" }
+                SpinBox {
+                    Layout.preferredHeight: Constants.comboHeight
+                    from: 1
+                    to: 65535
+                    value: UserSettings.remotePort
+                    onValueChanged: UserSettings.remotePort = value
+                    editable: true
+                }
+
+                Label { text: "Password:" }
+                TextField {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Constants.comboHeight
+                    text: UserSettings.remotePassword
+                    onTextChanged: UserSettings.remotePassword = text
+                    echoMode: TextInput.Password
+                    placeholderText: "Server password"
+                }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            visible: remoteSwitch.checked
+
+            Button {
+                text: "Test Connection"
+                enabled: UserSettings.remoteHost.length > 0
+                onClicked: {
+                    connectionStatus.text = "Testing connection..."
+                    connectionStatus.color = Material.foreground
+                    RemoteDatabaseManager.testConnection()
+                }
+            }
+
+            Label {
+                id: connectionStatus
+                Layout.fillWidth: true
+                text: ""
+                wrapMode: Text.WordWrap
+            }
+        }
+    }
+
+    // Handle connection test results
+    Connections {
+        target: RemoteDatabaseManager
+        function onConnectionResult(success, message) {
+            if (success) {
+                connectionStatus.text = "✓ " + message
+                connectionStatus.color = Material.color(Material.Green)
+            } else {
+                connectionStatus.text = "✗ " + message
+                connectionStatus.color = Material.color(Material.Red)
             }
         }
     }

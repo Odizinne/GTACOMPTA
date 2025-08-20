@@ -401,6 +401,5 @@ void DataManager::restoreUserSettings(const QJsonObject &settings)
                          settings["firstRun"].toBool(),
                          settings["companyName"].toString(),
                          settings["notes"].toString(),
-                         settings["autoUpdate"].toBool(),
                          settings["volume"].toDouble());
 }

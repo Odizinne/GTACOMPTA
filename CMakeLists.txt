@@ -26,6 +26,7 @@ set(HEADERS
     include/filterproxymodel.h
     include/datamanager.h
     include/wasmfilehandler.h
+    include/remotedatabasemanager.h
 )
 
 set(SOURCES
@@ -40,6 +41,7 @@ set(SOURCES
     src/filterproxymodel.cpp
     src/datamanager.cpp
     src/wasmfilehandler.cpp
+    src/remotedatabasemanager.cpp
 )
 
 # Get git commit hash
@@ -159,6 +161,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
     DEPENDENCIES QtCore QtQml
+    SOURCES
 )
 
 target_link_libraries(GTACOMPTA

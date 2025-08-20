@@ -71,7 +71,7 @@ signals:
     void exportCompleted(bool success, const QString &message);
     void importCompleted(bool success, const QString &message);
     void settingsChanged(int money, bool firstRun, const QString &companyName,
-                         const QString &notes, bool autoUpdate, double volume);
+                         const QString &notes, double volume);
     void exportDataReady(const QString &data, const QString &fileName);
 
 private:
