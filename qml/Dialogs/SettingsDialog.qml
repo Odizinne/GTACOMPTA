@@ -161,16 +161,6 @@ Dialog {
                 onTextChanged: UserSettings.remoteHost = text
                 placeholderText: "Server IP address"
             }
-
-            SpinBox {
-                id: portSpin
-                Layout.preferredHeight: Constants.comboHeight
-                from: 1
-                to: 65535
-                value: UserSettings.remotePort
-                onValueChanged: UserSettings.remotePort = value
-                editable: true
-            }
         }
 
         RowLayout {
