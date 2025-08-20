@@ -33,9 +33,9 @@ void printServerInfo(quint16 port, const QString &password, const QString &dataD
     out << "  GET  /api/load/<collection> - Load data" << Qt::endl;
     out << "  POST /api/save/<collection> - Save data" << Qt::endl;
     out << Qt::endl;
-    out << "CORS: Enabled for all origins" << Qt::endl;
+    out << "CORS: Handled by nginx reverse proxy" << Qt::endl;
     out << "Authentication: X-Password header required" << Qt::endl;
-    out << "SSL: Auto-detected from /etc/letsencrypt/" << Qt::endl;
+    out << "SSL: Handled by nginx reverse proxy" << Qt::endl;
     out << Qt::endl;
     out << "Server is running... Press Ctrl+C to stop" << Qt::endl;
     out << Qt::endl;

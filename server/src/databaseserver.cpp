@@ -11,7 +11,6 @@ DatabaseServer::DatabaseServer(QObject *parent)
     : QObject(parent)
     , m_server(new QTcpServer(this))
     , m_password("1234")
-    , m_sslEnabled(false)
 {
     m_dataDirectory = "";
     connect(m_server, &QTcpServer::newConnection, this, &DatabaseServer::newConnection);
@@ -29,16 +28,10 @@ DatabaseServer::~DatabaseServer()
 
 bool DatabaseServer::start(quint16 port)
 {
-    setupSsl();
-
     if (m_server->listen(QHostAddress::Any, port)) {
         qDebug() << "GTACOMPTA Database Server started on port" << port;
         qDebug() << "Data directory:" << m_dataDirectory;
-        if (m_sslEnabled) {
-            qDebug() << "SSL/HTTPS enabled";
-        } else {
-            qDebug() << "Running in HTTP mode (SSL setup failed)";
-        }
+        qDebug() << "Running in HTTP mode (nginx handles HTTPS)";
         qDebug() << "Password protection enabled";
 
         m_logTimer->start(30000);
@@ -47,37 +40,6 @@ bool DatabaseServer::start(quint16 port)
 
     qWarning() << "Failed to start server on port" << port << ":" << m_server->errorString();
     return false;
-}
-
-void DatabaseServer::setupSsl()
-{
-    m_sslEnabled = false;
-
-    QFile certFile("/etc/letsencrypt/live/srv967289.hstgr.cloud/fullchain.pem");
-    QFile keyFile("/etc/letsencrypt/live/srv967289.hstgr.cloud/privkey.pem");
-
-    if (certFile.open(QIODevice::ReadOnly) && keyFile.open(QIODevice::ReadOnly)) {
-        m_sslCertificate = QSslCertificate(certFile.readAll());
-
-        // Try EC first, then RSA
-        m_sslKey = QSslKey(keyFile.readAll(), QSsl::Ec);
-        if (m_sslKey.isNull()) {
-            keyFile.seek(0);
-            m_sslKey = QSslKey(keyFile.readAll(), QSsl::Rsa);
-        }
-
-        if (!m_sslCertificate.isNull() && !m_sslKey.isNull()) {
-            m_sslEnabled = true;
-            qDebug() << "SSL certificate loaded successfully";
-            qDebug() << "Key algorithm:" << (m_sslKey.algorithm() == QSsl::Ec ? "ECDSA" : "RSA");
-            qDebug() << "Certificate valid from:" << m_sslCertificate.effectiveDate();
-            qDebug() << "Certificate expires on:" << m_sslCertificate.expiryDate();
-        } else {
-            qWarning() << "SSL certificate or key is invalid";
-        }
-    } else {
-        qWarning() << "Failed to load SSL certificate files";
-    }
 }
 
 void DatabaseServer::stop()
@@ -107,50 +69,11 @@ void DatabaseServer::newConnection()
     while (m_server->hasPendingConnections()) {
         QTcpSocket *tcpSocket = m_server->nextPendingConnection();
 
-        if (m_sslEnabled) {
-            // Create SSL socket and take over the connection
-            QSslSocket *sslSocket = new QSslSocket(this);
-
-            // Set socket descriptor BEFORE setting up SSL
-            if (sslSocket->setSocketDescriptor(tcpSocket->socketDescriptor())) {
-                // Configure SSL
-                sslSocket->setLocalCertificate(m_sslCertificate);
-                sslSocket->setPrivateKey(m_sslKey);
-
-                // Connect signals BEFORE starting encryption
-                connect(sslSocket, &QSslSocket::readyRead, this, &DatabaseServer::readyRead);
-                connect(sslSocket, &QSslSocket::disconnected, this, &DatabaseServer::clientDisconnected);
-                connect(sslSocket, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors),
-                        this, &DatabaseServer::sslErrors);
-
-                // Start server-side SSL
-                sslSocket->startServerEncryption();
-
-                qDebug() << "New SSL connection from:" << sslSocket->peerAddress().toString();
-            } else {
-                qWarning() << "Failed to set socket descriptor for SSL";
-                sslSocket->deleteLater();
-            }
-
-            // Clean up the original TCP socket
-            tcpSocket->deleteLater();
-        } else {
-            // HTTP mode
-            connect(tcpSocket, &QTcpSocket::readyRead, this, &DatabaseServer::readyRead);
-            connect(tcpSocket, &QTcpSocket::disconnected, this, &DatabaseServer::clientDisconnected);
-            qDebug() << "New HTTP connection from:" << tcpSocket->peerAddress().toString();
-        }
+        // HTTP mode only - nginx handles HTTPS
+        connect(tcpSocket, &QTcpSocket::readyRead, this, &DatabaseServer::readyRead);
+        connect(tcpSocket, &QTcpSocket::disconnected, this, &DatabaseServer::clientDisconnected);
+        qDebug() << "New HTTP connection from:" << tcpSocket->peerAddress().toString();
     }
-}
-
-void DatabaseServer::sslErrors(const QList<QSslError> &errors)
-{
-    QSslSocket *socket = qobject_cast<QSslSocket*>(sender());
-    for (const QSslError &error : errors) {
-        qWarning() << "SSL Error:" << error.errorString();
-    }
-    // For development, you might want to ignore SSL errors:
-    // socket->ignoreSslErrors();
 }
 
 void DatabaseServer::readyRead()
@@ -182,21 +105,6 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
 
     QString response;
 
-    // CORS preflight
-    if (method == "OPTIONS") {
-        response = createHttpResponse(200, "", "text/plain");
-        response.replace("Content-Type: text/plain",
-                         "Content-Type: text/plain\r\n"
-                         "Access-Control-Allow-Origin: *\r\n"
-                         "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                         "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version\r\n"
-                         "Access-Control-Allow-Credentials: false\r\n"
-                         "Access-Control-Max-Age: 86400");
-        socket->write(response.toUtf8());
-        socket->close();
-        return;
-    }
-
     // Check protocol version
     if (!protocolVersion.isEmpty() && protocolVersion != "1.0") {
         QJsonObject error;
@@ -204,13 +112,6 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         error["serverVersion"] = "1.0";
         error["clientVersion"] = protocolVersion;
         response = createHttpResponse(400, QJsonDocument(error).toJson());
-        response.replace("Content-Type: application/json",
-                         "Content-Type: application/json\r\n"
-                         "Access-Control-Allow-Origin: *\r\n"
-                         "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                         "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version\r\n"
-                         "Access-Control-Allow-Credentials: false\r\n"
-                         "Access-Control-Max-Age: 86400");
         socket->write(response.toUtf8());
         socket->close();
         logRequest(method, path, "PROTOCOL VERSION MISMATCH");
@@ -231,7 +132,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         result["message"] = "Connection successful";
         result["server"] = "GTACOMPTA Server v1.0";
         result["protocolVersion"] = "1.0";
-        result["sslEnabled"] = m_sslEnabled;
+        result["sslEnabled"] = false; // nginx handles SSL
         result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
 
         response = createHttpResponse(200, QJsonDocument(result).toJson());
@@ -278,7 +179,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         status["server"] = "GTACOMPTA Database Server";
         status["version"] = "1.0.0";
         status["protocolVersion"] = "1.0";
-        status["sslEnabled"] = m_sslEnabled;
+        status["sslEnabled"] = false; // nginx handles SSL
         status["uptime"] = QDateTime::currentDateTime().toString(Qt::ISODate);
         status["dataDirectory"] = m_dataDirectory;
 
@@ -297,15 +198,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         logRequest(method, path, "NOT FOUND");
     }
 
-    // Add CORS headers
-    response.replace("Content-Type: application/json",
-                     "Content-Type: application/json\r\n"
-                     "Access-Control-Allow-Origin: *\r\n"
-                     "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                     "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version\r\n"
-                     "Access-Control-Allow-Credentials: false\r\n"
-                     "Access-Control-Max-Age: 86400");
-
+    // No CORS headers - nginx handles them
     socket->write(response.toUtf8());
     socket->close();
 }
