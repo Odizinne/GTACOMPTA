@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -57,12 +59,14 @@ Dialog {
                 id: supplementRepeater
                 model: AppState.supplementModel
 
-                RowLayout {
+                delegate: RowLayout {
+                    id: del
                     width: parent.width
                     spacing: 10
+                    required property var model
 
                     Label {
-                        text: model.name + " - " + AppState.toUiPrice(model.price)
+                        text: del.model.name + " - " + AppState.toUiPrice(del.model.price)
                         Layout.fillWidth: true
                         wrapMode: Text.WordWrap
                     }
@@ -97,11 +101,12 @@ Dialog {
                                        {text: "Cancel", role: DialogButtonBox.RejectRole, action: function() { root.close() }}
                                    ]
 
-            Button {
+            delegate: Button {
                 flat: true
-                text: modelData.text
-                DialogButtonBox.buttonRole: modelData.role
-                onClicked: modelData.action()
+                text: model.text
+                DialogButtonBox.buttonRole: model.role
+                onClicked: model.action()
+                required property var model
             }
         }
     }

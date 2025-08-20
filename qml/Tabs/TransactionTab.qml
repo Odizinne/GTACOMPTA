@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -60,31 +62,33 @@ Column {
             }
 
             delegate: Rectangle {
+                id: del
                 width: transactionListView.width
                 height: 40
                 color: (index % 2 === 0) ? "#404040" : "#303030"
-
+                required property var model
+                required property var index
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 5
                     spacing: 10
 
                     Label {
-                        text: (amount >= 0 ? "+" : "") + AppState.toUiPrice(amount)
-                        color: amount >= 0 ? "lightgreen" : "lightcoral"
+                        text: (del.model.amount >= 0 ? "+" : "") + AppState.toUiPrice(del.model.amount)
+                        color: del.model.amount >= 0 ? "lightgreen" : "lightcoral"
                         font.bold: true
                         Layout.preferredWidth: 120
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: date
+                        text: del.model.date
                         color: "gray"
                         Layout.preferredWidth: 100
                     }
 
                     Label {
-                        text: description
+                        text:del.model. description
                         font.bold: true
                         Layout.fillWidth: true
                         elide: Text.ElideRight
@@ -100,10 +104,10 @@ Column {
                             icon.height: 16
                             icon.color: Material.color(Material.Blue)
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.transactionFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.transactionFilterModel, del.index)
                                 AppState.transactionDialog.editMode = true
                                 AppState.transactionDialog.editIndex = sourceIndex.row
-                                AppState.transactionDialog.loadTransaction(description, amount, date)
+                                AppState.transactionDialog.loadTransaction(del.model.description, del.model.amount, del.model.date)
                                 AppState.transactionDialog.open()
                             }
                         }
@@ -116,7 +120,7 @@ Column {
                             icon.height: 16
                             icon.color: Material.color(Material.Red)
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.transactionFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.transactionFilterModel, del.index)
                                 AppState.confirmDialog.title = "Remove Transaction"
                                 AppState.confirmDialog.confirmed.connect(function() {
                                     UserSettings.money -= amount

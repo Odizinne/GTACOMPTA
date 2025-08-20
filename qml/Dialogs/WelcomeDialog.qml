@@ -21,7 +21,6 @@ Dialog {
             Layout.fillWidth: true
             text: "This is your first time using the application. Please enter your starting amount to begin."
             wrapMode: Text.WordWrap
-            //horizontalAlignment: Text.AlignHCenter
             font.pixelSize: 14
         }
 

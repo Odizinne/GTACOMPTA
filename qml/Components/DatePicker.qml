@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -82,6 +84,7 @@ RowLayout {
                 Layout.fillWidth: true
 
                 delegate: Label {
+                    required property var model
                     text: model.shortName
                     horizontalAlignment: Text.AlignHCenter
                     font.bold: true
@@ -99,8 +102,10 @@ RowLayout {
                 year: datePickerDialog.currentDate.getFullYear()
 
                 delegate: Rectangle {
-                    width: monthGrid.cellWidth
-                    height: monthGrid.cellHeight
+                    id: delRec
+                    required property var model
+                    width: monthGrid.width / 7
+                    height: monthGrid.height / 6
                     color: {
                         if (!model.today && model.month !== monthGrid.month)
                             return "transparent"
@@ -118,22 +123,25 @@ RowLayout {
                     radius: 4
 
                     function isSameDate(date1, date2) {
-                        return date1.getDate() === date2.getDate() &&
-                               date1.getMonth() === date2.getMonth() &&
-                               date1.getFullYear() === date2.getFullYear()
+                        if (!date1 || !date2) return false
+                        var d1 = new Date(date1)
+                        var d2 = new Date(date2)
+                        return d1.getDate() === d2.getDate() &&
+                               d1.getMonth() === d2.getMonth() &&
+                               d1.getFullYear() === d2.getFullYear()
                     }
 
                     Label {
                         anchors.centerIn: parent
-                        text: model.day
+                        text: delRec.model.day
                         color: {
-                            if (!model.today && model.month !== monthGrid.month)
+                            if (!delRec.model.today && delRec.model.month !== monthGrid.month)
                                 return Material.hintTextColor
-                            if (isSameDate(model.date, root.selectedDate))
+                            if (delRec.isSameDate(delRec.model.date, root.selectedDate))
                                 return Material.primaryTextColor
                             return Material.foreground
                         }
-                        font.bold: model.today || isSameDate(model.date, root.selectedDate)
+                        font.bold: delRec.model.today || delRec.isSameDate(delRec.model.date, root.selectedDate)
                     }
 
                     MouseArea {
@@ -141,9 +149,9 @@ RowLayout {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            root.selectedDate = model.date
-                            root.dateChanged(model.date)
-                            dateField.text = root.formatDate(model.date)
+                            root.selectedDate = delRec.model.date
+                            root.dateChanged(delRec.model.date)
+                            dateField.text = root.formatDate(delRec.model.date)
                             datePickerDialog.close()
                         }
                     }

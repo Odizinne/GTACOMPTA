@@ -26,10 +26,10 @@ Page {
 
         onTriggered: {
             elapsedTime += interval
-            progress = Math.min(elapsedTime / totalTime, 1.0)
+            splashWindow.progress = Math.min(elapsedTime / totalTime, 1.0)
 
-            if (progress >= 1.0) {
-                loadingComplete = true
+            if (splashWindow.progress >= 1.0) {
+                splashWindow.loadingComplete = true
                 stop()
                 // Small delay to show 100% completion
                 finishTimer.start()
@@ -123,10 +123,10 @@ Page {
 
                 Label {
                     text: {
-                        if (progress < 0.3) return "Initializing..."
-                        else if (progress < 0.6) return "Loading models..."
-                        else if (progress < 0.9) return "Setting up UI..."
-                        else if (progress < 1.0) return "Finalizing..."
+                        if (splashWindow.progress < 0.3) return "Initializing..."
+                        else if (splashWindow.progress < 0.6) return "Loading models..."
+                        else if (splashWindow.progress < 0.9) return "Setting up UI..."
+                        else if (splashWindow.progress < 1.0) return "Finalizing..."
                         else return "Ready!"
                     }
                     font.pixelSize: 12

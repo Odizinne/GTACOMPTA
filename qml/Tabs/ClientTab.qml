@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -97,9 +99,12 @@ Column {
             }
 
             delegate: Rectangle {
+                id: del
                 width: clientListView.width
                 height: 40
                 color: (index % 2 === 0) ? "#404040" : "#303030"
+                required property var model
+                required property var index
 
                 RowLayout {
                     anchors.fill: parent
@@ -107,14 +112,14 @@ Column {
                     spacing: 10
 
                     Label {
-                        text: businessType === 0 ? "Pro" : "Part"
+                        text: del.model.businessType === 0 ? "Pro" : "Part"
                         font.bold: true
-                        color: businessType === 0 ? Constants.businessColor : Constants.consumerColor
+                        color: del.model.businessType === 0 ? Constants.businessColor : Constants.consumerColor
                         Layout.preferredWidth: 30
                     }
 
                     Label {
-                        text: name
+                        text: del.model.name
                         font.bold: true
                         Layout.preferredWidth: 120
                         elide: Text.ElideRight
@@ -122,8 +127,8 @@ Column {
 
                     Label {
                         text: {
-                            if (offer >= 0 && offer < AppState.offerModel.count) {
-                                return AppState.offerModel.getOfferName(offer)
+                            if (del.model.offer >= 0 && del.model.offer < AppState.offerModel.count) {
+                                return AppState.offerModel.getOfferName(del.model.offer)
                             }
                             return "Unknown"
                         }
@@ -132,7 +137,7 @@ Column {
                     }
 
                     Label {
-                        text: AppState.toUiPrice(price)
+                        text: AppState.toUiPrice(del.model.price)
                         Layout.preferredWidth: 60
                         elide: Text.ElideRight
                     }
@@ -141,7 +146,7 @@ Column {
                         Layout.preferredHeight: 40
                         text: {
                             var totalItems = 0
-                            var suppMap = AppState.clientModel.getSupplementQuantities(index)
+                            var suppMap = AppState.clientModel.getSupplementQuantities(del.index)
                             for (var key in suppMap) {
                                 totalItems += suppMap[key]
                             }
@@ -149,26 +154,26 @@ Column {
                         }
                         Layout.preferredWidth: 80
                         onClicked: {
-                            AppState.supplementDialog.currentSupplements = AppState.clientModel.getSupplementQuantities(index)
+                            AppState.supplementDialog.currentSupplements = AppState.clientModel.getSupplementQuantities(del.index)
                             AppState.supplementDialog.readOnly = true
                             AppState.supplementDialog.open()
                         }
                     }
 
                     Label {
-                        text: discount + "%"
+                        text: del.model.discount + "%"
                         Layout.preferredWidth: 40
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: phoneNumber
+                        text: del.model.phoneNumber
                         Layout.preferredWidth: 100
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: comment
+                        text: del.model.comment
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                     }
@@ -183,7 +188,7 @@ Column {
                             icon.color: Material.color(Material.Orange)
                             Layout.preferredHeight: 40
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, del.index)
                                 AppState.clientModel.checkout(sourceIndex.row)
                             }
                         }
@@ -196,11 +201,11 @@ Column {
                             icon.color: Material.color(Material.Blue)
                             Layout.preferredHeight: 40
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, del.index)
                                 AppState.clientDialog.editMode = true
                                 AppState.clientDialog.editIndex = sourceIndex.row
-                                AppState.clientDialog.loadClient(businessType, name, offer, price,
-                                                              supplements, discount, phoneNumber, comment)
+                                AppState.clientDialog.loadClient(del.model.businessType, del.model.name, del.model.offer, del.model.price,
+                                                              del.model.supplements, del.model.discount, del.model.phoneNumber, del.model.comment)
                                 AppState.clientDialog.open()
                             }
                         }
@@ -213,7 +218,7 @@ Column {
                             icon.color: Material.color(Material.Red)
                             Layout.preferredHeight: 40
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel,del.index)
                                 AppState.confirmDialog.title = "Remove Client"
                                 AppState.confirmDialog.confirmed.connect(function() {
                                     AppState.clientModel.removeEntry(sourceIndex.row)

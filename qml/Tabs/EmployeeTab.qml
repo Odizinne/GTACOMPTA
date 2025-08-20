@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -84,48 +86,50 @@ Column {
             }
 
             delegate: Rectangle {
+                id: del
                 width: employeeListView.width
                 height: 40
                 color: (index % 2 === 0) ? "#404040" : "#303030"
-
+                required property var model
+                required property var index
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 5
                     spacing: 10
 
                     Label {
-                        text: name
+                        text: del.model.name
                         font.bold: true
                         Layout.preferredWidth: 120
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: phone
+                        text: del.model.phone
                         Layout.preferredWidth: 100
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: role
+                        text: del.model.role
                         Layout.preferredWidth: 100
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: AppState.toUiPrice(salary)
+                        text: AppState.toUiPrice(del.model.salary)
                         color: "lightgreen"
                         Layout.preferredWidth: 80
                         elide: Text.ElideRight
                     }
 
                     Label {
-                        text: addedDate
+                        text: del.model.addedDate
                         Layout.preferredWidth: 90
                     }
 
                     Label {
-                        text: comment
+                        text: del.model.comment
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                     }
@@ -140,7 +144,7 @@ Column {
                             icon.height: 16
                             icon.color: Material.color(Material.Orange)
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.employeeFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.employeeFilterModel, del.index)
                                 AppState.employeeModel.payEmployee(sourceIndex.row)
                             }
                         }
@@ -153,10 +157,10 @@ Column {
                             icon.color: Material.color(Material.Blue)
                             Layout.preferredHeight: 40
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.employeeFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.employeeFilterModel, del.index)
                                 AppState.employeeDialog.editMode = true
                                 AppState.employeeDialog.editIndex = sourceIndex.row
-                                AppState.employeeDialog.loadEmployee(name, phone, role, salary, addedDate, comment)
+                                AppState.employeeDialog.loadEmployee(del.model.name, del.model.phone, del.model.role, del.model.salary, del.model.addedDate, del.model.comment)
                                 AppState.employeeDialog.open()
                             }
                         }
@@ -169,7 +173,7 @@ Column {
                             icon.color: Material.color(Material.Red)
                             Layout.preferredHeight: 40
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.employeeFilterModel, index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.employeeFilterModel, del.index)
                                 AppState.confirmDialog.title = "Remove Employee"
                                 AppState.confirmDialog.confirmed.connect(function() {
                                     AppState.employeeModel.removeEntry(sourceIndex.row)

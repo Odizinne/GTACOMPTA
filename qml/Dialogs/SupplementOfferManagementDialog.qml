@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -125,22 +127,25 @@ Dialog {
                     spacing: 0
 
                     delegate: Rectangle {
+                        id: delRec
                         width: supplListView.width
                         height: 40
                         color: (index % 2 === 0) ? "#404040" : "#303030"
+                        required property var model
+                        required property int index
 
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10
 
                             Label {
-                                text: model.name
+                                text: delRec.model.name
                                 font.bold: true
                                 Layout.fillWidth: true
                             }
 
                             Label {
-                                text: AppState.toUiPrice(model.price)
+                                text: AppState.toUiPrice(delRec.model.price)
                                 color: "lightgreen"
                                 Layout.preferredWidth: 80
                             }
@@ -157,8 +162,8 @@ Dialog {
                                     onClicked: {
                                         supplementOfferDialog.isOffer = false
                                         supplementOfferDialog.editMode = true
-                                        supplementOfferDialog.editIndex = index
-                                        supplementOfferDialog.loadItem(model.name, model.price)
+                                        supplementOfferDialog.editIndex = delRec.index
+                                        supplementOfferDialog.loadItem(delRec.model.name, delRec.model.price)
                                         supplementOfferDialog.open()
                                     }
                                 }
@@ -170,7 +175,7 @@ Dialog {
                                     icon.height: 16
                                     icon.color: Material.color(Material.Red)
                                     Layout.preferredHeight: 40
-                                    onClicked: root.supplementRemoved(index)
+                                    onClicked: root.supplementRemoved(delRec.index)
                                 }
                             }
                         }
@@ -191,22 +196,24 @@ Dialog {
                     spacing: 0
 
                     delegate: Rectangle {
+                        id: delRec2
                         width: offerView.width
                         height: 40
                         color: (index % 2 === 0) ? "#404040" : "#303030"
-
+                        required property var model
+                        required property int index
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10
 
                             Label {
-                                text: model.name
+                                text: delRec2.model.name
                                 font.bold: true
                                 Layout.fillWidth: true
                             }
 
                             Label {
-                                text: AppState.toUiPrice(model.price)
+                                text: AppState.toUiPrice(delRec2.model.price)
                                 color: "lightgreen"
                                 Layout.preferredWidth: 80
                             }
@@ -222,8 +229,8 @@ Dialog {
                                     onClicked: {
                                         supplementOfferDialog.isOffer = true
                                         supplementOfferDialog.editMode = true
-                                        supplementOfferDialog.editIndex = index
-                                        supplementOfferDialog.loadItem(model.name, model.price)
+                                        supplementOfferDialog.editIndex = delRec2.index
+                                        supplementOfferDialog.loadItem(delRec2.model.name, delRec2.model.price)
                                         supplementOfferDialog.open()
                                     }
                                 }
@@ -235,7 +242,7 @@ Dialog {
                                     icon.height: 16
                                     icon.color: Material.color(Material.Red)
                                     Layout.preferredHeight: 40
-                                    onClicked: root.offerRemoved(index)
+                                    onClicked: root.offerRemoved(delRec2.index)
                                 }
                             }
                         }

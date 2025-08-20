@@ -1,13 +1,9 @@
 import QtQuick
 import QtQuick.Controls.Material
-import QtQuick.Controls.Material.impl
-import QtQuick.Controls.impl
 import QtQuick.Dialogs
-import QtQuick.Layouts
 import QtQml
 import Odizinne.GTACOMPTA
 import QtMultimedia
-import QtCore
 
 ApplicationWindow {
     id: window
@@ -38,7 +34,6 @@ ApplicationWindow {
 
     Component.onCompleted: {
         initSound.play()
-        // Initialize AppState singleton
         AppState.employeeModel = employeeModel
         AppState.transactionModel = transactionModel
         AppState.awaitingTransactionModel = awaitingTransactionModel

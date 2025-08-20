@@ -51,8 +51,11 @@ Dialog {
             root.supplementQuantities = AppState.clientModel.getSupplementQuantities(editIndex)
         } else {
             var quantities = {}
-            for (var i = 0; i < supplements.length; i++) {
-                quantities[supplements[i].toString()] = 1
+            if (supplements) {
+                var supplementsArray = Array.isArray(supplements) ? supplements : []
+                for (var i = 0; i < supplementsArray.length; i++) {
+                    quantities[supplementsArray[i].toString()] = 1
+                }
             }
             root.supplementQuantities = quantities
         }
