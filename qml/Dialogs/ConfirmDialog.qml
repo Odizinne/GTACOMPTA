@@ -11,6 +11,10 @@ Dialog {
 
     signal confirmed()
 
+    onClosed: {
+        confirmed.disconnect()
+    }
+
     RowLayout {
         anchors.fill: parent
         spacing: 20

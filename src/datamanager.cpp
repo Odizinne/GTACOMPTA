@@ -277,6 +277,14 @@ bool DataManager::importDataFromString(const QString &data,
         }
 
         if (success) {
+            if (employeeModel) employeeModel->saveToFile();
+            if (transactionModel) transactionModel->saveToFile();
+            if (awaitingTransactionModel) awaitingTransactionModel->saveToFile();
+            if (clientModel) clientModel->saveToFile();
+            if (supplementModel) supplementModel->saveToFile();
+            if (offerModel) offerModel->saveToFile();
+            if (companySummaryModel) companySummaryModel->saveToFile();
+
             emit importCompleted(true, "Data imported successfully");
         } else {
             emit importCompleted(false, "Some data could not be imported properly");

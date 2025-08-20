@@ -102,6 +102,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     QString path = parseHttpPath(request);
     QString body = parseHttpBody(request);
     QString authHeader = getHttpHeader(request, "X-Password");
+    QString protocolVersion = getHttpHeader(request, "X-Protocol-Version");
 
     QString response;
 
@@ -112,9 +113,25 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
                          "Content-Type: text/plain\r\n"
                          "Access-Control-Allow-Origin: *\r\n"
                          "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                         "Access-Control-Allow-Headers: Content-Type, X-Password");
+                         "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version");
         socket->write(response.toUtf8());
         socket->close();
+        return;
+    }
+
+    // Check protocol version
+    if (!protocolVersion.isEmpty() && protocolVersion != "1.0") {
+        QJsonObject error;
+        error["error"] = "Unsupported protocol version";
+        error["serverVersion"] = "1.0";
+        error["clientVersion"] = protocolVersion;
+        response = createHttpResponse(400, QJsonDocument(error).toJson());
+        response.replace("Content-Type: application/json",
+                         "Content-Type: application/json\r\n"
+                         "Access-Control-Allow-Origin: *");
+        socket->write(response.toUtf8());
+        socket->close();
+        logRequest(method, path, "PROTOCOL VERSION MISMATCH");
         return;
     }
 
@@ -131,6 +148,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         result["success"] = true;
         result["message"] = "Connection successful";
         result["server"] = "GTACOMPTA Server v1.0";
+        result["protocolVersion"] = "1.0";
         result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
 
         response = createHttpResponse(200, QJsonDocument(result).toJson());
@@ -176,6 +194,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         QJsonObject status;
         status["server"] = "GTACOMPTA Database Server";
         status["version"] = "1.0.0";
+        status["protocolVersion"] = "1.0";
         status["uptime"] = QDateTime::currentDateTime().toString(Qt::ISODate);
         status["dataDirectory"] = m_dataDirectory;
 

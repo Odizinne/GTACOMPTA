@@ -149,7 +149,7 @@ void BaseModel::loadFromRemote()
     RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
     if (remoteManager) {
         qDebug() << "Loading from remote:" << m_fileName << "using instance:" << remoteManager;
-        remoteManager->loadData(m_fileName);
+        remoteManager->loadData(m_fileName); // Back to original
     } else {
         qWarning() << "RemoteDatabaseManager not available, falling back to local";
         loadFromLocal();
@@ -206,7 +206,7 @@ void BaseModel::saveToFile()
             QJsonObject payload;
             payload["data"] = array;
             qDebug() << "Saving to remote:" << m_fileName;
-            remoteManager->saveData(m_fileName, payload);
+            remoteManager->saveData(m_fileName, payload); // Back to original
         } else {
             qWarning() << "RemoteDatabaseManager not available, falling back to local";
             saveToLocal(array);
@@ -247,8 +247,7 @@ void BaseModel::onRemoteDataLoaded(const QString &collection, const QJsonObject 
 {
     qDebug() << "onRemoteDataLoaded called for collection:" << collection << "my filename:" << m_fileName;
 
-    if (collection != m_fileName) {
-        // Don't log this as it's normal - other models will get this signal too
+    if (collection != m_fileName) { // Back to original comparison
         return;
     }
 
@@ -276,7 +275,7 @@ void BaseModel::onRemoteDataLoaded(const QString &collection, const QJsonObject 
 
 void BaseModel::onRemoteDataSaved(const QString &collection, bool success)
 {
-    if (collection != m_fileName) return;
+    if (collection != m_fileName) return; // Back to original comparison
 
     qDebug() << "Remote save result for" << collection << ":" << (success ? "SUCCESS" : "FAILED");
 

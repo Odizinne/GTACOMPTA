@@ -76,11 +76,13 @@ void RemoteDatabaseManager::makeRequest(const QString &method, const QString &en
     request.setUrl(QUrl(url));
     request.setRawHeader("X-Password", password.toUtf8());
     request.setRawHeader("Content-Type", "application/json");
+    request.setRawHeader("X-Protocol-Version", "1.0"); // Add this line
 
     // Safe header debugging - convert to QString properly
     qDebug() << "Headers set:";
     qDebug() << "  X-Password:" << QString::fromUtf8(request.rawHeader("X-Password"));
     qDebug() << "  Content-Type:" << QString::fromUtf8(request.rawHeader("Content-Type"));
+    qDebug() << "  X-Protocol-Version:" << QString::fromUtf8(request.rawHeader("X-Protocol-Version"));
 
     QNetworkReply *reply = nullptr;
 
