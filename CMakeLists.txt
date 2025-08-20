@@ -10,7 +10,7 @@ set(CMAKE_AUTORCC ON)
 set(QT_QML_GENERATE_QMLLS_INI ON)
 set(CMAKE_DISABLE_FIND_PACKAGE_WrapVulkanHeaders TRUE)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Qml Network)
+find_package(Qt6 REQUIRED COMPONENTS Quick Qml)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -81,7 +81,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     qt_add_executable(GTACOMPTA
         src/main.cpp
         resources/icons/icons.qrc
-        resources/sounds/sounds.qrc
     )
 
     set_target_properties(GTACOMPTA PROPERTIES
@@ -102,7 +101,6 @@ else()
     qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
         src/main.cpp
         resources/icons/icons.qrc
-        resources/sounds/sounds.qrc
         ${WINDOWS_RESOURCES}
     )
 
@@ -162,7 +160,7 @@ qt_add_qml_module(GTACOMPTA
 )
 
 target_link_libraries(GTACOMPTA
-    PRIVATE Qt6::Quick Qt6::Qml Qt6::Network
+    PRIVATE Qt6::Quick Qt6::Qml
 )
 
 # Only do installation stuff for non-WebAssembly builds

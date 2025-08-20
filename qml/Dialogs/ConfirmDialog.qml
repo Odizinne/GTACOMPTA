@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
-import QtMultimedia
-import Odizinne.GTACOMPTA
 
 Dialog {
     id: dialog
@@ -10,19 +8,8 @@ Dialog {
     anchors.centerIn: parent
     modal: true
     Material.roundedScale: Material.ExtraSmallScale
-    onVisibleChanged: {
-        if (visible) {
-            noticeEffect.play()
-        }
-    }
 
     signal confirmed()
-
-    SoundEffect {
-        id: noticeEffect
-        volume: UserSettings.volume
-        source: "qrc:/sounds/notice.wav"
-    }
 
     RowLayout {
         anchors.fill: parent

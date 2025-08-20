@@ -7,5 +7,4 @@ Settings {
     property bool firstRun: true
     property string companyName: ""
     property string notes: ""
-    property real volume: 0.5
 }
