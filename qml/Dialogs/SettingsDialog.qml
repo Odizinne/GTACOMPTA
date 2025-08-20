@@ -93,10 +93,18 @@ Dialog {
         RowLayout {
             Layout.fillWidth: true
 
-            Label {
-                text: "Remote Database"
-                Layout.fillWidth: true
-                font.bold: true
+            ColumnLayout {
+                spacing: 2
+                Label {
+                    text: "Remote Database"
+                    Layout.fillWidth: true
+                    font.bold: true
+                }
+                Label {
+                    text: "Allow to connect to a distant server that holds the database.\nPlease use the dedicated server provided below (Linux only)."
+                    font.pixelSize: 12
+                    opacity: 0.7
+                }
             }
 
             Switch {
