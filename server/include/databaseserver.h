@@ -46,7 +46,7 @@ private:
 
     // HTTP handling
     void handleHttpRequest(QTcpSocket *socket, const QString &request);
-    QString createHttpResponse(int statusCode, const QString &body, const QString &contentType = "application/json");
+    QByteArray createHttpResponse(int statusCode, const QString &body, const QString &contentType = "application/json");
     QString parseHttpMethod(const QString &request);
     QString parseHttpPath(const QString &request);
     QString parseHttpBody(const QString &request);

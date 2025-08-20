@@ -103,7 +103,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     QString authHeader = getHttpHeader(request, "X-Password");
     QString protocolVersion = getHttpHeader(request, "X-Protocol-Version");
 
-    QString response;
+    QByteArray response;
 
     // Check protocol version
     if (!protocolVersion.isEmpty() && protocolVersion != "1.0") {
@@ -112,7 +112,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         error["serverVersion"] = "1.0";
         error["clientVersion"] = protocolVersion;
         response = createHttpResponse(400, QJsonDocument(error).toJson());
-        socket->write(response.toUtf8());
+        socket->write(response);
         socket->close();
         logRequest(method, path, "PROTOCOL VERSION MISMATCH");
         return;
@@ -199,11 +199,11 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     }
 
     // No CORS headers - nginx handles them
-    socket->write(response.toUtf8());
+    socket->write(response);
     socket->close();
 }
 
-QString DatabaseServer::createHttpResponse(int statusCode, const QString &body, const QString &contentType)
+QByteArray DatabaseServer::createHttpResponse(int statusCode, const QString &body, const QString &contentType)
 {
     QString statusText;
     switch (statusCode) {
@@ -215,22 +215,23 @@ QString DatabaseServer::createHttpResponse(int statusCode, const QString &body, 
     default: statusText = "Unknown"; break;
     }
 
-    // Convert to UTF-8 bytes to get the correct length
+    // Convert body to UTF-8 bytes
     QByteArray bodyBytes = body.toUtf8();
 
-    QString response = QString("HTTP/1.1 %1 %2\\r\\n"
-                               "Content-Type: %3\\r\\n"
-                               "Content-Length: %4\\r\\n"
-                               "Connection: close\\r\\n"
-                               "\\r\\n"
-                               "%5")
-                           .arg(statusCode)
-                           .arg(statusText)
-                           .arg(contentType)
-                           .arg(bodyBytes.length())  // Use byte length, not character length
-                           .arg(body);
+    // Create header as string first
+    QString headerStr = QString("HTTP/1.1 %1 %2\r\n"
+                                "Content-Type: %3; charset=utf-8\r\n"
+                                "Content-Length: %4\r\n"
+                                "Connection: close\r\n"
+                                "\r\n")
+                            .arg(statusCode)
+                            .arg(statusText)
+                            .arg(contentType)
+                            .arg(bodyBytes.size());
 
-    return response;
+    // Convert header to bytes and combine
+    QByteArray headerBytes = headerStr.toUtf8();
+    return headerBytes + bodyBytes;
 }
 
 QString DatabaseServer::parseHttpMethod(const QString &request)

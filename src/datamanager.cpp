@@ -138,13 +138,13 @@ bool DataManager::importData(const QString &filePath,
             restoreUserSettings(rootObject["userSettings"].toObject());
         }
 
-        if (employeeModel) employeeModel->clear();
-        if (transactionModel) transactionModel->clear();
-        if (awaitingTransactionModel) awaitingTransactionModel->clear();
-        if (clientModel) clientModel->clear();
-        if (supplementModel) supplementModel->clear();
-        if (offerModel) offerModel->clear();
-        if (companySummaryModel) companySummaryModel->clear();
+        //if (employeeModel) employeeModel->clear();
+        //if (transactionModel) transactionModel->clear();
+        //if (awaitingTransactionModel) awaitingTransactionModel->clear();
+        //if (clientModel) clientModel->clear();
+        //if (supplementModel) supplementModel->clear();
+        //if (offerModel) offerModel->clear();
+        //if (companySummaryModel) companySummaryModel->clear();
 
         bool success = true;
         if (rootObject.contains("employees")) {
@@ -277,13 +277,13 @@ bool DataManager::importDataFromString(const QString &data,
         }
 
         if (success) {
-            if (employeeModel) employeeModel->saveToFile();
-            if (transactionModel) transactionModel->saveToFile();
-            if (awaitingTransactionModel) awaitingTransactionModel->saveToFile();
-            if (clientModel) clientModel->saveToFile();
-            if (supplementModel) supplementModel->saveToFile();
-            if (offerModel) offerModel->saveToFile();
-            if (companySummaryModel) companySummaryModel->saveToFile();
+            //if (employeeModel) employeeModel->saveToFile();
+            //if (transactionModel) transactionModel->saveToFile();
+            //if (awaitingTransactionModel) awaitingTransactionModel->saveToFile();
+            //if (clientModel) clientModel->saveToFile();
+            //if (supplementModel) supplementModel->saveToFile();
+            //if (offerModel) offerModel->saveToFile();
+            //if (companySummaryModel) companySummaryModel->saveToFile();
 
             emit importCompleted(true, "Data imported successfully");
         } else {
