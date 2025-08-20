@@ -1,4 +1,3 @@
-// src/databaseserver.cpp
 #include "databaseserver.h"
 #include <QCoreApplication>
 #include <QDebug>
@@ -11,15 +10,12 @@
 DatabaseServer::DatabaseServer(QObject *parent)
     : QObject(parent)
     , m_server(new QTcpServer(this))
-    , m_password("1234")  // Updated default password
+    , m_password("1234")
+    , m_sslEnabled(false)
 {
-    // The data directory will be set by main.cpp using proper app settings
-    // We just initialize with empty string here
     m_dataDirectory = "";
-
     connect(m_server, &QTcpServer::newConnection, this, &DatabaseServer::newConnection);
 
-    // Setup logging timer
     m_logTimer = new QTimer(this);
     connect(m_logTimer, &QTimer::timeout, this, [this]() {
         qDebug() << "[" << QDateTime::currentDateTime().toString() << "] Server running...";
@@ -33,17 +29,55 @@ DatabaseServer::~DatabaseServer()
 
 bool DatabaseServer::start(quint16 port)
 {
+    setupSsl();
+
     if (m_server->listen(QHostAddress::Any, port)) {
         qDebug() << "GTACOMPTA Database Server started on port" << port;
         qDebug() << "Data directory:" << m_dataDirectory;
+        if (m_sslEnabled) {
+            qDebug() << "SSL/HTTPS enabled";
+        } else {
+            qDebug() << "Running in HTTP mode (SSL setup failed)";
+        }
         qDebug() << "Password protection enabled";
 
-        m_logTimer->start(30000); // Log every 30 seconds
+        m_logTimer->start(30000);
         return true;
     }
 
     qWarning() << "Failed to start server on port" << port << ":" << m_server->errorString();
     return false;
+}
+
+void DatabaseServer::setupSsl()
+{
+    m_sslEnabled = false;
+
+    QFile certFile("/etc/letsencrypt/live/srv967289.hstgr.cloud/fullchain.pem");
+    QFile keyFile("/etc/letsencrypt/live/srv967289.hstgr.cloud/privkey.pem");
+
+    if (certFile.open(QIODevice::ReadOnly) && keyFile.open(QIODevice::ReadOnly)) {
+        m_sslCertificate = QSslCertificate(certFile.readAll());
+
+        // Try EC first, then RSA
+        m_sslKey = QSslKey(keyFile.readAll(), QSsl::Ec);
+        if (m_sslKey.isNull()) {
+            keyFile.seek(0);
+            m_sslKey = QSslKey(keyFile.readAll(), QSsl::Rsa);
+        }
+
+        if (!m_sslCertificate.isNull() && !m_sslKey.isNull()) {
+            m_sslEnabled = true;
+            qDebug() << "SSL certificate loaded successfully";
+            qDebug() << "Key algorithm:" << (m_sslKey.algorithm() == QSsl::Ec ? "ECDSA" : "RSA");
+            qDebug() << "Certificate valid from:" << m_sslCertificate.effectiveDate();
+            qDebug() << "Certificate expires on:" << m_sslCertificate.expiryDate();
+        } else {
+            qWarning() << "SSL certificate or key is invalid";
+        }
+    } else {
+        qWarning() << "Failed to load SSL certificate files";
+    }
 }
 
 void DatabaseServer::stop()
@@ -71,10 +105,52 @@ void DatabaseServer::setDataDirectory(const QString &path)
 void DatabaseServer::newConnection()
 {
     while (m_server->hasPendingConnections()) {
-        QTcpSocket *socket = m_server->nextPendingConnection();
-        connect(socket, &QTcpSocket::readyRead, this, &DatabaseServer::readyRead);
-        connect(socket, &QTcpSocket::disconnected, this, &DatabaseServer::clientDisconnected);
+        QTcpSocket *tcpSocket = m_server->nextPendingConnection();
+
+        if (m_sslEnabled) {
+            // Create SSL socket and take over the connection
+            QSslSocket *sslSocket = new QSslSocket(this);
+
+            // Set socket descriptor BEFORE setting up SSL
+            if (sslSocket->setSocketDescriptor(tcpSocket->socketDescriptor())) {
+                // Configure SSL
+                sslSocket->setLocalCertificate(m_sslCertificate);
+                sslSocket->setPrivateKey(m_sslKey);
+
+                // Connect signals BEFORE starting encryption
+                connect(sslSocket, &QSslSocket::readyRead, this, &DatabaseServer::readyRead);
+                connect(sslSocket, &QSslSocket::disconnected, this, &DatabaseServer::clientDisconnected);
+                connect(sslSocket, QOverload<const QList<QSslError>&>::of(&QSslSocket::sslErrors),
+                        this, &DatabaseServer::sslErrors);
+
+                // Start server-side SSL
+                sslSocket->startServerEncryption();
+
+                qDebug() << "New SSL connection from:" << sslSocket->peerAddress().toString();
+            } else {
+                qWarning() << "Failed to set socket descriptor for SSL";
+                sslSocket->deleteLater();
+            }
+
+            // Clean up the original TCP socket
+            tcpSocket->deleteLater();
+        } else {
+            // HTTP mode
+            connect(tcpSocket, &QTcpSocket::readyRead, this, &DatabaseServer::readyRead);
+            connect(tcpSocket, &QTcpSocket::disconnected, this, &DatabaseServer::clientDisconnected);
+            qDebug() << "New HTTP connection from:" << tcpSocket->peerAddress().toString();
+        }
     }
+}
+
+void DatabaseServer::sslErrors(const QList<QSslError> &errors)
+{
+    QSslSocket *socket = qobject_cast<QSslSocket*>(sender());
+    for (const QSslError &error : errors) {
+        qWarning() << "SSL Error:" << error.errorString();
+    }
+    // For development, you might want to ignore SSL errors:
+    // socket->ignoreSslErrors();
 }
 
 void DatabaseServer::readyRead()
@@ -113,7 +189,9 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
                          "Content-Type: text/plain\r\n"
                          "Access-Control-Allow-Origin: *\r\n"
                          "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
-                         "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version");
+                         "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version\r\n"
+                         "Access-Control-Allow-Credentials: false\r\n"
+                         "Access-Control-Max-Age: 86400");
         socket->write(response.toUtf8());
         socket->close();
         return;
@@ -128,7 +206,11 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         response = createHttpResponse(400, QJsonDocument(error).toJson());
         response.replace("Content-Type: application/json",
                          "Content-Type: application/json\r\n"
-                         "Access-Control-Allow-Origin: *");
+                         "Access-Control-Allow-Origin: *\r\n"
+                         "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                         "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version\r\n"
+                         "Access-Control-Allow-Credentials: false\r\n"
+                         "Access-Control-Max-Age: 86400");
         socket->write(response.toUtf8());
         socket->close();
         logRequest(method, path, "PROTOCOL VERSION MISMATCH");
@@ -149,6 +231,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         result["message"] = "Connection successful";
         result["server"] = "GTACOMPTA Server v1.0";
         result["protocolVersion"] = "1.0";
+        result["sslEnabled"] = m_sslEnabled;
         result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
 
         response = createHttpResponse(200, QJsonDocument(result).toJson());
@@ -156,7 +239,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     }
     // Save data
     else if (method == "POST" && path.startsWith("/api/save/")) {
-        QString collection = path.mid(10); // Remove "/api/save/"
+        QString collection = path.mid(10);
 
         QJsonParseError error;
         QJsonDocument doc = QJsonDocument::fromJson(body.toUtf8(), &error);
@@ -183,7 +266,7 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     }
     // Load data
     else if (method == "GET" && path.startsWith("/api/load/")) {
-        QString collection = path.mid(10); // Remove "/api/load/"
+        QString collection = path.mid(10);
 
         QJsonObject data = loadCollection(collection);
         response = createHttpResponse(200, QJsonDocument(data).toJson());
@@ -195,10 +278,10 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         status["server"] = "GTACOMPTA Database Server";
         status["version"] = "1.0.0";
         status["protocolVersion"] = "1.0";
+        status["sslEnabled"] = m_sslEnabled;
         status["uptime"] = QDateTime::currentDateTime().toString(Qt::ISODate);
         status["dataDirectory"] = m_dataDirectory;
 
-        // Count collections
         QDir dataDir(m_dataDirectory);
         QStringList jsonFiles = dataDir.entryList(QStringList() << "*.json", QDir::Files);
         status["collections"] = jsonFiles.size();
@@ -217,7 +300,11 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     // Add CORS headers
     response.replace("Content-Type: application/json",
                      "Content-Type: application/json\r\n"
-                     "Access-Control-Allow-Origin: *");
+                     "Access-Control-Allow-Origin: *\r\n"
+                     "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+                     "Access-Control-Allow-Headers: Content-Type, X-Password, X-Protocol-Version\r\n"
+                     "Access-Control-Allow-Credentials: false\r\n"
+                     "Access-Control-Max-Age: 86400");
 
     socket->write(response.toUtf8());
     socket->close();
@@ -279,11 +366,11 @@ QString DatabaseServer::parseHttpBody(const QString &request)
 QString DatabaseServer::getHttpHeader(const QString &request, const QString &headerName)
 {
     QStringList lines = request.split("\r\n");
-    QString headerPrefix = headerName.toLower() + ": "; // Convert to lowercase for comparison
+    QString headerPrefix = headerName.toLower() + ": ";
 
     for (const QString &line : lines) {
-        if (line.toLower().startsWith(headerPrefix)) { // Case-insensitive comparison
-            return line.mid(line.indexOf(":") + 1).trimmed(); // Get value after ':'
+        if (line.toLower().startsWith(headerPrefix)) {
+            return line.mid(line.indexOf(":") + 1).trimmed();
         }
     }
 
@@ -359,7 +446,6 @@ bool DatabaseServer::saveCollection(const QString &collection, const QJsonArray 
 
 QString DatabaseServer::getCollectionPath(const QString &collection)
 {
-    // Sanitize collection name
     QString sanitized = collection;
     sanitized.replace(QRegularExpression("[^a-zA-Z0-9_-]"), "_");
     return m_dataDirectory + "/" + sanitized + ".json";

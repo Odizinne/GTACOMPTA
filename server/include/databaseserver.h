@@ -1,10 +1,13 @@
-// include/databaseserver.h
 #ifndef DATABASESERVER_H
 #define DATABASESERVER_H
 
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QSslSocket>
+#include <QSslKey>
+#include <QSslCertificate>
+#include <QSslConfiguration>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -33,12 +36,19 @@ private slots:
     void newConnection();
     void readyRead();
     void clientDisconnected();
+    void sslErrors(const QList<QSslError> &errors);
 
 private:
     QTcpServer *m_server;
     QString m_password;
     QString m_dataDirectory;
     QTimer *m_logTimer;
+
+    // SSL members
+    void setupSsl();
+    QSslKey m_sslKey;
+    QSslCertificate m_sslCertificate;
+    bool m_sslEnabled;
 
     bool authenticate(const QString &password);
     void logRequest(const QString &method, const QString &path, const QString &response = "");
