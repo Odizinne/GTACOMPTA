@@ -129,6 +129,7 @@ set(QML_FILES
     qml/Dialogs/TransactionDialog.qml
     qml/Dialogs/VersionDialog.qml
     qml/Dialogs/WelcomeDialog.qml
+    qml/Dialogs/DatePickerDialog.qml
     qml/Pages/MainPage.qml
     qml/Pages/SplashScreen.qml
     qml/Tabs/AwaitingTransactionTab.qml

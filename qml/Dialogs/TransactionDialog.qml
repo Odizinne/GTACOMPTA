@@ -62,6 +62,19 @@ Dialog {
             Layout.fillWidth: true
             selectedDate: new Date()
             placeholderText: "Select transaction date"
+            onOpenDateDialog: transDatePickerDialog.open()
+        }
+    }
+
+    DatePickerDialog {
+        id: transDatePickerDialog
+        selectedDate: transDate.selectedDate
+        onDateSelected: function(newDate) {
+            transDate.selectedDate = newDate
+            transDate.dateChanged(newDate)
+        }
+        onOpened: {
+            currentDate = transDate.selectedDate
         }
     }
 

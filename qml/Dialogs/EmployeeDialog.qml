@@ -88,6 +88,7 @@ Dialog {
             Layout.fillWidth: true
             selectedDate: new Date()
             placeholderText: "Select employee start date"
+            onOpenDateDialog: empDatePickerDialog.open()
         }
 
         Label { text: "Comment:" }
@@ -99,6 +100,18 @@ Dialog {
                 placeholderText: "Additional comments..."
                 wrapMode: TextArea.Wrap
             }
+        }
+    }
+
+    DatePickerDialog {
+        id: empDatePickerDialog
+        selectedDate: empAddedDate.selectedDate
+        onDateSelected: function(newDate) {
+            empAddedDate.selectedDate = newDate
+            empAddedDate.dateChanged(newDate)
+        }
+        onOpened: {
+            currentDate = empAddedDate.selectedDate
         }
     }
 
