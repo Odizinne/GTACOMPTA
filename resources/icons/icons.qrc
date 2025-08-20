@@ -11,5 +11,7 @@
         <file>date.svg</file>
         <file>download.svg</file>
         <file>warning.svg</file>
+        <file>sun.svg</file>
+        <file>moon.svg</file>
     </qresource>
 </RCC>

@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    // Models (will be set from Main.qml)
     property var employeeModel: null
     property var transactionModel: null
     property var awaitingTransactionModel: null
@@ -11,17 +10,14 @@ QtObject {
     property var supplementModel: null
     property var offerModel: null
 
-    // Filter models (will be set from Main.qml)
     property var employeeFilterModel: null
     property var transactionFilterModel: null
     property var awaitingTransactionFilterModel: null
     property var clientFilterModel: null
 
-    // App state
     property string filterText: ""
     property bool isWasm: Qt.platform.os === "wasm"
 
-    // Dialogs (will be set from Main.qml)
     property var employeeDialog: null
     property var transactionDialog: null
     property var awaitingTransactionDialog: null
@@ -29,9 +25,11 @@ QtObject {
     property var confirmDialog: null
     property var supplementDialog: null
 
-    // Helper functions
-    function toUiPrice(priceInCents) {
-        return "$" + (priceInCents).toLocaleString()
+    function toUiPrice(price) {
+        if (price === 0) return "$0"
+        var sign = price > 0 ? "+" : "-"
+        var absolutePrice = Math.abs(price)
+        return sign + "$" + absolutePrice.toLocaleString()
     }
 
     function toModelPrice(priceString) {

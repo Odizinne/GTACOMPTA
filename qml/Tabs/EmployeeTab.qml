@@ -82,16 +82,17 @@ Column {
                 text: AppState.filterText ? "No employees match the filter." : "No employees added yet.\nUse Databases → New Employee to add one."
                 visible: employeeListView.count === 0
                 horizontalAlignment: Text.AlignHCenter
-                color: "gray"
+                color: Constants.secondaryTextColor
             }
 
             delegate: Rectangle {
                 id: del
                 width: employeeListView.width
                 height: 40
-                color: (index % 2 === 0) ? "#404040" : "#303030"
+                color: (index % 2 === 0) ? Constants.listItemEven : Constants.listItemOdd
                 required property var model
                 required property var index
+
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 5
@@ -102,23 +103,26 @@ Column {
                         font.bold: true
                         Layout.preferredWidth: 120
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: del.model.phone
                         Layout.preferredWidth: 100
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: del.model.role
                         Layout.preferredWidth: 100
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: AppState.toUiPrice(del.model.salary)
-                        color: "lightgreen"
+                        color: Constants.salaryColor
                         Layout.preferredWidth: 80
                         elide: Text.ElideRight
                     }
@@ -126,12 +130,14 @@ Column {
                     Label {
                         text: del.model.addedDate
                         Layout.preferredWidth: 90
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: del.model.comment
                         Layout.fillWidth: true
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     RowLayout {

@@ -9,9 +9,9 @@ import Odizinne.GTACOMPTA
 
 Page {
     id: root
-    Material.primary: "#2A2F2A"
-    Material.background: "#232323"
-    Material.accent: "#4CAF50"
+    Material.primary: Constants.primaryColor
+    Material.background: Constants.backgroundColor
+    Material.accent: Constants.accentColor
 
     signal showSettings()
     signal showNotes()
@@ -26,7 +26,7 @@ Page {
     signal clearAllData()
 
     background: Rectangle {
-        color: "#1A1A1A"
+        color: Constants.surfaceColor
         layer.enabled: root.enabled && root.Material.elevation > 0
         layer.effect: ElevationEffect {
             elevation: root.Material.elevation

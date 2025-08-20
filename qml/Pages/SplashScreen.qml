@@ -1,14 +1,15 @@
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
+import Odizinne.GTACOMPTA
 
 Page {
     id: splashWindow
     visible: true
-    Material.theme: Material.Dark
-    Material.primary: "#2A2F2A"
-    Material.background: "#232323"
-    Material.accent: "#4CAF50"
+    Material.theme: UserSettings.darkMode ? Material.Dark : Material.Light
+    Material.primary: Constants.primaryColor
+    Material.background: Constants.backgroundColor
+    Material.accent: Constants.accentColor
 
     property real progress: 0
     property bool loadingComplete: false
@@ -46,8 +47,8 @@ Page {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "#2A2F2A" }
-            GradientStop { position: 1.0; color: "#1A1A1A" }
+            GradientStop { position: 0.0; color: Constants.gradientStart }
+            GradientStop { position: 1.0; color: Constants.gradientEnd }
         }
 
         ColumnLayout {

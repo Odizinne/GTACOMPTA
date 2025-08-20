@@ -95,14 +95,14 @@ Column {
                 text: AppState.filterText ? "No clients match the filter." : "No clients added yet.\nUse Databases → New Client to add one."
                 visible: clientListView.count === 0
                 horizontalAlignment: Text.AlignHCenter
-                color: "gray"
+                color: Constants.secondaryTextColor
             }
 
             delegate: Rectangle {
                 id: del
                 width: clientListView.width
                 height: 40
-                color: (index % 2 === 0) ? "#404040" : "#303030"
+                color: (index % 2 === 0) ? Constants.listItemEven : Constants.listItemOdd
                 required property var model
                 required property var index
 
@@ -123,6 +123,7 @@ Column {
                         font.bold: true
                         Layout.preferredWidth: 120
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
@@ -134,12 +135,14 @@ Column {
                         }
                         Layout.preferredWidth: 80
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: AppState.toUiPrice(del.model.price)
                         Layout.preferredWidth: 60
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     ToolButton {
@@ -164,18 +167,21 @@ Column {
                         text: del.model.discount + "%"
                         Layout.preferredWidth: 40
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: del.model.phoneNumber
                         Layout.preferredWidth: 100
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     Label {
                         text: del.model.comment
                         Layout.fillWidth: true
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     RowLayout {
@@ -218,7 +224,7 @@ Column {
                             icon.color: Material.color(Material.Red)
                             Layout.preferredHeight: 40
                             onClicked: {
-                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel,del.index)
+                                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, del.index)
                                 AppState.confirmDialog.title = "Remove Client"
                                 AppState.confirmDialog.confirmed.connect(function() {
                                     AppState.clientModel.removeEntry(sourceIndex.row)

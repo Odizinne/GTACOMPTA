@@ -58,24 +58,25 @@ Column {
                 text: AppState.filterText ? "No transactions match the filter." : "No transactions added yet.\nUse Databases → New Transaction to add one."
                 visible: transactionListView.count === 0
                 horizontalAlignment: Text.AlignHCenter
-                color: "gray"
+                color: Constants.secondaryTextColor
             }
 
             delegate: Rectangle {
                 id: del
                 width: transactionListView.width
                 height: 40
-                color: (index % 2 === 0) ? "#404040" : "#303030"
+                color: (index % 2 === 0) ? Constants.listItemEven : Constants.listItemOdd
                 required property var model
                 required property var index
+
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 5
                     spacing: 10
 
                     Label {
-                        text: (del.model.amount >= 0 ? "+" : "") + AppState.toUiPrice(del.model.amount)
-                        color: del.model.amount >= 0 ? "lightgreen" : "lightcoral"
+                        text: AppState.toUiPrice(del.model.amount)
+                        color: del.model.amount >= 0 ? Constants.positiveAmountColor : Constants.negativeAmountColor
                         font.bold: true
                         Layout.preferredWidth: 120
                         elide: Text.ElideRight
@@ -83,15 +84,16 @@ Column {
 
                     Label {
                         text: del.model.date
-                        color: "gray"
+                        color: Constants.secondaryTextColor
                         Layout.preferredWidth: 100
                     }
 
                     Label {
-                        text:del.model. description
+                        text: del.model.description
                         font.bold: true
                         Layout.fillWidth: true
                         elide: Text.ElideRight
+                        color: Constants.primaryTextColor
                     }
 
                     RowLayout {

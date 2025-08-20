@@ -3,7 +3,6 @@ import QtQuick.Controls.Material
 import QtQuick.Dialogs
 import QtQml
 import Odizinne.GTACOMPTA
-import QtMultimedia
 
 ApplicationWindow {
     id: window
@@ -13,27 +12,13 @@ ApplicationWindow {
     minimumWidth: 1280
     minimumHeight: 720
     title: "GTACOMPTA"
-    Material.theme: Material.Dark
-
-    Material.primary: "#2A2F2A"
-    Material.background: "#232323"
-    Material.accent: "#4CAF50"
-    color: "#1A1A1A"
-
-    SoundEffect {
-        id: introSound
-        source: "qrc:/sounds/intro.wav"
-        volume: UserSettings.volume
-    }
-
-    SoundEffect {
-        id: initSound
-        source: "qrc:/sounds/empty.wav"
-        volume: 1
-    }
+    Material.theme: UserSettings.darkMode ? Material.Dark : Material.Light
+    Material.primary: Constants.primaryColor
+    Material.background: Constants.backgroundColor
+    Material.accent: Constants.accentColor
+    color: Constants.surfaceColor
 
     Component.onCompleted: {
-        initSound.play()
         AppState.employeeModel = employeeModel
         AppState.transactionModel = transactionModel
         AppState.awaitingTransactionModel = awaitingTransactionModel
@@ -140,16 +125,6 @@ ApplicationWindow {
         }
     }
 
-    Connections {
-        target: VersionGetter
-        function onUpdateCheckCompleted(updateAvailable, latestVersion) {
-            if (!settingsDialog.visible && updateAvailable) {
-                settingsDialog.open()
-            }
-        }
-    }
-
-    // Stack view for splash/main transition
     StackView {
         id: mainStack
         anchors.fill: parent
@@ -161,12 +136,6 @@ ApplicationWindow {
                 mainStack.replace(mainPage)
                 if (UserSettings.firstRun) {
                     welcomeDialog.open()
-                }
-                if (UserSettings.autoUpdate && !AppState.isWasm) {
-                    VersionGetter.checkForUpdates()
-                }
-                if (!AppState.isWasm) {
-                    introSound.play()
                 }
             }
         }
