@@ -21,19 +21,9 @@ jobs:
         uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: build.yml
+          workflow: build-server.yml
           workflow_conclusion: success
-          name: GTACOMPTA_win64_msvc2022
-          run_id: ${{ inputs.workflow_run_id }}
-          if_no_artifact_found: fail
-
-      - name: Download Windows Installer
-        uses: dawidd6/action-download-artifact@v9
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: build.yml
-          workflow_conclusion: success
-          name: GTACOMPTA_Installer
+          name: GTACOMPTAServer
           run_id: ${{ inputs.workflow_run_id }}
           if_no_artifact_found: fail
 
@@ -57,22 +47,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Windows release asset
+      - name: Upload Server release asset
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: GTACOMPTA_win64_msvc2022.zip
-          asset_name: GTACOMPTA_win64_msvc2022.zip
+          asset_path: GTACOMPTAServer
+          asset_name: GTACOMPTAServer_linux_gcc64
           asset_content_type: application/zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows Installer asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: GTACOMPTA_Installer.exe 
-          asset_name: GTACOMPTA_Installer.exe  
-          asset_content_type: application/vnd.microsoft.portable-executable
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
