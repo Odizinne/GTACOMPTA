@@ -11,12 +11,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Network)
 set(SOURCES
     src/main.cpp
     src/databaseserver.cpp
-    src/requesthandler.cpp
 )
 
 set(HEADERS
     include/databaseserver.h
-    include/requesthandler.h
 )
 
 qt_add_executable(GTACOMPTAServer
