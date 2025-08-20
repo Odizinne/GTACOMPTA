@@ -18,6 +18,7 @@
 #include "supplementmodel.h"
 #include "offermodel.h"
 #include "basemodel.h"
+#include "companysummarymodel.h"
 
 class DataManager : public QObject
 {
@@ -38,7 +39,8 @@ public:
                                 AwaitingTransactionModel *awaitingTransactionModel,
                                 ClientModel *clientModel,
                                 SupplementModel *supplementModel,
-                                OfferModel *offerModel);
+                                OfferModel *offerModel,
+                                CompanySummaryModel *companySummaryModel);
 
     Q_INVOKABLE bool importData(const QString &filePath,
                                 EmployeeModel *employeeModel,
@@ -46,15 +48,16 @@ public:
                                 AwaitingTransactionModel *awaitingTransactionModel,
                                 ClientModel *clientModel,
                                 SupplementModel *supplementModel,
-                                OfferModel *offerModel);
+                                OfferModel *offerModel,
+                                CompanySummaryModel *companySummaryModel);
 
-    // Add these methods to the public section:
     Q_INVOKABLE bool exportDataToString(EmployeeModel *employeeModel,
                                         TransactionModel *transactionModel,
                                         AwaitingTransactionModel *awaitingTransactionModel,
                                         ClientModel *clientModel,
                                         SupplementModel *supplementModel,
-                                        OfferModel *offerModel);
+                                        OfferModel *offerModel,
+                                        CompanySummaryModel *companySummaryModel);
 
     Q_INVOKABLE bool importDataFromString(const QString &data,
                                           EmployeeModel *employeeModel,
@@ -62,7 +65,8 @@ public:
                                           AwaitingTransactionModel *awaitingTransactionModel,
                                           ClientModel *clientModel,
                                           SupplementModel *supplementModel,
-                                          OfferModel *offerModel);
+                                          OfferModel *offerModel,
+                                          CompanySummaryModel *companySummaryModel);
 
     Q_INVOKABLE QString getDefaultExportPath() const;
     Q_INVOKABLE QString getDefaultImportPath() const;
@@ -80,7 +84,8 @@ private:
                                AwaitingTransactionModel *awaitingTransactionModel,
                                ClientModel *clientModel,
                                SupplementModel *supplementModel,
-                               OfferModel *offerModel);
+                               OfferModel *offerModel,
+                               CompanySummaryModel *companySummaryModel);
 
     QJsonArray modelToJsonArray(BaseModel *model);
     bool restoreModelFromJsonArray(BaseModel *model, const QJsonArray &array);

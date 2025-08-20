@@ -269,9 +269,11 @@ ApplicationWindow {
         id: exportDialog
         onExportRequested: function(filePath) {
             if (AppState.isWasm) {
-                DataManager.exportDataToString(employeeModel, transactionModel, awaitingTransactionModel, clientModel, supplementModel, offerModel)
+                DataManager.exportDataToString(employeeModel, transactionModel, awaitingTransactionModel,
+                                             clientModel, supplementModel, offerModel, companySummaryModel)
             } else {
-                DataManager.exportData(filePath, employeeModel, transactionModel, awaitingTransactionModel, clientModel, supplementModel, offerModel)
+                DataManager.exportData(filePath, employeeModel, transactionModel, awaitingTransactionModel,
+                                     clientModel, supplementModel, offerModel, companySummaryModel)
             }
         }
     }
@@ -282,7 +284,8 @@ ApplicationWindow {
             if (AppState.isWasm) {
                 WasmFileHandler.openLoadDialog()
             } else {
-                DataManager.importData(filePath, employeeModel, transactionModel, awaitingTransactionModel, clientModel, supplementModel, offerModel)
+                DataManager.importData(filePath, employeeModel, transactionModel, awaitingTransactionModel,
+                                     clientModel, supplementModel, offerModel, companySummaryModel)
             }
         }
     }
@@ -319,19 +322,19 @@ ApplicationWindow {
         id: supplementDialog
     }
 
-    // Data manager connections
+    Connections {
+        target: AppState.isWasm ? WasmFileHandler : null
+        function onLoadFileSelected(content) {
+            DataManager.importDataFromString(content, employeeModel, transactionModel, awaitingTransactionModel,
+                                           clientModel, supplementModel, offerModel, companySummaryModel)
+        }
+    }
+
     Connections {
         target: DataManager
         enabled: AppState.isWasm
         function onExportDataReady(data, fileName) {
             WasmFileHandler.openSaveDialog(fileName, data)
-        }
-    }
-
-    Connections {
-        target: AppState.isWasm ? WasmFileHandler : null
-        function onLoadFileSelected(content) {
-            DataManager.importDataFromString(content, employeeModel, transactionModel, awaitingTransactionModel, clientModel, supplementModel, offerModel)
         }
     }
 

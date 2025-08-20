@@ -100,7 +100,6 @@ Dialog {
             }
 
             Switch {
-                id: remoteSwitch
                 checked: UserSettings.useRemoteDatabase
                 onClicked: {
                     UserSettings.useRemoteDatabase = checked
@@ -129,51 +128,52 @@ Dialog {
             }
         }
 
-        // Remote database configuration (visible when enabled)
-        GroupBox {
+        RowLayout {
+            enabled: UserSettings.useRemoteDatabase
             Layout.fillWidth: true
-            title: "Remote Configuration"
-            visible: remoteSwitch.checked
+            Label { text: "Host:"; Layout.fillWidth: true }
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                Layout.preferredWidth: 180
+                text: UserSettings.remoteHost
+                onTextChanged: UserSettings.remoteHost = text
+                placeholderText: "Server IP address"
+            }
 
-            GridLayout {
-                anchors.fill: parent
-                columns: 2
-                rowSpacing: 10
-
-                Label { text: "Host:" }
-                TextField {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Constants.comboHeight
-                    text: UserSettings.remoteHost
-                    onTextChanged: UserSettings.remoteHost = text
-                    placeholderText: "localhost or 192.168.1.100"
-                }
-
-                Label { text: "Port:" }
-                SpinBox {
-                    Layout.preferredHeight: Constants.comboHeight
-                    from: 1
-                    to: 65535
-                    value: UserSettings.remotePort
-                    onValueChanged: UserSettings.remotePort = value
-                    editable: true
-                }
-
-                Label { text: "Password:" }
-                TextField {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Constants.comboHeight
-                    text: UserSettings.remotePassword
-                    onTextChanged: UserSettings.remotePassword = text
-                    echoMode: TextInput.Password
-                    placeholderText: "Server password"
-                }
+            SpinBox {
+                id: portSpin
+                Layout.preferredHeight: Constants.comboHeight
+                from: 1
+                to: 65535
+                value: UserSettings.remotePort
+                onValueChanged: UserSettings.remotePort = value
+                editable: true
             }
         }
 
         RowLayout {
+            enabled: UserSettings.useRemoteDatabase
+            Label { text: "Password:"; Layout.fillWidth: true }
+            TextField {
+                Layout.preferredHeight: Constants.comboHeight
+                Layout.preferredWidth: portSpin.width
+                text: UserSettings.remotePassword
+                onTextChanged: UserSettings.remotePassword = text
+                echoMode: TextInput.Password
+                placeholderText: "Server password"
+            }
+        }
+
+        RowLayout {
+            enabled: UserSettings.useRemoteDatabase
             Layout.fillWidth: true
-            visible: remoteSwitch.checked
+
+            Label {
+                id: connectionStatus
+                Layout.fillWidth: true
+                text: ""
+                wrapMode: Text.WordWrap
+            }
 
             Button {
                 text: "Test Connection"
@@ -183,13 +183,6 @@ Dialog {
                     connectionStatus.color = Material.foreground
                     RemoteDatabaseManager.testConnection()
                 }
-            }
-
-            Label {
-                id: connectionStatus
-                Layout.fillWidth: true
-                text: ""
-                wrapMode: Text.WordWrap
             }
         }
     }

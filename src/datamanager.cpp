@@ -47,7 +47,8 @@ bool DataManager::exportData(const QString &filePath,
                              AwaitingTransactionModel *awaitingTransactionModel,
                              ClientModel *clientModel,
                              SupplementModel *supplementModel,
-                             OfferModel *offerModel)
+                             OfferModel *offerModel,
+                             CompanySummaryModel *companySummaryModel)
 {
     if (filePath.isEmpty()) {
         emit exportCompleted(false, "File path is empty");
@@ -57,12 +58,12 @@ bool DataManager::exportData(const QString &filePath,
     try {
         QJsonObject rootObject = collectAllData(employeeModel, transactionModel,
                                                 awaitingTransactionModel, clientModel,
-                                                supplementModel, offerModel);
+                                                supplementModel, offerModel,
+                                                companySummaryModel);
 
         QJsonDocument doc(rootObject);
         QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
 
-        // Ensure directory exists
         QFileInfo fileInfo(filePath);
         QDir().mkpath(fileInfo.absolutePath());
 
@@ -95,7 +96,8 @@ bool DataManager::importData(const QString &filePath,
                              AwaitingTransactionModel *awaitingTransactionModel,
                              ClientModel *clientModel,
                              SupplementModel *supplementModel,
-                             OfferModel *offerModel)
+                             OfferModel *offerModel,
+                             CompanySummaryModel *companySummaryModel)
 {
     if (filePath.isEmpty()) {
         emit importCompleted(false, "File path is empty");
@@ -127,26 +129,23 @@ bool DataManager::importData(const QString &filePath,
 
         QJsonObject rootObject = doc.object();
 
-        // Verify this is a valid GTACOMPTA backup
         if (!rootObject.contains("application") || rootObject["application"].toString() != "GTACOMPTA") {
             emit importCompleted(false, "This is not a valid GTACOMPTA backup file");
             return false;
         }
 
-        // Restore user settings first
         if (rootObject.contains("userSettings")) {
             restoreUserSettings(rootObject["userSettings"].toObject());
         }
 
-        // Clear all models before importing
         if (employeeModel) employeeModel->clear();
         if (transactionModel) transactionModel->clear();
         if (awaitingTransactionModel) awaitingTransactionModel->clear();
         if (clientModel) clientModel->clear();
         if (supplementModel) supplementModel->clear();
         if (offerModel) offerModel->clear();
+        if (companySummaryModel) companySummaryModel->clear();
 
-        // Restore model data
         bool success = true;
         if (rootObject.contains("employees")) {
             success &= restoreModelFromJsonArray(employeeModel, rootObject["employees"].toArray());
@@ -165,6 +164,9 @@ bool DataManager::importData(const QString &filePath,
         }
         if (rootObject.contains("offers")) {
             success &= restoreModelFromJsonArray(offerModel, rootObject["offers"].toArray());
+        }
+        if (rootObject.contains("companySummary")) {
+            success &= restoreModelFromJsonArray(companySummaryModel, rootObject["companySummary"].toArray());
         }
 
         if (success) {
@@ -186,18 +188,19 @@ bool DataManager::exportDataToString(EmployeeModel *employeeModel,
                                      AwaitingTransactionModel *awaitingTransactionModel,
                                      ClientModel *clientModel,
                                      SupplementModel *supplementModel,
-                                     OfferModel *offerModel)
+                                     OfferModel *offerModel,
+                                     CompanySummaryModel *companySummaryModel)
 {
     try {
         QJsonObject rootObject = collectAllData(employeeModel, transactionModel,
                                                 awaitingTransactionModel, clientModel,
-                                                supplementModel, offerModel);
+                                                supplementModel, offerModel,
+                                                companySummaryModel);
 
         QJsonDocument doc(rootObject);
         QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
         QString jsonString = QString::fromUtf8(jsonData);
 
-        // Generate filename with timestamp
         QString timestamp = QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm-ss");
         QString fileName = QString("GTACOMPTA_backup_%1.gco").arg(timestamp);
 
@@ -217,7 +220,8 @@ bool DataManager::importDataFromString(const QString &data,
                                        AwaitingTransactionModel *awaitingTransactionModel,
                                        ClientModel *clientModel,
                                        SupplementModel *supplementModel,
-                                       OfferModel *offerModel)
+                                       OfferModel *offerModel,
+                                       CompanySummaryModel *companySummaryModel)
 {
     try {
         QByteArray jsonData = data.toUtf8();
@@ -232,26 +236,23 @@ bool DataManager::importDataFromString(const QString &data,
 
         QJsonObject rootObject = doc.object();
 
-        // Verify this is a valid GTACOMPTA backup
         if (!rootObject.contains("application") || rootObject["application"].toString() != "GTACOMPTA") {
             emit importCompleted(false, "This is not a valid GTACOMPTA backup file");
             return false;
         }
 
-        // Restore user settings first
         if (rootObject.contains("userSettings")) {
             restoreUserSettings(rootObject["userSettings"].toObject());
         }
 
-        // Clear all models before importing
         if (employeeModel) employeeModel->clear();
         if (transactionModel) transactionModel->clear();
         if (awaitingTransactionModel) awaitingTransactionModel->clear();
         if (clientModel) clientModel->clear();
         if (supplementModel) supplementModel->clear();
         if (offerModel) offerModel->clear();
+        if (companySummaryModel) companySummaryModel->clear();
 
-        // Restore model data
         bool success = true;
         if (rootObject.contains("employees")) {
             success &= restoreModelFromJsonArray(employeeModel, rootObject["employees"].toArray());
@@ -270,6 +271,9 @@ bool DataManager::importDataFromString(const QString &data,
         }
         if (rootObject.contains("offers")) {
             success &= restoreModelFromJsonArray(offerModel, rootObject["offers"].toArray());
+        }
+        if (rootObject.contains("companySummary")) {
+            success &= restoreModelFromJsonArray(companySummaryModel, rootObject["companySummary"].toArray());
         }
 
         if (success) {
@@ -302,19 +306,17 @@ QJsonObject DataManager::collectAllData(EmployeeModel *employeeModel,
                                         AwaitingTransactionModel *awaitingTransactionModel,
                                         ClientModel *clientModel,
                                         SupplementModel *supplementModel,
-                                        OfferModel *offerModel)
+                                        OfferModel *offerModel,
+                                        CompanySummaryModel *companySummaryModel)
 {
     QJsonObject rootObject;
 
-    // Add metadata
     rootObject["version"] = "1.0";
     rootObject["exportDate"] = QDateTime::currentDateTime().toString(Qt::ISODate);
     rootObject["application"] = "GTACOMPTA";
 
-    // Add user settings
     rootObject["userSettings"] = collectUserSettings();
 
-    // Add model data
     if (employeeModel) {
         rootObject["employees"] = modelToJsonArray(employeeModel);
     }
@@ -332,6 +334,9 @@ QJsonObject DataManager::collectAllData(EmployeeModel *employeeModel,
     }
     if (offerModel) {
         rootObject["offers"] = modelToJsonArray(offerModel);
+    }
+    if (companySummaryModel) {
+        rootObject["companySummary"] = modelToJsonArray(companySummaryModel);
     }
 
     return rootObject;
@@ -383,23 +388,23 @@ QJsonObject DataManager::collectUserSettings()
 {
     QJsonObject settings;
 
-    // We need to read from QSettings since UserSettings.qml uses Settings
     QSettings qsettings("Odizinne", "GTACOMPTA");
-    settings["money"] = qsettings.value("money", 0).toInt();
     settings["firstRun"] = qsettings.value("firstRun", true).toBool();
-    settings["companyName"] = qsettings.value("companyName", "").toString();
     settings["notes"] = qsettings.value("notes", "").toString();
-    settings["autoUpdate"] = qsettings.value("autoUpdate", true).toBool();
-    settings["volume"] = qsettings.value("volume", 0.5).toDouble();
+    settings["darkMode"] = qsettings.value("darkMode", true).toBool();
+    settings["useRemoteDatabase"] = qsettings.value("useRemoteDatabase", false).toBool();
+    settings["remoteHost"] = qsettings.value("remoteHost", "localhost").toString();
+    settings["remotePort"] = qsettings.value("remotePort", 3000).toInt();
+    settings["remotePassword"] = qsettings.value("remotePassword", "1234").toString();
 
     return settings;
 }
 
 void DataManager::restoreUserSettings(const QJsonObject &settings)
 {
-    emit settingsChanged(settings["money"].toInt(),
+    emit settingsChanged(0, // money now comes only from CompanySummaryModel
                          settings["firstRun"].toBool(),
-                         settings["companyName"].toString(),
+                         "", // companyName only from CompanySummaryModel
                          settings["notes"].toString(),
-                         settings["volume"].toDouble());
+                         0.5);
 }

@@ -56,6 +56,7 @@ Page {
 
                     MenuItem {
                         text: "Clear All Data"
+                        enabled: !UserSettings.useRemoteDatabase
                         onTriggered: root.clearAllData()
                     }
 
