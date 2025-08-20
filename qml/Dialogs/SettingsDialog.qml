@@ -129,6 +129,20 @@ Dialog {
         }
 
         RowLayout {
+            Layout.fillWidth: true
+
+            Label {
+                text: "Server Download"
+                Layout.fillWidth: true
+            }
+
+            Button {
+                text: "For Linux"
+                onClicked: Qt.openUrlExternally("https://github.com/odizinne/gtacompta/releases/latest/download/GTACOMPTAServer_linux_gcc64")
+            }
+        }
+
+        RowLayout {
             enabled: UserSettings.useRemoteDatabase
             Layout.fillWidth: true
             Label { text: "Host:"; Layout.fillWidth: true }
