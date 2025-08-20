@@ -178,7 +178,6 @@ Page {
                 width: 180
                 placeholderText: "Filter..."
                 onTextChanged: AppState.filterText = text
-
             }
 
             Item {
@@ -251,42 +250,23 @@ Page {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        pushEnter: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 200
-                easing.type: Easing.OutQuad
-            }
-        }
-
-        pushExit: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 200
-                easing.type: Easing.OutQuad
-            }
-        }
+        property int previousIndex: 0
+        property bool isMovingForward: false
 
         replaceEnter: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 200
+            XAnimator {
+                from: stackView.isMovingForward ? stackView.width : -stackView.width
+                to: 0
+                duration: 300
                 easing.type: Easing.OutQuad
             }
         }
 
         replaceExit: Transition {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 200
+            XAnimator {
+                from: 0
+                to: stackView.isMovingForward ? -stackView.width : stackView.width
+                duration: 300
                 easing.type: Easing.OutQuad
             }
         }
@@ -319,11 +299,15 @@ Page {
         function onCurrentIndexChanged() {
             var components = [employeeComponent, transactionComponent, awaitingComponent, clientComponent]
             if (tabBar.currentIndex < components.length) {
+                stackView.isMovingForward = tabBar.currentIndex > stackView.previousIndex
+
                 if (stackView.depth === 0) {
                     stackView.push(components[tabBar.currentIndex])
                 } else {
                     stackView.replace(components[tabBar.currentIndex])
                 }
+
+                stackView.previousIndex = tabBar.currentIndex
             }
         }
     }
