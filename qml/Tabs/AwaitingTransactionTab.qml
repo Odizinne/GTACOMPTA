@@ -17,21 +17,24 @@ Column {
             anchors.margins: 5
             spacing: 10
 
-            Label {
-                text: "Amount"
-                font.bold: true
+            SortableLabel {
+                headerText: "Amount"
+                sortColumn: AwaitingTransactionModel.SortByAmount
+                sortModel: AppState.awaitingTransactionModel
                 Layout.preferredWidth: 120
             }
 
-            Label {
-                text: "Date"
-                font.bold: true
+            SortableLabel {
+                headerText: "Date"
+                sortColumn: AwaitingTransactionModel.SortByDate
+                sortModel: AppState.awaitingTransactionModel
                 Layout.preferredWidth: 100
             }
 
-            Label {
-                text: "Description"
-                font.bold: true
+            SortableLabel {
+                headerText: "Description"
+                sortColumn: AwaitingTransactionModel.SortByDescription
+                sortModel: AppState.awaitingTransactionModel
                 Layout.fillWidth: true
             }
 
