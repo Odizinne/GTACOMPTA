@@ -40,4 +40,30 @@ QtObject {
     function getSourceIndex(filterModel, index) {
         return filterModel.mapToSource(filterModel.index(index, 0))
     }
+
+    function loadAllModels(useRemote) {
+        console.log("AppState: Loading all models with useRemote =", useRemote)
+
+        if (employeeModel) {
+            employeeModel.loadFromFile(useRemote)
+        }
+        if (transactionModel) {
+            transactionModel.loadFromFile(useRemote)
+        }
+        if (awaitingTransactionModel) {
+            awaitingTransactionModel.loadFromFile(useRemote)
+        }
+        if (clientModel) {
+            clientModel.loadFromFile(useRemote)
+        }
+        if (supplementModel) {
+            supplementModel.loadFromFile(useRemote)
+        }
+        if (offerModel) {
+            offerModel.loadFromFile(useRemote)
+        }
+        if (companySummaryModel) {
+            companySummaryModel.loadFromFile(useRemote)
+        }
+    }
 }

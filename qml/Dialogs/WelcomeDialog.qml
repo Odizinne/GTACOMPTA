@@ -27,13 +27,13 @@ Dialog {
 
         RowLayout {
             Layout.fillWidth: true
-            enabled: !remoteDatabaseSwitch.checked
+            enabled: !UserSettings.useRemoteDatabase
 
             Label {
                 text: "Company name:"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
-                opacity: remoteDatabaseSwitch.checked ? 0.5 : 1.0
+                opacity: UserSettings.useRemoteDatabase ? 0.5 : 1.0
             }
 
             TextField {
@@ -44,20 +44,20 @@ Dialog {
                         AppState.companySummaryModel.companyName = text
                     }
                 }
-                placeholderText: remoteDatabaseSwitch.checked ? "Will be loaded from remote" : "Company name"
-                opacity: remoteDatabaseSwitch.checked ? 0.5 : 1.0
+                placeholderText: UserSettings.useRemoteDatabase ? "Will be loaded from remote" : "Company name"
+                opacity: UserSettings.useRemoteDatabase ? 0.5 : 1.0
             }
         }
 
         RowLayout {
             Layout.fillWidth: true
-            enabled: !remoteDatabaseSwitch.checked
+            enabled: !UserSettings.useRemoteDatabase
 
             Label {
                 text: "Starting balance:"
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
-                opacity: remoteDatabaseSwitch.checked ? 0.5 : 1.0
+                opacity: UserSettings.useRemoteDatabase ? 0.5 : 1.0
             }
 
             SpinBox {
@@ -69,7 +69,7 @@ Dialog {
                 editable: true
                 stepSize: 1000
                 onValueChanged: welcomeDialog.initialAmount = value
-                opacity: remoteDatabaseSwitch.checked ? 0.5 : 1.0
+                opacity: UserSettings.useRemoteDatabase ? 0.5 : 1.0
             }
         }
 
@@ -77,91 +77,27 @@ Dialog {
             Layout.fillWidth: true
         }
 
-        RowLayout {
+        RemoteDatabaseConfig {
+            id: dbConfig
             Layout.fillWidth: true
+            showSynchronizeButton: false
+            showTestConnection: true
 
-            ColumnLayout {
-                spacing: 2
-                Label {
-                    text: "Remote Database"
-                    Layout.fillWidth: true
-                    font.bold: true
-                }
-                Label {
-                    text: "Connect to a distant server that holds the database.\nLeave unchecked to use local storage."
-                    font.pixelSize: 12
-                    opacity: 0.7
-                }
-            }
-
-            Switch {
-                id: remoteDatabaseSwitch
-                checked: UserSettings.useRemoteDatabase
-                onClicked: {
-                    UserSettings.useRemoteDatabase = checked
-                    // Reset connection test status when switching
-                    welcomeDialog.connectionTestPassed = false
-                    connectionStatus.text = ""
-                }
+            onTestConnectionRequested: {
+                welcomeDialog.connectionTestPassed = false
+                RemoteDatabaseManager.testConnection()
             }
         }
 
-        RowLayout {
-            enabled: remoteDatabaseSwitch.checked
+        // Info label about what happens on start
+        Label {
             Layout.fillWidth: true
-            Label { text: "Host:"; Layout.fillWidth: true }
-            TextField {
-                Layout.preferredHeight: Constants.comboHeight
-                Layout.preferredWidth: 180
-                text: UserSettings.remoteHost
-                onTextChanged: {
-                    UserSettings.remoteHost = text
-                    // Reset connection test when host changes
-                    welcomeDialog.connectionTestPassed = false
-                    connectionStatus.text = ""
-                }
-                placeholderText: "Server IP address"
-            }
-        }
-
-        RowLayout {
-            enabled: remoteDatabaseSwitch.checked
-            Label { text: "Password:"; Layout.fillWidth: true }
-            TextField {
-                Layout.preferredHeight: Constants.comboHeight
-                text: UserSettings.remotePassword
-                onTextChanged: {
-                    UserSettings.remotePassword = text
-                    // Reset connection test when password changes
-                    welcomeDialog.connectionTestPassed = false
-                    connectionStatus.text = ""
-                }
-                echoMode: TextInput.Password
-                placeholderText: "Server password"
-            }
-        }
-
-        RowLayout {
-            enabled: remoteDatabaseSwitch.checked
-            Layout.fillWidth: true
-
-            Label {
-                id: connectionStatus
-                Layout.fillWidth: true
-                text: ""
-                wrapMode: Text.WordWrap
-            }
-
-            Button {
-                text: "Test Connection"
-                enabled: UserSettings.remoteHost.length > 0 && remoteDatabaseSwitch.checked
-                onClicked: {
-                    connectionStatus.text = "Testing connection..."
-                    connectionStatus.color = Material.foreground
-                    welcomeDialog.connectionTestPassed = false
-                    RemoteDatabaseManager.testConnection()
-                }
-            }
+            text: UserSettings.useRemoteDatabase ?
+                  "💡 Data will be loaded from remote server when you start." :
+                  "💡 Local database will be initialized when you start."
+            font.pixelSize: 10
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
     }
 
@@ -170,12 +106,12 @@ Dialog {
         target: RemoteDatabaseManager
         function onConnectionResult(success, message) {
             if (success) {
-                connectionStatus.text = "✓ " + message
-                connectionStatus.color = Material.color(Material.Green)
+                dbConfig.connectionStatus = "✓ " + message
+                dbConfig.connectionStatusColor = Material.color(Material.Green)
                 welcomeDialog.connectionTestPassed = true
             } else {
-                connectionStatus.text = "✗ " + message
-                connectionStatus.color = Material.color(Material.Red)
+                dbConfig.connectionStatus = "✗ " + message
+                dbConfig.connectionStatusColor = Material.color(Material.Red)
                 welcomeDialog.connectionTestPassed = false
             }
         }
@@ -187,38 +123,18 @@ Dialog {
             text: "Start"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
             enabled: {
-                if (remoteDatabaseSwitch.checked) {
-                    // If remote is checked, require successful connection test
+                if (UserSettings.useRemoteDatabase) {
                     return welcomeDialog.connectionTestPassed
                 } else {
-                    // If local, require company name
                     return AppState.companySummaryModel ? (AppState.companySummaryModel.companyName.length > 0) : false
                 }
             }
             onClicked: {
                 UserSettings.firstRun = false
+                AppState.loadAllModels(UserSettings.useRemoteDatabase)
 
-                // Load models with the selected remote/local setting
-                if (AppState.employeeModel) {
-                    AppState.employeeModel.loadFromFile(UserSettings.useRemoteDatabase)
-                }
-                if (AppState.transactionModel) {
-                    AppState.transactionModel.loadFromFile(UserSettings.useRemoteDatabase)
-                }
-                if (AppState.awaitingTransactionModel) {
-                    AppState.awaitingTransactionModel.loadFromFile(UserSettings.useRemoteDatabase)
-                }
-                if (AppState.clientModel) {
-                    AppState.clientModel.loadFromFile(UserSettings.useRemoteDatabase)
-                }
-                if (AppState.supplementModel) {
-                    AppState.supplementModel.loadFromFile(UserSettings.useRemoteDatabase)
-                }
-                if (AppState.offerModel) {
-                    AppState.offerModel.loadFromFile(UserSettings.useRemoteDatabase)
-                }
-                if (AppState.companySummaryModel) {
-                    AppState.companySummaryModel.loadFromFile(UserSettings.useRemoteDatabase)
+                if (!UserSettings.useRemoteDatabase && welcomeDialog.initialAmount !== 0) {
+                    initialTransactionTimer.start()
                 }
 
                 welcomeDialog.close()
@@ -231,6 +147,20 @@ Dialog {
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
             visible: Qt.platform.os !== "wasm"
             onClicked: Qt.quit()
+        }
+    }
+
+    Timer {
+        id: initialTransactionTimer
+        interval: 100
+        onTriggered: {
+            if (AppState.transactionModel && welcomeDialog.initialAmount !== 0) {
+                AppState.transactionModel.addTransaction(
+                    "Initial transfer",
+                    welcomeDialog.initialAmount,
+                    Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+                )
+            }
         }
     }
 }

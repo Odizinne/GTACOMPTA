@@ -114,6 +114,7 @@ set(QML_FILES
     qml/Main.qml
     qml/Components/DatePicker.qml
     qml/Components/SortableLabel.qml
+    qml/Components/RemoteDatabaseConfig.qml
     qml/Dialogs/AwaitingTransactionDialog.qml
     qml/Dialogs/ClearAllDialog.qml
     qml/Dialogs/ClientDialog.qml

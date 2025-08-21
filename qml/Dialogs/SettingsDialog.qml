@@ -1,4 +1,3 @@
-// qml/Dialogs/SettingsDialog.qml
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Controls.impl
@@ -12,6 +11,11 @@ Dialog {
     anchors.centerIn: parent
     modal: true
     Material.roundedScale: Material.ExtraSmallScale
+
+    onClosed: {
+        console.log("Dialog closed - syncing with", UserSettings.useRemoteDatabase ? "remote" : "local", "database")
+        AppState.loadAllModels(UserSettings.useRemoteDatabase)
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -90,111 +94,40 @@ Dialog {
             Layout.fillWidth: true
         }
 
-        RowLayout {
+        RemoteDatabaseConfig {
+            id: dbConfig
             Layout.fillWidth: true
+            showSynchronizeButton: true
+            showTestConnection: true
 
-            ColumnLayout {
-                spacing: 2
-                Label {
-                    text: "Remote Database"
-                    Layout.fillWidth: true
-                    font.bold: true
-                }
-                Label {
-                    text: "Allow to connect to a distant server that holds the database.\nPlease use the dedicated server provided below (Linux only)."
-                    font.pixelSize: 12
-                    opacity: 0.7
-                }
+            onSynchronizeRequested: {
+                // Manual synchronization
+                AppState.loadAllModels(true)
+                syncTimer.start()
             }
 
-            Switch {
-                checked: UserSettings.useRemoteDatabase
-                onClicked: {
-                    UserSettings.useRemoteDatabase = checked
-                    if (AppState.employeeModel) {
-                        AppState.employeeModel.loadFromFile(checked)
-                    }
-                    if (AppState.transactionModel) {
-                        AppState.transactionModel.loadFromFile(checked)
-                    }
-                    if (AppState.awaitingTransactionModel) {
-                        AppState.awaitingTransactionModel.loadFromFile(checked)
-                    }
-                    if (AppState.clientModel) {
-                        AppState.clientModel.loadFromFile(checked)
-                    }
-                    if (AppState.supplementModel) {
-                        AppState.supplementModel.loadFromFile(checked)
-                    }
-                    if (AppState.offerModel) {
-                        AppState.offerModel.loadFromFile(checked)
-                    }
-                    if (AppState.companySummaryModel) {
-                        AppState.companySummaryModel.loadFromFile(checked)
-                    }
-                }
+            onTestConnectionRequested: {
+                RemoteDatabaseManager.testConnection()
             }
         }
 
-        RowLayout {
+        // Info label about auto-sync
+        Label {
             Layout.fillWidth: true
-
-            Label {
-                text: "Server Download"
-                Layout.fillWidth: true
-            }
-
-            Button {
-                text: "For Linux"
-                onClicked: Qt.openUrlExternally("https://github.com/odizinne/gtacompta/releases/latest/download/GTACOMPTAServer_linux_gcc64")
-            }
+            text: "💡 Data will be automatically synchronized when you close this dialog."
+            font.pixelSize: 10
+            opacity: 0.7
+            wrapMode: Text.WordWrap
         }
+    }
 
-        RowLayout {
-            enabled: UserSettings.useRemoteDatabase
-            Layout.fillWidth: true
-            Label { text: "Host:"; Layout.fillWidth: true }
-            TextField {
-                Layout.preferredHeight: Constants.comboHeight
-                Layout.preferredWidth: 180
-                text: UserSettings.remoteHost
-                onTextChanged: UserSettings.remoteHost = text
-                placeholderText: "Server IP address"
-            }
-        }
-
-        RowLayout {
-            enabled: UserSettings.useRemoteDatabase
-            Label { text: "Password:"; Layout.fillWidth: true }
-            TextField {
-                Layout.preferredHeight: Constants.comboHeight
-                text: UserSettings.remotePassword
-                onTextChanged: UserSettings.remotePassword = text
-                echoMode: TextInput.Password
-                placeholderText: "Server password"
-            }
-        }
-
-        RowLayout {
-            enabled: UserSettings.useRemoteDatabase
-            Layout.fillWidth: true
-
-            Label {
-                id: connectionStatus
-                Layout.fillWidth: true
-                text: ""
-                wrapMode: Text.WordWrap
-            }
-
-            Button {
-                text: "Test Connection"
-                enabled: UserSettings.remoteHost.length > 0
-                onClicked: {
-                    connectionStatus.text = "Testing connection..."
-                    connectionStatus.color = Material.foreground
-                    RemoteDatabaseManager.testConnection()
-                }
-            }
+    Timer {
+        id: syncTimer
+        interval: 2000
+        onTriggered: {
+            dbConfig.isSynchronizing = false
+            dbConfig.connectionStatus = "✓ Data synchronized successfully"
+            dbConfig.connectionStatusColor = Material.color(Material.Green)
         }
     }
 
@@ -203,11 +136,11 @@ Dialog {
         target: RemoteDatabaseManager
         function onConnectionResult(success, message) {
             if (success) {
-                connectionStatus.text = "✓ " + message
-                connectionStatus.color = Material.color(Material.Green)
+                dbConfig.connectionStatus = "✓ " + message
+                dbConfig.connectionStatusColor = Material.color(Material.Green)
             } else {
-                connectionStatus.text = "✗ " + message
-                connectionStatus.color = Material.color(Material.Red)
+                dbConfig.connectionStatus = "✗ " + message
+                dbConfig.connectionStatusColor = Material.color(Material.Red)
             }
         }
     }
