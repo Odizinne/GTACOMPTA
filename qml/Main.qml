@@ -73,7 +73,32 @@ ApplicationWindow {
 
     CompanySummaryModel {
         id: companySummaryModel
-        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
+        Component.onCompleted: {
+            loadFromFile(UserSettings.useRemoteDatabase)
+        }
+
+        // Monitor when model finishes loading
+        onCountChanged: {
+            checkIfShouldShowWelcome()
+        }
+
+        onCompanyNameChanged: {
+            checkIfShouldShowWelcome()
+        }
+
+        function checkIfShouldShowWelcome() {
+            // Only check for local database usage
+            if (!UserSettings.useRemoteDatabase) {
+                // If model is empty (no entries) or company name is empty, show welcome
+                var isEmpty = companySummaryModel.count === 0
+                var noCompanyName = !companySummaryModel.companyName || companySummaryModel.companyName.length === 0
+
+                if (isEmpty || noCompanyName) {
+                    console.log("Company model is empty - showing welcome dialog")
+                    welcomeDialog.open()
+                }
+            }
+        }
     }
 
     // Filter proxy models

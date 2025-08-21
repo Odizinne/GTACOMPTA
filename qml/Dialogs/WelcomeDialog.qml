@@ -80,7 +80,7 @@ Dialog {
         RemoteDatabaseConfig {
             id: dbConfig
             Layout.fillWidth: true
-            showSynchronizeButton: false
+            showSynchronizeButton: true
             showTestConnection: true
 
             onTestConnectionRequested: {
@@ -88,20 +88,8 @@ Dialog {
                 RemoteDatabaseManager.testConnection()
             }
         }
-
-        // Info label about what happens on start
-        Label {
-            Layout.fillWidth: true
-            text: UserSettings.useRemoteDatabase ?
-                  "💡 Data will be loaded from remote server when you start." :
-                  "💡 Local database will be initialized when you start."
-            font.pixelSize: 10
-            opacity: 0.7
-            wrapMode: Text.WordWrap
-        }
     }
 
-    // Handle connection test results
     Connections {
         target: RemoteDatabaseManager
         function onConnectionResult(success, message) {

@@ -121,8 +121,14 @@ Column {
                     }
 
                     Label {
-                        text: AppState.toUiPrice(del.model.salary)
-                        color: Constants.salaryColor
+                        text: {
+                            var salaryText = AppState.toUiPrice(del.model.salary)
+                            if (salaryText.startsWith("+") || salaryText.startsWith("-")) {
+                                salaryText = salaryText.substring(1)
+                            }
+                            return salaryText
+                        }
+                        color: Constants.debitColor
                         Layout.preferredWidth: 80
                         elide: Text.ElideRight
                     }

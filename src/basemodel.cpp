@@ -72,71 +72,64 @@ void BaseModel::loadFromLocal()
     QSettings settings("Odizinne", "GTACOMPTA");
     QByteArray jsonData = settings.value(m_fileName).toByteArray();
 
-    if (jsonData.isEmpty()) {
-        qDebug() << "No local data found for:" << m_fileName;
-        return;
-    }
-
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-
-    if (error.error != QJsonParseError::NoError) {
-        qWarning() << "JSON parse error:" << error.errorString();
-        return;
-    }
-
+    // Always reset the model, whether we have data or not
     beginResetModel();
     clearModel();
 
-    QJsonArray array = doc.array();
-    for (const QJsonValue &value : array) {
-        QJsonObject obj = value.toObject();
-        entryFromJson(obj);
+    if (!jsonData.isEmpty()) {
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
+
+        if (error.error == QJsonParseError::NoError) {
+            QJsonArray array = doc.array();
+            for (const QJsonValue &value : array) {
+                QJsonObject obj = value.toObject();
+                entryFromJson(obj);
+            }
+            qDebug() << "Loaded" << array.size() << "entries from local storage for" << m_fileName;
+        } else {
+            qWarning() << "JSON parse error:" << error.errorString();
+        }
+    } else {
+        qDebug() << "No local data found for:" << m_fileName << "- model cleared";
     }
 
-    // Sort after loading
+    // Sort after loading (or after clearing)
     performSort();
-
     endResetModel();
     emit countChanged();
 #else
     // Use file system for other platforms
     QString filePath = getDataFilePath();
-    QFile file(filePath);
 
-    if (!file.exists()) {
-        qDebug() << "No local data file found:" << filePath;
-        return;
-    }
-
-    if (!file.open(QIODevice::ReadOnly)) {
-        qWarning() << "Could not open file for reading:" << filePath;
-        return;
-    }
-
-    QByteArray jsonData = file.readAll();
-    file.close();
-
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
-
-    if (error.error != QJsonParseError::NoError) {
-        qWarning() << "JSON parse error:" << error.errorString();
-        return;
-    }
-
+    // Always reset the model, whether we have data or not
     beginResetModel();
     clearModel();
 
-    QJsonArray array = doc.array();
-    for (const QJsonValue &value : array) {
-        QJsonObject obj = value.toObject();
-        entryFromJson(obj);
+    QFile file(filePath);
+    if (file.exists() && file.open(QIODevice::ReadOnly)) {
+        QByteArray jsonData = file.readAll();
+        file.close();
+
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(jsonData, &error);
+
+        if (error.error == QJsonParseError::NoError) {
+            QJsonArray array = doc.array();
+            for (const QJsonValue &value : array) {
+                QJsonObject obj = value.toObject();
+                entryFromJson(obj);
+            }
+            qDebug() << "Loaded" << array.size() << "entries from local file" << filePath;
+        } else {
+            qWarning() << "JSON parse error:" << error.errorString();
+        }
+    } else {
+        qDebug() << "No local data file found:" << filePath << "- model cleared";
     }
 
-    // Sort after loading
+    // Sort after loading (or after clearing)
     performSort();
-
     endResetModel();
     emit countChanged();
 #endif

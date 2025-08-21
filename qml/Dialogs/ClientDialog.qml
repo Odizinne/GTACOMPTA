@@ -178,12 +178,22 @@ Dialog {
                 id: calculatedPrice
                 Layout.preferredHeight: Constants.comboHeight
                 Layout.preferredWidth: implicitWidth + 20
-                text: AppState.toUiPrice(root.calculatePrice())
+                text: {
+                    var priceText = AppState.toUiPrice(root.calculatePrice())
+                    if (priceText.startsWith("+") || priceText.startsWith("-")) {
+                        priceText = priceText.substring(1)
+                    }
+                    return priceText
+                }
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
 
                 function updatePrice() {
-                    text = AppState.toUiPrice(root.calculatePrice())
+                    var priceText = AppState.toUiPrice(root.calculatePrice())
+                    if (priceText.startsWith("+") || priceText.startsWith("-")) {
+                        priceText = priceText.substring(1)
+                    }
+                    text = priceText
                 }
 
                 Rectangle {

@@ -111,7 +111,6 @@ Dialog {
             }
         }
 
-        // Info label about auto-sync
         Label {
             Layout.fillWidth: true
             text: "💡 Data will be automatically synchronized when you close this dialog."
@@ -131,7 +130,6 @@ Dialog {
         }
     }
 
-    // Handle connection test results
     Connections {
         target: RemoteDatabaseManager
         function onConnectionResult(success, message) {

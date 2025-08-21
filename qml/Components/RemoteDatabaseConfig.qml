@@ -43,13 +43,11 @@ ColumnLayout {
                 UserSettings.useRemoteDatabase = checked
 
                 if (checked) {
-                    // Show info about remote database being enabled
                     if (root.showSynchronizeButton) {
                         root.connectionStatus = "Remote database enabled. Will sync on dialog close or manual sync."
                         root.connectionStatusColor = Material.color(Material.Blue)
                     }
                 } else {
-                    // Show info about local database being enabled
                     if (root.showSynchronizeButton) {
                         root.connectionStatus = "Local database enabled. Will sync on dialog close."
                         root.connectionStatusColor = Material.color(Material.Blue)
@@ -69,7 +67,6 @@ ColumnLayout {
             text: UserSettings.remoteHost
             onTextChanged: {
                 UserSettings.remoteHost = text
-                // Reset connection test when host changes
                 if (root.showSynchronizeButton && UserSettings.useRemoteDatabase) {
                     root.connectionStatus = ""
                 }
@@ -86,7 +83,6 @@ ColumnLayout {
             text: UserSettings.remotePassword
             onTextChanged: {
                 UserSettings.remotePassword = text
-                // Reset connection test when password changes
                 if (root.showSynchronizeButton && UserSettings.useRemoteDatabase) {
                     root.connectionStatus = ""
                 }
@@ -119,7 +115,6 @@ ColumnLayout {
         }
     }
 
-    // Synchronization section (only shown when requested)
     RowLayout {
         enabled: UserSettings.useRemoteDatabase
         Layout.fillWidth: true

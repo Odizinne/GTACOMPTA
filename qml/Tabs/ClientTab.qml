@@ -35,7 +35,7 @@ Column {
                 headerText: "Offer"
                 sortColumn: ClientModel.SortByOffer
                 sortModel: AppState.clientModel
-                Layout.preferredWidth: 80
+                Layout.preferredWidth: 100
             }
 
             SortableLabel {
@@ -55,7 +55,7 @@ Column {
                 headerText: "Disc"
                 sortColumn: ClientModel.SortByDiscount
                 sortModel: AppState.clientModel
-                Layout.preferredWidth: 40
+                Layout.preferredWidth: 60
             }
 
             SortableLabel {
@@ -133,16 +133,22 @@ Column {
                             }
                             return "Unknown"
                         }
-                        Layout.preferredWidth: 80
+                        Layout.preferredWidth: 100
                         elide: Text.ElideRight
                         color: Constants.primaryTextColor
                     }
 
                     Label {
-                        text: AppState.toUiPrice(del.model.price)
+                        text: {
+                            var priceText = AppState.toUiPrice(del.model.price)
+                            if (priceText.startsWith("+") || priceText.startsWith("-")) {
+                                priceText = priceText.substring(1)
+                            }
+                            return priceText
+                        }
                         Layout.preferredWidth: 60
                         elide: Text.ElideRight
-                        color: Constants.primaryTextColor
+                        color: Constants.creditColor
                     }
 
                     ToolButton {
@@ -165,7 +171,7 @@ Column {
 
                     Label {
                         text: del.model.discount + "%"
-                        Layout.preferredWidth: 40
+                        Layout.preferredWidth: 60
                         elide: Text.ElideRight
                         color: Constants.primaryTextColor
                     }
