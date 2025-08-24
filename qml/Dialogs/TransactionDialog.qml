@@ -14,7 +14,7 @@ Dialog {
     property bool editMode: false
     property int editIndex: -1
 
-    signal transactionAdded(string description, real amount, string date)
+    signal transactionAdded(string description, real amount, string date, bool skip)
     signal transactionUpdated(int index, string description, real amount, string date)
 
     function loadTransaction(description, amount, date) {
@@ -64,6 +64,20 @@ Dialog {
             placeholderText: "Select transaction date"
             onOpenDateDialog: transDatePickerDialog.open()
         }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.columnSpan: 2
+            Label {
+                text: "Skip approval"
+                Layout.fillWidth: true
+            }
+
+            CheckBox {
+                id: skipApprovalCheckbox
+                visible: !root.editMode
+            }
+        }
     }
 
     DatePickerDialog {
@@ -89,7 +103,7 @@ Dialog {
                 if (root.editMode) {
                     root.transactionUpdated(root.editIndex, transDesc.text, transAmount.value, dateString)
                 } else {
-                    root.transactionAdded(transDesc.text, transAmount.value, dateString)
+                    root.transactionAdded(transDesc.text, transAmount.value, dateString, skipApprovalCheckbox.checked)
                 }
                 root.close()
             }

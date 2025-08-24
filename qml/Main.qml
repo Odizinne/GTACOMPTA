@@ -234,8 +234,12 @@ ApplicationWindow {
 
     TransactionDialog {
         id: transactionDialog
-        onTransactionAdded: function(description, amount, date) {
-            awaitingTransactionModel.addAwaitingTransaction(description, amount, date)
+        onTransactionAdded: function(description, amount, date, skip) {
+            if (skip) {
+                transactionModel.addTransaction(description, amount, date)
+            } else {
+                awaitingTransactionModel.addAwaitingTransaction(description, amount, date)
+            }
         }
         onTransactionUpdated: function(index, description, amount, date) {
             var oldAmount = transactionModel.getTransactionAmount(index)
