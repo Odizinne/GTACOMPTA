@@ -83,6 +83,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     qt_add_executable(GTACOMPTA
         src/main.cpp
         resources/icons/icons.qrc
+        resources/fonts/fonts.qrc
     )
 
     set_target_properties(GTACOMPTA PROPERTIES
@@ -102,6 +103,7 @@ else()
     qt_add_executable(GTACOMPTA WIN32 MACOSX_BUNDLE
         src/main.cpp
         resources/icons/icons.qrc
+        resources/fonts/fonts.qrc
         ${WINDOWS_RESOURCES}
     )
 
