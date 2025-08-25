@@ -11,6 +11,8 @@ Column {
     ToolBar {
         width: parent.width
         height: 35
+        z: 1000
+
 
         RowLayout {
             anchors.fill: parent
@@ -69,12 +71,14 @@ Column {
     ScrollView {
         width: parent.width
         height: parent.height - 35
+        clip: true
 
         ListView {
             id: employeeListView
             width: parent.width
             height: parent.parent.height
             model: AppState.employeeFilterModel
+            clip: true
             spacing: 0
 
             Label {
