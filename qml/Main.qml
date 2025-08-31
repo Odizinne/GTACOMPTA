@@ -87,9 +87,7 @@ ApplicationWindow {
         }
 
         function checkIfShouldShowWelcome() {
-            // Only check for local database usage
-            if (!UserSettings.useRemoteDatabase) {
-                // If model is empty (no entries) or company name is empty, show welcome
+            if (!UserSettings.useRemoteDatabase && mainStack.currentItem === mainPage) {
                 var isEmpty = companySummaryModel.count === 0
                 var noCompanyName = !companySummaryModel.companyName || companySummaryModel.companyName.length === 0
 
