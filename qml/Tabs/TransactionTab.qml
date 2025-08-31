@@ -129,13 +129,10 @@ Column {
                             icon.color: Material.color(Material.Red)
                             onClicked: {
                                 var sourceIndex = AppState.getSourceIndex(AppState.transactionFilterModel, del.index)
-                                AppState.confirmDialog.title = "Remove Transaction"
-                                AppState.confirmDialog.confirmed.connect(function() {
+                                AppState.confirmDialog.showConfirmation("Remove Transaction", function() {
                                     AppState.companySummaryModel.subtractFromMoney(del.model.amount)
                                     AppState.transactionModel.removeEntry(sourceIndex.row)
-                                    AppState.confirmDialog.confirmed.disconnect(arguments.callee)
                                 })
-                                AppState.confirmDialog.open()
                             }
                         }
                     }

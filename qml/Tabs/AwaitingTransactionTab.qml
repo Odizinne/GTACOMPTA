@@ -142,12 +142,9 @@ Column {
                             icon.color: Material.color(Material.Red)
                             onClicked: {
                                 var sourceIndex = AppState.getSourceIndex(AppState.awaitingTransactionFilterModel, del.index)
-                                AppState.confirmDialog.title = "Remove Awaiting Transaction"
-                                AppState.confirmDialog.confirmed.connect(function() {
+                                AppState.confirmDialog.showConfirmation("Remove Awaiting Transaction", function() {
                                     AppState.awaitingTransactionModel.removeEntry(sourceIndex.row)
-                                    AppState.confirmDialog.confirmed.disconnect(arguments.callee)
                                 })
-                                AppState.confirmDialog.open()
                             }
                         }
                     }

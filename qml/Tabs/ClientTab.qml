@@ -234,12 +234,9 @@ Column {
                             Layout.preferredHeight: 40
                             onClicked: {
                                 var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, del.index)
-                                AppState.confirmDialog.title = "Remove Client"
-                                AppState.confirmDialog.confirmed.connect(function() {
+                                AppState.confirmDialog.showConfirmation("Remove Client", function() {
                                     AppState.clientModel.removeEntry(sourceIndex.row)
-                                    AppState.confirmDialog.confirmed.disconnect(arguments.callee)
                                 })
-                                AppState.confirmDialog.open()
                             }
                         }
                     }

@@ -9,7 +9,13 @@ Dialog {
     modal: true
     Material.roundedScale: Material.ExtraSmallScale
 
-    signal confirmed()
+    property var confirmCallback: null
+
+    function showConfirmation(titleText, callback) {
+        title = titleText
+        confirmCallback = callback
+        open()
+    }
 
     RowLayout {
         anchors.fill: parent
@@ -33,7 +39,10 @@ Dialog {
             flat: true
             text: "Cancel"
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-            onClicked: dialog.close()
+            onClicked: {
+                dialog.confirmCallback = null
+                dialog.close()
+            }
         }
 
         Button {
@@ -41,7 +50,10 @@ Dialog {
             text: "Confirm"
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
             onClicked: {
-                dialog.confirmed()
+                if (dialog.confirmCallback) {
+                    dialog.confirmCallback()
+                    dialog.confirmCallback = null
+                }
                 dialog.close()
             }
         }
