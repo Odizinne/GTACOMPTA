@@ -48,7 +48,8 @@ bool DataManager::exportData(const QString &filePath,
                              ClientModel *clientModel,
                              SupplementModel *supplementModel,
                              OfferModel *offerModel,
-                             CompanySummaryModel *companySummaryModel)
+                             CompanySummaryModel *companySummaryModel,
+                             NoteModel *noteModel)
 {
     if (filePath.isEmpty()) {
         emit exportCompleted(false, "File path is empty");
@@ -59,7 +60,7 @@ bool DataManager::exportData(const QString &filePath,
         QJsonObject rootObject = collectAllData(employeeModel, transactionModel,
                                                 awaitingTransactionModel, clientModel,
                                                 supplementModel, offerModel,
-                                                companySummaryModel);
+                                                companySummaryModel, noteModel);
 
         QJsonDocument doc(rootObject);
         QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
@@ -97,7 +98,8 @@ bool DataManager::importData(const QString &filePath,
                              ClientModel *clientModel,
                              SupplementModel *supplementModel,
                              OfferModel *offerModel,
-                             CompanySummaryModel *companySummaryModel)
+                             CompanySummaryModel *companySummaryModel,
+                             NoteModel *noteModel)
 {
     if (filePath.isEmpty()) {
         emit importCompleted(false, "File path is empty");
@@ -138,14 +140,6 @@ bool DataManager::importData(const QString &filePath,
             restoreUserSettings(rootObject["userSettings"].toObject());
         }
 
-        //if (employeeModel) employeeModel->clear();
-        //if (transactionModel) transactionModel->clear();
-        //if (awaitingTransactionModel) awaitingTransactionModel->clear();
-        //if (clientModel) clientModel->clear();
-        //if (supplementModel) supplementModel->clear();
-        //if (offerModel) offerModel->clear();
-        //if (companySummaryModel) companySummaryModel->clear();
-
         bool success = true;
         if (rootObject.contains("employees")) {
             success &= restoreModelFromJsonArray(employeeModel, rootObject["employees"].toArray());
@@ -168,6 +162,9 @@ bool DataManager::importData(const QString &filePath,
         if (rootObject.contains("companySummary")) {
             success &= restoreModelFromJsonArray(companySummaryModel, rootObject["companySummary"].toArray());
         }
+        if (rootObject.contains("notes")) {
+            success &= restoreModelFromJsonArray(noteModel, rootObject["notes"].toArray());
+        }
 
         if (success) {
             emit importCompleted(true, "Data imported successfully from " + filePath);
@@ -189,13 +186,14 @@ bool DataManager::exportDataToString(EmployeeModel *employeeModel,
                                      ClientModel *clientModel,
                                      SupplementModel *supplementModel,
                                      OfferModel *offerModel,
-                                     CompanySummaryModel *companySummaryModel)
+                                     CompanySummaryModel *companySummaryModel,
+                                     NoteModel *noteModel)
 {
     try {
         QJsonObject rootObject = collectAllData(employeeModel, transactionModel,
                                                 awaitingTransactionModel, clientModel,
                                                 supplementModel, offerModel,
-                                                companySummaryModel);
+                                                companySummaryModel, noteModel);
 
         QJsonDocument doc(rootObject);
         QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
@@ -221,7 +219,8 @@ bool DataManager::importDataFromString(const QString &data,
                                        ClientModel *clientModel,
                                        SupplementModel *supplementModel,
                                        OfferModel *offerModel,
-                                       CompanySummaryModel *companySummaryModel)
+                                       CompanySummaryModel *companySummaryModel,
+                                       NoteModel *noteModel)
 {
     try {
         QByteArray jsonData = data.toUtf8();
@@ -252,6 +251,7 @@ bool DataManager::importDataFromString(const QString &data,
         if (supplementModel) supplementModel->clear();
         if (offerModel) offerModel->clear();
         if (companySummaryModel) companySummaryModel->clear();
+        if (noteModel) noteModel->clear();
 
         bool success = true;
         if (rootObject.contains("employees")) {
@@ -275,16 +275,11 @@ bool DataManager::importDataFromString(const QString &data,
         if (rootObject.contains("companySummary")) {
             success &= restoreModelFromJsonArray(companySummaryModel, rootObject["companySummary"].toArray());
         }
+        if (rootObject.contains("notes")) {
+            success &= restoreModelFromJsonArray(noteModel, rootObject["notes"].toArray());
+        }
 
         if (success) {
-            //if (employeeModel) employeeModel->saveToFile();
-            //if (transactionModel) transactionModel->saveToFile();
-            //if (awaitingTransactionModel) awaitingTransactionModel->saveToFile();
-            //if (clientModel) clientModel->saveToFile();
-            //if (supplementModel) supplementModel->saveToFile();
-            //if (offerModel) offerModel->saveToFile();
-            //if (companySummaryModel) companySummaryModel->saveToFile();
-
             emit importCompleted(true, "Data imported successfully");
         } else {
             emit importCompleted(false, "Some data could not be imported properly");
@@ -298,24 +293,14 @@ bool DataManager::importDataFromString(const QString &data,
     }
 }
 
-QString DataManager::getDefaultExportPath() const
-{
-    QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-    return documentsPath + "/GTACOMPTA_backup.gco";
-}
-
-QString DataManager::getDefaultImportPath() const
-{
-    return getDefaultExportPath();
-}
-
 QJsonObject DataManager::collectAllData(EmployeeModel *employeeModel,
                                         TransactionModel *transactionModel,
                                         AwaitingTransactionModel *awaitingTransactionModel,
                                         ClientModel *clientModel,
                                         SupplementModel *supplementModel,
                                         OfferModel *offerModel,
-                                        CompanySummaryModel *companySummaryModel)
+                                        CompanySummaryModel *companySummaryModel,
+                                        NoteModel *noteModel)
 {
     QJsonObject rootObject;
 
@@ -346,8 +331,22 @@ QJsonObject DataManager::collectAllData(EmployeeModel *employeeModel,
     if (companySummaryModel) {
         rootObject["companySummary"] = modelToJsonArray(companySummaryModel);
     }
+    if (noteModel) {
+        rootObject["notes"] = modelToJsonArray(noteModel);
+    }
 
     return rootObject;
+}
+
+QString DataManager::getDefaultExportPath() const
+{
+    QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    return documentsPath + "/GTACOMPTA_backup.gco";
+}
+
+QString DataManager::getDefaultImportPath() const
+{
+    return getDefaultExportPath();
 }
 
 QJsonArray DataManager::modelToJsonArray(BaseModel *model)

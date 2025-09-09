@@ -12,8 +12,12 @@ Dialog {
     ScrollView {
         anchors.fill: parent
         TextArea {
-            text: UserSettings.notes
-            onTextChanged: UserSettings.notes = text
+            text: AppState.noteModel ? AppState.noteModel.content : ""
+            onTextChanged: {
+                if (AppState.noteModel) {
+                    AppState.noteModel.content = text
+                }
+            }
             wrapMode: TextArea.Wrap
             width: parent.width
         }

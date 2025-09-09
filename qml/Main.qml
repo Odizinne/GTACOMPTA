@@ -28,6 +28,7 @@ ApplicationWindow {
         AppState.supplementModel = supplementModel
         AppState.offerModel = offerModel
         AppState.companySummaryModel = companySummaryModel
+        AppState.noteModel = noteModel
         AppState.employeeFilterModel = employeeFilterModel
         AppState.transactionFilterModel = transactionFilterModel
         AppState.awaitingTransactionFilterModel = awaitingTransactionFilterModel
@@ -97,6 +98,11 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    NoteModel {
+        id: noteModel
+        Component.onCompleted: loadFromFile(UserSettings.useRemoteDatabase)
     }
 
     // Filter proxy models
@@ -297,10 +303,10 @@ ApplicationWindow {
         onExportRequested: function(filePath) {
             if (AppState.isWasm) {
                 DataManager.exportDataToString(employeeModel, transactionModel, awaitingTransactionModel,
-                                             clientModel, supplementModel, offerModel, companySummaryModel)
+                                             clientModel, supplementModel, offerModel, companySummaryModel, noteModel)
             } else {
                 DataManager.exportData(filePath, employeeModel, transactionModel, awaitingTransactionModel,
-                                     clientModel, supplementModel, offerModel, companySummaryModel)
+                                     clientModel, supplementModel, offerModel, companySummaryModel, noteModel)
             }
         }
     }
@@ -312,7 +318,7 @@ ApplicationWindow {
                 WasmFileHandler.openLoadDialog()
             } else {
                 DataManager.importData(filePath, employeeModel, transactionModel, awaitingTransactionModel,
-                                     clientModel, supplementModel, offerModel, companySummaryModel)
+                                     clientModel, supplementModel, offerModel, companySummaryModel, noteModel)
             }
         }
     }
@@ -355,7 +361,7 @@ ApplicationWindow {
         target: AppState.isWasm ? WasmFileHandler : null
         function onLoadFileSelected(content) {
             DataManager.importDataFromString(content, employeeModel, transactionModel, awaitingTransactionModel,
-                                           clientModel, supplementModel, offerModel, companySummaryModel)
+                                           clientModel, supplementModel, offerModel, companySummaryModel, noteModel)
         }
     }
 
@@ -381,6 +387,7 @@ ApplicationWindow {
                 clientModel.loadFromFile(UserSettings.useRemoteDatabase)
                 supplementModel.loadFromFile(UserSettings.useRemoteDatabase)
                 offerModel.loadFromFile(UserSettings.useRemoteDatabase)
+                noteModel.loadFromFile(UserSettings.useRemoteDatabase)
             }
         }
         function onSettingsChanged(money, firstRun, companyName, notes, volume) {

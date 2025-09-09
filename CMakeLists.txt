@@ -27,6 +27,8 @@ set(HEADERS
     include/datamanager.h
     include/wasmfilehandler.h
     include/remotedatabasemanager.h
+    include/companysummarymodel.h
+    include/notemodel.h
 )
 
 set(SOURCES
@@ -42,6 +44,8 @@ set(SOURCES
     src/datamanager.cpp
     src/wasmfilehandler.cpp
     src/remotedatabasemanager.cpp
+    src/companysummarymodel.cpp
+    src/notemodel.cpp
 )
 
 # Get git commit hash
@@ -163,8 +167,6 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
     DEPENDENCIES QtCore QtQml
-    SOURCES
-    SOURCES include/companysummarymodel.h src/companysummarymodel.cpp
 )
 
 target_link_libraries(GTACOMPTA

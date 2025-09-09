@@ -10,6 +10,7 @@ QtObject {
     property var supplementModel: null
     property var offerModel: null
     property var companySummaryModel: null
+    property var noteModel: null
 
     property var employeeFilterModel: null
     property var transactionFilterModel: null
@@ -64,6 +65,9 @@ QtObject {
         }
         if (companySummaryModel) {
             companySummaryModel.loadFromFile(useRemote)
+        }
+        if (noteModel) {  // Add this block
+            noteModel.loadFromFile(useRemote)
         }
     }
 }

@@ -4,7 +4,6 @@ import QtCore
 
 Settings {
     property bool firstRun: true
-    property string notes: ""
     property bool darkMode: true
 
     property bool useRemoteDatabase: false
