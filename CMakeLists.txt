@@ -167,6 +167,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
     DEPENDENCIES QtCore QtQml
+    SOURCES
 )
 
 target_link_libraries(GTACOMPTA

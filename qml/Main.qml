@@ -41,6 +41,15 @@ ApplicationWindow {
         AppState.supplementDialog = supplementDialog
     }
 
+    // Add this connection for readonly status
+    Connections {
+        target: RemoteDatabaseManager
+        function onReadOnlyStatusChanged(isReadOnly) {
+            AppState._remoteReadOnly = isReadOnly
+            console.log("Remote readonly status updated:", isReadOnly)
+        }
+    }
+
     // Models
     EmployeeModel {
         id: employeeModel
@@ -152,13 +161,12 @@ ApplicationWindow {
         }
     }
 
-    // In Main.qml, update this connection:
     Connections {
         target: transactionModel
         function onRowsInserted(parent, first, last) {
             for (var i = first; i <= last; i++) {
                 var amount = transactionModel.getTransactionAmount(i)
-                companySummaryModel.addToMoney(amount)  // Use companySummaryModel instead of UserSettings
+                companySummaryModel.addToMoney(amount)
             }
         }
     }
@@ -248,7 +256,7 @@ ApplicationWindow {
         onTransactionUpdated: function(index, description, amount, date) {
             var oldAmount = transactionModel.getTransactionAmount(index)
             var difference = amount - oldAmount
-            companySummaryModel.addToMoney(difference)  // Use companySummaryModel
+            companySummaryModel.addToMoney(difference)
             transactionModel.updateTransaction(index, description, amount, date)
         }
     }

@@ -19,7 +19,7 @@ public:
     explicit RemoteDatabaseManager(QObject *parent = nullptr);
     static RemoteDatabaseManager* create(QQmlEngine *qmlEngine, QJSEngine *jsEngine);
     static RemoteDatabaseManager* instance();
-    static RemoteDatabaseManager* ensureInstance(); // Added this method
+    static RemoteDatabaseManager* ensureInstance();
 
     Q_INVOKABLE void saveData(const QString &collection, const QJsonObject &data);
     Q_INVOKABLE void loadData(const QString &collection);
@@ -29,6 +29,7 @@ signals:
     void dataLoaded(const QString &collection, const QJsonObject &data);
     void dataSaved(const QString &collection, bool success);
     void connectionResult(bool success, const QString &message);
+    void readOnlyStatusChanged(bool isReadOnly);
 
 private slots:
     void handleNetworkReply();

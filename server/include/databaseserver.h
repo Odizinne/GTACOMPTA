@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QRegularExpression>
+#include "usermanager.h"
 
 class DatabaseServer : public QObject
 {
@@ -36,8 +37,11 @@ private:
     QString m_password;
     QString m_dataDirectory;
     QTimer *m_logTimer;
+    UserManager *m_userManager;
 
     bool authenticate(const QString &password);
+    bool authenticateRequest(const QString &username, const QString &password);
+    bool isRequestReadOnly(const QString &username);
     void logRequest(const QString &method, const QString &path, const QString &response = "");
 
     QJsonObject loadCollection(const QString &collection);

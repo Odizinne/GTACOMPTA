@@ -11,6 +11,7 @@ DatabaseServer::DatabaseServer(QObject *parent)
     : QObject(parent)
     , m_server(new QTcpServer(this))
     , m_password("1234")
+    , m_userManager(new UserManager(this))
 {
     m_dataDirectory = "";
     connect(m_server, &QTcpServer::newConnection, this, &DatabaseServer::newConnection);
@@ -61,6 +62,7 @@ void DatabaseServer::setDataDirectory(const QString &path)
 {
     m_dataDirectory = path;
     QDir().mkpath(m_dataDirectory);
+    m_userManager->setDataDirectory(m_dataDirectory);
     qDebug() << "Data directory set to:" << m_dataDirectory;
 }
 
@@ -102,6 +104,8 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     QString body = parseHttpBody(request);
     QString authHeader = getHttpHeader(request, "X-Password");
     QString protocolVersion = getHttpHeader(request, "X-Protocol-Version");
+    QString username = getHttpHeader(request, "X-Username");
+    QString userPassword = getHttpHeader(request, "X-User-Password");
 
     QByteArray response;
 
@@ -118,12 +122,19 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         return;
     }
 
-    // Authentication check
+    // Server authentication check
     if (!authenticate(authHeader)) {
         QJsonObject error;
-        error["error"] = "Unauthorized";
+        error["error"] = "Unauthorized - Invalid server password";
         response = createHttpResponse(401, QJsonDocument(error).toJson());
-        logRequest(method, path, "UNAUTHORIZED");
+        logRequest(method, path, "UNAUTHORIZED - SERVER");
+    }
+    // User authentication check
+    else if (!authenticateRequest(username, userPassword)) {
+        QJsonObject error;
+        error["error"] = "Unauthorized - Invalid user credentials";
+        response = createHttpResponse(401, QJsonDocument(error).toJson());
+        logRequest(method, path, "UNAUTHORIZED - USER");
     }
     // Test connection
     else if (method == "GET" && path == "/api/test") {
@@ -132,46 +143,55 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         result["message"] = "Connection successful";
         result["server"] = "GTACOMPTA Server v1.0";
         result["protocolVersion"] = "1.0";
-        result["sslEnabled"] = false; // nginx handles SSL
+        result["sslEnabled"] = false;
         result["timestamp"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+        result["username"] = username;
+        result["readonly"] = isRequestReadOnly(username);
 
         response = createHttpResponse(200, QJsonDocument(result).toJson());
-        logRequest(method, path, "Connection test successful");
+        logRequest(method, path, QString("Connection test successful for user: %1").arg(username));
     }
-    // Save data
+    // Save data - check if user has write permissions
     else if (method == "POST" && path.startsWith("/api/save/")) {
-        QString collection = path.mid(10);
-
-        QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(body.toUtf8(), &error);
-
-        if (error.error != QJsonParseError::NoError) {
-            QJsonObject errorObj;
-            errorObj["error"] = "Invalid JSON";
-            response = createHttpResponse(400, QJsonDocument(errorObj).toJson());
+        if (isRequestReadOnly(username)) {
+            QJsonObject error;
+            error["error"] = "Forbidden - Read-only user cannot save data";
+            response = createHttpResponse(403, QJsonDocument(error).toJson());
+            logRequest(method, path, QString("FORBIDDEN - User %1 attempted to save").arg(username));
         } else {
-            QJsonObject requestData = doc.object();
-            QJsonArray data = requestData["data"].toArray();
+            QString collection = path.mid(10);
 
-            bool success = saveCollection(collection, data);
+            QJsonParseError error;
+            QJsonDocument doc = QJsonDocument::fromJson(body.toUtf8(), &error);
 
-            QJsonObject result;
-            result["success"] = success;
-            if (!success) {
-                result["error"] = "Failed to save data";
+            if (error.error != QJsonParseError::NoError) {
+                QJsonObject errorObj;
+                errorObj["error"] = "Invalid JSON";
+                response = createHttpResponse(400, QJsonDocument(errorObj).toJson());
+            } else {
+                QJsonObject requestData = doc.object();
+                QJsonArray data = requestData["data"].toArray();
+
+                bool success = saveCollection(collection, data);
+
+                QJsonObject result;
+                result["success"] = success;
+                if (!success) {
+                    result["error"] = "Failed to save data";
+                }
+
+                response = createHttpResponse(200, QJsonDocument(result).toJson());
+                logRequest(method, path, QString("Save %1 by %2: %3").arg(collection).arg(username).arg(success ? "SUCCESS" : "FAILED"));
             }
-
-            response = createHttpResponse(200, QJsonDocument(result).toJson());
-            logRequest(method, path, QString("Save %1: %2").arg(collection).arg(success ? "SUCCESS" : "FAILED"));
         }
     }
-    // Load data
+    // Load data - allowed for all authenticated users
     else if (method == "GET" && path.startsWith("/api/load/")) {
         QString collection = path.mid(10);
 
         QJsonObject data = loadCollection(collection);
         response = createHttpResponse(200, QJsonDocument(data).toJson());
-        logRequest(method, path, QString("Load %1: %2 items").arg(collection).arg(data["data"].toArray().size()));
+        logRequest(method, path, QString("Load %1 by %2: %3 items").arg(collection).arg(username).arg(data["data"].toArray().size()));
     }
     // Server status
     else if (method == "GET" && path == "/api/status") {
@@ -179,16 +199,18 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         status["server"] = "GTACOMPTA Database Server";
         status["version"] = "1.0.0";
         status["protocolVersion"] = "1.0";
-        status["sslEnabled"] = false; // nginx handles SSL
+        status["sslEnabled"] = false;
         status["uptime"] = QDateTime::currentDateTime().toString(Qt::ISODate);
         status["dataDirectory"] = m_dataDirectory;
+        status["username"] = username;
+        status["readonly"] = isRequestReadOnly(username);
 
         QDir dataDir(m_dataDirectory);
         QStringList jsonFiles = dataDir.entryList(QStringList() << "*.json", QDir::Files);
         status["collections"] = jsonFiles.size();
 
         response = createHttpResponse(200, QJsonDocument(status).toJson());
-        logRequest(method, path, "Status check");
+        logRequest(method, path, QString("Status check by user: %1").arg(username));
     }
     // Not found
     else {
@@ -198,7 +220,6 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         logRequest(method, path, "NOT FOUND");
     }
 
-    // No CORS headers - nginx handles them
     socket->write(response);
     socket->close();
 }
@@ -210,6 +231,7 @@ QByteArray DatabaseServer::createHttpResponse(int statusCode, const QString &bod
     case 200: statusText = "OK"; break;
     case 400: statusText = "Bad Request"; break;
     case 401: statusText = "Unauthorized"; break;
+    case 403: statusText = "Forbidden"; break;
     case 404: statusText = "Not Found"; break;
     case 500: statusText = "Internal Server Error"; break;
     default: statusText = "Unknown"; break;
@@ -277,6 +299,20 @@ QString DatabaseServer::getHttpHeader(const QString &request, const QString &hea
 bool DatabaseServer::authenticate(const QString &password)
 {
     return password == m_password;
+}
+
+bool DatabaseServer::authenticateRequest(const QString &username, const QString &password)
+{
+    if (username.isEmpty() || password.isEmpty()) {
+        return false;
+    }
+
+    return m_userManager->authenticateUser(username, password);
+}
+
+bool DatabaseServer::isRequestReadOnly(const QString &username)
+{
+    return m_userManager->isUserReadOnly(username);
 }
 
 void DatabaseServer::logRequest(const QString &method, const QString &path, const QString &response)

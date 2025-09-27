@@ -20,6 +20,7 @@ set(HEADERS
 qt_add_executable(GTACOMPTAServer
     ${SOURCES}
     ${HEADERS}
+    include/usermanager.h src/usermanager.cpp
 )
 
 target_include_directories(GTACOMPTAServer PRIVATE include)

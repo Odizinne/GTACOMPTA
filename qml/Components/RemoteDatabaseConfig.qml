@@ -16,6 +16,18 @@ ColumnLayout {
     signal synchronizeRequested()
     signal testConnectionRequested()
 
+    function updateConnectionStatus() {
+        if (UserSettings.useRemoteDatabase &&
+            UserSettings.remoteUsername.length > 0 &&
+            UserSettings.remoteUserPassword.length > 0) {
+            root.connectionStatus = "Ready to connect as " + UserSettings.remoteUsername
+            root.connectionStatusColor = Material.foreground
+        } else if (UserSettings.useRemoteDatabase) {
+            root.connectionStatus = "Please enter username and password"
+            root.connectionStatusColor = Material.color(Material.Orange)
+        }
+    }
+
     RowLayout {
         Layout.fillWidth: true
 
@@ -42,16 +54,14 @@ ColumnLayout {
             onClicked: {
                 UserSettings.useRemoteDatabase = checked
 
-                if (checked) {
-                    if (root.showSynchronizeButton) {
-                        root.connectionStatus = "Remote database enabled. Will sync on dialog close or manual sync."
-                        root.connectionStatusColor = Material.color(Material.Blue)
-                    }
-                } else {
+                if (!checked) {
+                    AppState._remoteReadOnly = true
                     if (root.showSynchronizeButton) {
                         root.connectionStatus = "Local database enabled. Will sync on dialog close."
                         root.connectionStatusColor = Material.color(Material.Blue)
                     }
+                } else {
+                    root.updateConnectionStatus()
                 }
             }
         }
@@ -77,7 +87,7 @@ ColumnLayout {
 
     RowLayout {
         enabled: UserSettings.useRemoteDatabase
-        Label { text: "Password:"; Layout.fillWidth: true }
+        Label { text: "Server Password:"; Layout.fillWidth: true }
         TextField {
             Layout.preferredHeight: Constants.comboHeight
             text: UserSettings.remotePassword
@@ -89,6 +99,42 @@ ColumnLayout {
             }
             echoMode: TextInput.Password
             placeholderText: "Server password"
+        }
+    }
+
+    MenuSeparator {
+        Layout.fillWidth: true
+        visible: UserSettings.useRemoteDatabase
+    }
+
+    RowLayout {
+        enabled: UserSettings.useRemoteDatabase
+        visible: UserSettings.useRemoteDatabase
+        Label { text: "Username:"; Layout.fillWidth: true }
+        TextField {
+            Layout.preferredHeight: Constants.comboHeight
+            text: UserSettings.remoteUsername
+            onTextChanged: {
+                UserSettings.remoteUsername = text
+                root.updateConnectionStatus()
+            }
+            placeholderText: "admin or guest"
+        }
+    }
+
+    RowLayout {
+        enabled: UserSettings.useRemoteDatabase
+        visible: UserSettings.useRemoteDatabase
+        Label { text: "User Password:"; Layout.fillWidth: true }
+        TextField {
+            Layout.preferredHeight: Constants.comboHeight
+            text: UserSettings.remoteUserPassword
+            onTextChanged: {
+                UserSettings.remoteUserPassword = text
+                root.updateConnectionStatus()
+            }
+            echoMode: TextInput.Password
+            placeholderText: "User password"
         }
     }
 
@@ -106,7 +152,11 @@ ColumnLayout {
 
         Button {
             text: "Test Connection"
-            enabled: UserSettings.remoteHost.length > 0 && UserSettings.useRemoteDatabase && !root.isSynchronizing
+            enabled: UserSettings.remoteHost.length > 0 &&
+                    UserSettings.remoteUsername.length > 0 &&
+                    UserSettings.remoteUserPassword.length > 0 &&
+                    UserSettings.useRemoteDatabase &&
+                    !root.isSynchronizing
             onClicked: {
                 root.connectionStatus = "Testing connection..."
                 root.connectionStatusColor = Material.foreground
@@ -160,6 +210,12 @@ ColumnLayout {
         Button {
             text: "For Linux"
             onClicked: Qt.openUrlExternally("https://github.com/odizinne/gtacompta/releases/latest/download/GTACOMPTAServer_linux_gcc64")
+        }
+    }
+
+    Component.onCompleted: {
+        if (UserSettings.useRemoteDatabase) {
+            root.updateConnectionStatus()
         }
     }
 }

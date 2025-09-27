@@ -6,6 +6,7 @@
 #include <QLoggingCategory>
 #include <QStandardPaths>
 #include "databaseserver.h"
+#include "usermanager.h"
 
 void printWelcomeBanner()
 {
@@ -41,6 +42,18 @@ void printServerInfo(quint16 port, const QString &password, const QString &dataD
     out << Qt::endl;
 }
 
+void printUsage()
+{
+    QTextStream out(stdout);
+    out << Qt::endl;
+    out << "User Management Examples:" << Qt::endl;
+    out << "  --add-user \"john\" \"secret123\"         - Add user with full access" << Qt::endl;
+    out << "  --add-user \"jane\" \"pass456\" --readonly - Add read-only user" << Qt::endl;
+    out << "  --delete-user \"john\"                   - Delete user" << Qt::endl;
+    out << "  --list-users                            - List all users" << Qt::endl;
+    out << Qt::endl;
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
@@ -70,21 +83,35 @@ int main(int argc, char *argv[])
     QCommandLineOption verboseOption(QStringList() << "verbose",
                                      "Enable verbose logging");
 
+    // User management options
+    QCommandLineOption addUserOption(QStringList() << "add-user",
+                                     "Add a new user: --add-user \"username\" \"password\"",
+                                     "username password");
+    QCommandLineOption deleteUserOption(QStringList() << "delete-user",
+                                        "Delete a user: --delete-user \"username\"",
+                                        "username");
+    QCommandLineOption readonlyOption(QStringList() << "readonly",
+                                      "Make the new user read-only (use with --add-user)");
+    QCommandLineOption listUsersOption(QStringList() << "list-users",
+                                       "List all registered users");
+
     parser.addOption(portOption);
     parser.addOption(passwordOption);
     parser.addOption(dataOption);
     parser.addOption(verboseOption);
+    parser.addOption(addUserOption);
+    parser.addOption(deleteUserOption);
+    parser.addOption(readonlyOption);
+    parser.addOption(listUsersOption);
 
     parser.process(app);
 
-    DatabaseServer server;
-
-    QString password = parser.value(passwordOption);
-    if (password.isEmpty()) {
-        qWarning() << "WARNING: No password set! Server will be unprotected.";
+    if (parser.isSet(verboseOption)) {
+        QLoggingCategory::setFilterRules("*.debug=true");
+        qDebug() << "Verbose logging enabled";
     }
-    server.setPassword(password);
 
+    // Setup data directory
     QString dataDir;
     if (parser.isSet(dataOption)) {
         dataDir = parser.value(dataOption);
@@ -98,6 +125,73 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Create user manager for user management operations
+    UserManager userManager;
+    userManager.setDataDirectory(dataDir);
+
+    // Handle user management commands
+    if (parser.isSet(addUserOption)) {
+        QStringList userArgs = parser.values(addUserOption);
+        if (userArgs.size() != 2) {
+            qCritical() << "Error: --add-user requires exactly 2 arguments: username and password";
+            qCritical() << "Usage: --add-user \"username\" \"password\"";
+            printUsage();
+            return 1;
+        }
+
+        QString username = userArgs[0];
+        QString password = userArgs[1];
+        bool readonly = parser.isSet(readonlyOption);
+
+        if (userManager.userExists(username)) {
+            qCritical() << "Error: User" << username << "already exists";
+            return 1;
+        }
+
+        if (userManager.addUser(username, password, readonly)) {
+            QTextStream out(stdout);
+            out << "✓ User '" << username << "' added successfully ";
+            out << (readonly ? "(read-only access)" : "(full access)") << Qt::endl;
+            userManager.listUsers();
+        } else {
+            qCritical() << "Failed to add user" << username;
+            return 1;
+        }
+        return 0; // Exit after user management
+    }
+
+    if (parser.isSet(deleteUserOption)) {
+        QString username = parser.value(deleteUserOption);
+
+        if (!userManager.userExists(username)) {
+            qCritical() << "Error: User" << username << "does not exist";
+            return 1;
+        }
+
+        if (userManager.deleteUser(username)) {
+            QTextStream out(stdout);
+            out << "✓ User '" << username << "' deleted successfully" << Qt::endl;
+            userManager.listUsers();
+        } else {
+            qCritical() << "Failed to delete user" << username;
+            return 1;
+        }
+        return 0; // Exit after user management
+    }
+
+    if (parser.isSet(listUsersOption)) {
+        userManager.listUsers();
+        return 0; // Exit after listing users
+    }
+
+    // If we get here, we're starting the server
+    DatabaseServer server;
+
+    QString password = parser.value(passwordOption);
+    if (password.isEmpty()) {
+        qWarning() << "WARNING: No password set! Server will be unprotected.";
+    }
+    server.setPassword(password);
     server.setDataDirectory(dataDir);
 
     bool portOk;
@@ -107,17 +201,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (parser.isSet(verboseOption)) {
-        QLoggingCategory::setFilterRules("*.debug=true");
-        qDebug() << "Verbose logging enabled";
-    }
-
     if (!server.start(port)) {
         qCritical() << "Failed to start server on port" << port;
         return 1;
     }
 
     printServerInfo(port, password, dataDir);
+
+    // Show current users
+    userManager.listUsers();
 
     QObject::connect(&app, &QCoreApplication::aboutToQuit, [&server]() {
         qDebug() << "Shutting down server...";

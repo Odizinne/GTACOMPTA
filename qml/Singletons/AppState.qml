@@ -27,6 +27,16 @@ QtObject {
     property var confirmDialog: null
     property var supplementDialog: null
 
+    // Permission checking
+    property bool isReadOnly: {
+        if (!UserSettings.useRemoteDatabase) {
+            return false // Local database = full access
+        }
+        return _remoteReadOnly
+    }
+
+    property bool _remoteReadOnly: true // Default to readonly until we know better
+
     function toUiPrice(price) {
         if (price === 0) return "$0"
         var sign = price > 0 ? "+" : "-"
@@ -66,7 +76,7 @@ QtObject {
         if (companySummaryModel) {
             companySummaryModel.loadFromFile(useRemote)
         }
-        if (noteModel) {  // Add this block
+        if (noteModel) {
             noteModel.loadFromFile(useRemote)
         }
     }

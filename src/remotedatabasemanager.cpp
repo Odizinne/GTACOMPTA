@@ -66,20 +66,24 @@ void RemoteDatabaseManager::makeRequest(const QString &method, const QString &en
 {
     QSettings settings("Odizinne", "GTACOMPTA");
     QString password = settings.value("remotePassword", "1234").toString();
+    QString username = settings.value("remoteUsername", "").toString();
+    QString userPassword = settings.value("remoteUserPassword", "").toString();
 
     QString url = getApiUrl(endpoint);
     qDebug() << "Making request:" << method << url;
-    qDebug() << "Using password:" << password;
 
     QNetworkRequest request;
     request.setUrl(QUrl(url));
     request.setRawHeader("X-Password", password.toUtf8());
+    request.setRawHeader("X-Username", username.toUtf8());
+    request.setRawHeader("X-User-Password", userPassword.toUtf8());
     request.setRawHeader("Content-Type", "application/json");
-    request.setRawHeader("X-Protocol-Version", "1.0"); // Add this line
+    request.setRawHeader("X-Protocol-Version", "1.0");
 
-    // Safe header debugging - convert to QString properly
     qDebug() << "Headers set:";
     qDebug() << "  X-Password:" << QString::fromUtf8(request.rawHeader("X-Password"));
+    qDebug() << "  X-Username:" << QString::fromUtf8(request.rawHeader("X-Username"));
+    qDebug() << "  X-User-Password:" << QString::fromUtf8(request.rawHeader("X-User-Password"));
     qDebug() << "  Content-Type:" << QString::fromUtf8(request.rawHeader("Content-Type"));
     qDebug() << "  X-Protocol-Version:" << QString::fromUtf8(request.rawHeader("X-Protocol-Version"));
 
@@ -135,8 +139,20 @@ void RemoteDatabaseManager::handleNetworkReply()
     QJsonObject response = doc.object();
 
     if (endpoint.contains("/test")) {
-        qDebug() << "About to emit connectionResult";
-        emit connectionResult(true, response["message"].toString());
+        // Extract readonly status from test response
+        bool isReadOnly = response["readonly"].toBool(true);
+        QString username = response["username"].toString();
+
+        // Emit readonly status change
+        emit readOnlyStatusChanged(isReadOnly);
+
+        QString message = response["message"].toString();
+        if (!username.isEmpty()) {
+            message += QString(" (User: %1, %2)").arg(username).arg(isReadOnly ? "read-only" : "full access");
+        }
+
+        qDebug() << "About to emit connectionResult with readonly status:" << isReadOnly;
+        emit connectionResult(true, message);
     } else if (endpoint.contains("/save/")) {
         QString collection = endpoint.split("/").last();
         qDebug() << "About to emit dataSaved for:" << collection;
@@ -144,9 +160,6 @@ void RemoteDatabaseManager::handleNetworkReply()
     } else if (endpoint.contains("/load/")) {
         QString collection = endpoint.split("/").last();
         qDebug() << "About to emit dataLoaded for collection:" << collection;
-        qDebug() << "Signal emitter pointer:" << this;
-        qDebug() << "Number of connections to dataLoaded signal:" << receivers(SIGNAL(dataLoaded(QString,QJsonObject)));
         emit dataLoaded(collection, response);
-        qDebug() << "dataLoaded signal emitted";
     }
 }
