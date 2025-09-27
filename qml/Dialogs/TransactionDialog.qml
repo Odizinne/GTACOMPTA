@@ -36,6 +36,7 @@ Dialog {
     }
 
     GridLayout {
+        enabled: !AppState.isReadOnly
         anchors.fill: parent
         columns: 2
 

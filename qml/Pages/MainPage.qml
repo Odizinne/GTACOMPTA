@@ -95,10 +95,12 @@ Page {
 
                     MenuItem {
                         text: "Export Data..."
+                        enabled: !AppState.isReadOnly
                         onTriggered: root.showExport()
                     }
 
                     MenuItem {
+                        enabled: !AppState.isReadOnly
                         text: "Import Data..."
                         onTriggered: root.showImport()
                     }

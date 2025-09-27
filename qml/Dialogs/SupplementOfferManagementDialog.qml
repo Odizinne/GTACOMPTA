@@ -144,6 +144,7 @@ Dialog {
                                 spacing: 0
                                 ToolButton {
                                     text: "Edit"
+                                    enabled: !AppState.isReadOnly
                                     icon.source: "qrc:/icons/edit.svg"
                                     icon.width: 16
                                     icon.height: 16
@@ -160,6 +161,7 @@ Dialog {
 
                                 ToolButton {
                                     text: "Remove"
+                                    enabled: !AppState.isReadOnly
                                     icon.source: "qrc:/icons/delete.svg"
                                     icon.width: 16
                                     icon.height: 16
@@ -211,6 +213,7 @@ Dialog {
                                 spacing: 0
                                 ToolButton {
                                     text: "Edit"
+                                    enabled: !AppState.isReadOnly
                                     icon.source: "qrc:/icons/edit.svg"
                                     icon.width: 16
                                     icon.height: 16
@@ -227,6 +230,7 @@ Dialog {
 
                                 ToolButton {
                                     text: "Remove"
+                                    enabled: !AppState.isReadOnly
                                     icon.source: "qrc:/icons/delete.svg"
                                     icon.width: 16
                                     icon.height: 16
@@ -283,6 +287,7 @@ Dialog {
         }
 
         GridLayout {
+            enabled: !AppState.isReadOnly
             anchors.fill: parent
             columns: 2
             rowSpacing: 10

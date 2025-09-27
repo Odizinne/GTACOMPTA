@@ -107,6 +107,7 @@ Column {
                         ToolButton {
                             Layout.preferredHeight: 40
                             text: "Approve"
+                            enabled: !AppState.isReadOnly
                             icon.source: "qrc:/icons/checkmark.svg"
                             icon.width: 16
                             icon.height: 16
@@ -120,6 +121,7 @@ Column {
                         ToolButton {
                             Layout.preferredHeight: 40
                             text: "Edit"
+                            enabled: !AppState.isReadOnly
                             icon.source: "qrc:/icons/edit.svg"
                             icon.width: 16
                             icon.height: 16
@@ -136,6 +138,7 @@ Column {
                         ToolButton {
                             Layout.preferredHeight: 40
                             text: "Remove"
+                            enabled: !AppState.isReadOnly
                             icon.source: "qrc:/icons/delete.svg"
                             icon.width: 16
                             icon.height: 16

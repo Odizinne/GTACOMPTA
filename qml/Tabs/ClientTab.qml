@@ -197,6 +197,7 @@ Column {
                         spacing: 0
                         ToolButton {
                             text: "Checkout"
+                            enabled: !AppState.isReadOnly
                             icon.source: "qrc:/icons/dollar.svg"
                             icon.width: 16
                             icon.height: 16
@@ -210,6 +211,7 @@ Column {
 
                         ToolButton {
                             text: "Edit"
+                            enabled: !AppState.isReadOnly
                             icon.source: "qrc:/icons/edit.svg"
                             icon.width: 16
                             icon.height: 16
@@ -227,6 +229,7 @@ Column {
 
                         ToolButton {
                             text: "Remove"
+                            enabled: !AppState.isReadOnly
                             icon.source: "qrc:/icons/delete.svg"
                             icon.width: 16
                             icon.height: 16

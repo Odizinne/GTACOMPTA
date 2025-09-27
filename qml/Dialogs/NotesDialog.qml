@@ -12,6 +12,7 @@ Dialog {
     ScrollView {
         anchors.fill: parent
         TextArea {
+            enabled: !AppState.isReadOnly
             text: AppState.noteModel ? AppState.noteModel.content : ""
             onTextChanged: {
                 if (AppState.noteModel) {
