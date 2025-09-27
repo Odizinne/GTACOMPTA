@@ -47,10 +47,12 @@ void printUsage()
     QTextStream out(stdout);
     out << Qt::endl;
     out << "User Management Examples:" << Qt::endl;
-    out << "  --add-user \"john\" \"secret123\"         - Add user with full access" << Qt::endl;
-    out << "  --add-user \"jane\" \"pass456\" --readonly - Add read-only user" << Qt::endl;
-    out << "  --delete-user \"john\"                   - Delete user" << Qt::endl;
-    out << "  --list-users                            - List all users" << Qt::endl;
+    out << "  --add-user username password         - Add user with full access" << Qt::endl;
+    out << "  --add-user username password --readonly - Add read-only user" << Qt::endl;
+    out << "  --delete-user username               - Delete user" << Qt::endl;
+    out << "  --list-users                         - List all users" << Qt::endl;
+    out << Qt::endl;
+    out << "Note: Username and password should not contain spaces" << Qt::endl;
     out << Qt::endl;
 }
 
@@ -83,12 +85,11 @@ int main(int argc, char *argv[])
     QCommandLineOption verboseOption(QStringList() << "verbose",
                                      "Enable verbose logging");
 
-    // User management options
+    // User management options - simplified approach
     QCommandLineOption addUserOption(QStringList() << "add-user",
-                                     "Add a new user: --add-user \"username\" \"password\"",
-                                     "username password");
+                                     "Add a new user. Requires 2 positional arguments after this flag: username password");
     QCommandLineOption deleteUserOption(QStringList() << "delete-user",
-                                        "Delete a user: --delete-user \"username\"",
+                                        "Delete a user. Requires 1 positional argument: username",
                                         "username");
     QCommandLineOption readonlyOption(QStringList() << "readonly",
                                       "Make the new user read-only (use with --add-user)");
@@ -129,18 +130,21 @@ int main(int argc, char *argv[])
     UserManager userManager;
     userManager.setDataDirectory(dataDir);
 
+    // Get positional arguments (arguments after options)
+    QStringList positionalArgs = parser.positionalArguments();
+
     // Handle user management commands
     if (parser.isSet(addUserOption)) {
-        QStringList userArgs = parser.values(addUserOption);
-        if (userArgs.size() != 2) {
-            qCritical() << "Error: --add-user requires exactly 2 arguments: username and password";
-            qCritical() << "Usage: --add-user \"username\" \"password\"";
+        if (positionalArgs.size() < 2) {
+            qCritical() << "Error: --add-user requires 2 arguments: username password";
+            qCritical() << "Usage: --add-user username password";
+            qCritical() << "Example: ./GTACOMPTAServer --add-user gorzyne shyvana0307";
             printUsage();
             return 1;
         }
 
-        QString username = userArgs[0];
-        QString password = userArgs[1];
+        QString username = positionalArgs[0];
+        QString password = positionalArgs[1];
         bool readonly = parser.isSet(readonlyOption);
 
         if (userManager.userExists(username)) {
