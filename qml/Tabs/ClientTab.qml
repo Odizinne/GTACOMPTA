@@ -108,6 +108,11 @@ Column {
                 color: (index % 2 === 0) ? Constants.listItemEven : Constants.listItemOdd
                 required property var model
                 required property var index
+                property bool isHovered: false
+
+                HoverHandler {
+                    onHoveredChanged: del.isHovered = hovered
+                }
 
                 RowLayout {
                     anchors.fill: parent
@@ -195,6 +200,15 @@ Column {
 
                     RowLayout {
                         spacing: 0
+                        opacity: del.isHovered ? 1 : 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                easing.type: Easing.Linear
+                                duration: 100
+                            }
+                        }
+
                         ToolButton {
                             text: "Checkout"
                             enabled: !AppState.isReadOnly
