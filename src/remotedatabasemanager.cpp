@@ -159,6 +159,10 @@ void RemoteDatabaseManager::handleNetworkReply()
         emit dataSaved(collection, response["success"].toBool());
     } else if (endpoint.contains("/load/")) {
         QString collection = endpoint.split("/").last();
+        if (response.contains("readonly")) {
+            bool isReadOnly = response["readonly"].toBool(true);
+            emit readOnlyStatusChanged(isReadOnly);
+        }
         qDebug() << "About to emit dataLoaded for collection:" << collection;
         emit dataLoaded(collection, response);
     }

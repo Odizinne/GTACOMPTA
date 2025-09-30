@@ -190,6 +190,11 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         QString collection = path.mid(10);
 
         QJsonObject data = loadCollection(collection);
+
+        // Add readonly status to response
+        data["readonly"] = isRequestReadOnly(username);
+        data["username"] = username;
+
         response = createHttpResponse(200, QJsonDocument(data).toJson());
         logRequest(method, path, QString("Load %1 by %2: %3 items").arg(collection).arg(username).arg(data["data"].toArray().size()));
     }
