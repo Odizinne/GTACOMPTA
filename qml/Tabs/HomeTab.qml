@@ -16,11 +16,30 @@ Column {
     property var weeklyTotals: []
     property real maxAbsValue: 0
 
+    property int currentCardIndex: 0
+    property var cards: [balanceCard, projectedCard, incomeCard, outcomeCard, revenueCard, chartCard, statsCard, lastActivityCard]
+
     ListModel {
         id: weeksDisplayModel
     }
 
-    // Hidden repeaters to calculate sums
+    Timer {
+        id: fadeInTimer
+        interval: 70
+        repeat: true
+        running: false
+        onTriggered: {
+            if (root.currentCardIndex < root.cards.length) {
+                if (root.cards[root.currentCardIndex] && root.cards[root.currentCardIndex].visible) {
+                    root.cards[root.currentCardIndex].opacity = 1
+                }
+                root.currentCardIndex++
+            } else {
+                stop()
+            }
+        }
+    }
+
     Repeater {
         id: clientRepeater
         model: AppState.clientModel
@@ -68,7 +87,6 @@ Column {
         var latestDate = null
         var latestIndex = -1
 
-        // Iterate backwards to get the "last" transaction more naturally
         for (var i = AppState.transactionModel.count - 1; i >= 0; i--) {
             var index = AppState.transactionModel.index(i, 0)
             var dateStr = AppState.transactionModel.data(index, TransactionModel.DateRole)
@@ -100,7 +118,6 @@ Column {
         var oldestDate = new Date()
         var hasData = false
 
-        // Scan all transactions and sum by week
         for (var i = 0; i < AppState.transactionModel.count; i++) {
             var index = AppState.transactionModel.index(i, 0)
             var dateStr = AppState.transactionModel.data(index, TransactionModel.DateRole)
@@ -126,12 +143,10 @@ Column {
             weeks[weekKey].total += amount
         }
 
-        // Calculate the start date for 12 weeks
         var endDate = getMonday(new Date())
         var startDate = new Date(endDate)
-        startDate.setDate(startDate.getDate() - (11 * 7)) // 11 weeks back
+        startDate.setDate(startDate.getDate() - (11 * 7))
 
-        // Create all 12 weeks
         var weeksArray = []
         for (var j = 0; j < 12; j++) {
             var weekDate = new Date(startDate)
@@ -146,7 +161,6 @@ Column {
 
         root.weeklyTotals = weeksArray
 
-        // Calculate max absolute value for scaling
         var maxAbs = 0
         for (var k = 0; k < weeksArray.length; k++) {
             var abs = Math.abs(weeksArray[k].total)
@@ -154,7 +168,6 @@ Column {
         }
         root.maxAbsValue = maxAbs
 
-        // Populate display model
         weeksDisplayModel.clear()
         for (var m = 0; m < weeksArray.length; m++) {
             weeksDisplayModel.append({
@@ -181,11 +194,22 @@ Column {
         })
     }
 
-    Component.onCompleted: calculateFinancials()
+    Component.onCompleted: {
+        calculateFinancials()
+        currentCardIndex = 0
+        fadeInTimer.start()
+    }
 
     onVisibleChanged: {
         if (visible) {
             calculateFinancials()
+            currentCardIndex = 0
+            for (var i = 0; i < cards.length; i++) {
+                if (cards[i]) {
+                    cards[i].opacity = 0
+                }
+            }
+            fadeInTimer.restart()
         }
     }
 
@@ -209,7 +233,6 @@ Column {
                 Layout.leftMargin: 20
             }
 
-            // Combined Grid Layout
             GridLayout {
                 Layout.fillWidth: true
                 Layout.margins: 20
@@ -220,10 +243,20 @@ Column {
                 RowLayout {
                     Layout.columnSpan: 3
                     spacing: 20
+
                     Pane {
+                        id: balanceCard
                         Layout.fillWidth: true
                         Material.elevation: 6
                         Material.background: Constants.listItemOdd
+                        opacity: 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 400
+                                easing.type: Easing.InCubic
+                            }
+                        }
 
                         ColumnLayout {
                             width: parent.width
@@ -244,11 +277,21 @@ Column {
                             }
                         }
                     }
+
                     Pane {
+                        id: projectedCard
                         Layout.fillWidth: true
                         Material.elevation: 6
                         Material.background: Constants.listItemOdd
                         visible: AppState.awaitingTransactionModel && AppState.awaitingTransactionModel.count > 0
+                        opacity: 0
+
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 400
+                                easing.type: Easing.InCubic
+                            }
+                        }
 
                         ColumnLayout {
                             width: parent.width
@@ -285,12 +328,20 @@ Column {
                     }
                 }
 
-                // Row 1 - Weekly Estimates
                 Pane {
+                    id: incomeCard
                     Layout.fillWidth: true
                     Layout.preferredHeight: 150
                     Material.elevation: 6
                     Material.background: Constants.listItemOdd
+                    opacity: 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 400
+                            easing.type: Easing.InCubic
+                        }
+                    }
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -326,10 +377,19 @@ Column {
                 }
 
                 Pane {
+                    id: outcomeCard
                     Layout.fillWidth: true
                     Layout.preferredHeight: 150
                     Material.elevation: 6
                     Material.background: Constants.listItemOdd
+                    opacity: 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 400
+                            easing.type: Easing.InCubic
+                        }
+                    }
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -365,10 +425,19 @@ Column {
                 }
 
                 Pane {
+                    id: revenueCard
                     Layout.fillWidth: true
                     Layout.preferredHeight: 150
                     Material.elevation: 6
                     Material.background: Constants.listItemOdd
+                    opacity: 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 400
+                            easing.type: Easing.InCubic
+                        }
+                    }
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -397,14 +466,22 @@ Column {
                     }
                 }
 
-                // Row 2-3 - Performance Chart and Stats
                 Pane {
+                    id: chartCard
                     Layout.fillWidth: true
                     Layout.preferredHeight: 400
                     Layout.columnSpan: 2
                     Layout.rowSpan: 2
                     Material.elevation: 6
                     Material.background: Constants.listItemOdd
+                    opacity: 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 400
+                            easing.type: Easing.InCubic
+                        }
+                    }
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -512,10 +589,19 @@ Column {
                 }
 
                 Pane {
+                    id: statsCard
                     Layout.fillWidth: true
                     Layout.preferredHeight: 190
                     Material.elevation: 6
                     Material.background: Constants.listItemOdd
+                    opacity: 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 400
+                            easing.type: Easing.InCubic
+                        }
+                    }
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -592,6 +678,14 @@ Column {
                     Layout.preferredHeight: 190
                     Material.elevation: 6
                     Material.background: Constants.listItemOdd
+                    opacity: 0
+
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 400
+                            easing.type: Easing.InCubic
+                        }
+                    }
 
                     property var lastTransaction: null
 
