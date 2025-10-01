@@ -4,12 +4,12 @@
 EmployeeModel::EmployeeModel(QObject *parent)
     : BaseModel("employees.json", parent)
 {
-    m_sortColumn = SortByName; // Default sort by name
+    m_sortColumn = SortByName;
 }
 
 int EmployeeModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    Q_UNUSED(parent)
     return m_employees.size();
 }
 
@@ -57,7 +57,6 @@ void EmployeeModel::addEmployee(const QString &name, const QString &phone,
     m_employees.append({name, phone, role, salary, addedDate, comment});
     endInsertRows();
 
-    // Sort after adding
     beginResetModel();
     performSort();
     endResetModel();
@@ -74,7 +73,6 @@ void EmployeeModel::updateEmployee(int index, const QString &name, const QString
 
     m_employees[index] = {name, phone, role, salary, addedDate, comment};
 
-    // Resort after updating
     beginResetModel();
     performSort();
     endResetModel();
@@ -95,7 +93,7 @@ void EmployeeModel::payEmployee(int employeeIndex)
 
 void EmployeeModel::performSort()
 {
-    std::sort(m_employees.begin(), m_employees.end(), [this](const Employee &a, const Employee &b) {
+    std::stable_sort(m_employees.begin(), m_employees.end(), [this](const Employee &a, const Employee &b) {
         bool result = false;
 
         switch (m_sortColumn) {
@@ -156,7 +154,6 @@ void EmployeeModel::entryFromJson(const QJsonObject &obj)
 
 void EmployeeModel::addEntryToModel()
 {
-    // Not used in this implementation
 }
 
 void EmployeeModel::removeEntryFromModel(int index)

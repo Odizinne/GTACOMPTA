@@ -5,12 +5,12 @@
 TransactionModel::TransactionModel(QObject *parent)
     : BaseModel("transactions.json", parent)
 {
-    m_sortColumn = SortByDate; // Default sort by date
+    m_sortColumn = SortByDate;
 }
 
 int TransactionModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    Q_UNUSED(parent)
     return m_transactions.size();
 }
 
@@ -48,7 +48,6 @@ void TransactionModel::addTransaction(const QString &description, double amount,
     m_transactions.append({description, amount, date});
     endInsertRows();
 
-    // Sort after adding
     beginResetModel();
     performSort();
     endResetModel();
@@ -64,7 +63,6 @@ void TransactionModel::updateTransaction(int index, const QString &description, 
 
     m_transactions[index] = {description, amount, date};
 
-    // Resort after updating
     beginResetModel();
     performSort();
     endResetModel();
@@ -82,7 +80,7 @@ double TransactionModel::getTransactionAmount(int index) const
 
 void TransactionModel::performSort()
 {
-    std::sort(m_transactions.begin(), m_transactions.end(), [this](const Transaction &a, const Transaction &b) {
+    std::stable_sort(m_transactions.begin(), m_transactions.end(), [this](const Transaction &a, const Transaction &b) {
         bool result = false;
 
         switch (m_sortColumn) {
@@ -96,7 +94,7 @@ void TransactionModel::performSort()
             result = a.date < b.date;
             break;
         default:
-            result = a.date < b.date; // Default sort by date
+            result = a.date < b.date;
             break;
         }
 
@@ -128,7 +126,6 @@ void TransactionModel::entryFromJson(const QJsonObject &obj)
 
 void TransactionModel::addEntryToModel()
 {
-    // Not used in this implementation
 }
 
 void TransactionModel::removeEntryFromModel(int index)

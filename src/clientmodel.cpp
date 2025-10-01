@@ -7,7 +7,7 @@ ClientModel::ClientModel(QObject *parent)
     , m_offerModel(nullptr)
     , m_supplementModel(nullptr)
 {
-    m_sortColumn = SortByName; // Default sort by name
+    m_sortColumn = SortByName;
 }
 
 void ClientModel::setOfferModel(OfferModel *model)
@@ -22,7 +22,7 @@ void ClientModel::setSupplementModel(SupplementModel *model)
 
 int ClientModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    Q_UNUSED(parent)
     return m_clients.size();
 }
 
@@ -80,7 +80,6 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
     client.offer = static_cast<Offer>(offer);
     client.price = price;
 
-    // Convert list to map - for backward compatibility, assume quantity 1
     for (int suppId : supplements) {
         client.supplements[suppId] = 1;
     }
@@ -91,7 +90,6 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
     m_clients.append(client);
     endInsertRows();
 
-    // Sort after adding
     beginResetModel();
     performSort();
     endResetModel();
@@ -113,7 +111,6 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     client.offer = static_cast<Offer>(offer);
     client.price = price;
 
-    // Convert list to map - for backward compatibility, assume quantity 1
     client.supplements.clear();
     for (int suppId : supplements) {
         client.supplements[suppId] = 1;
@@ -123,7 +120,6 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
     client.phoneNumber = phoneNumber;
     client.comment = comment;
 
-    // Resort after updating
     beginResetModel();
     performSort();
     endResetModel();
@@ -163,15 +159,12 @@ void ClientModel::entryFromJson(const QJsonObject &obj)
     client.offer = static_cast<Offer>(obj["offer"].toInt(0));
     client.price = obj["price"].toInt();
 
-    // Handle both old format (array) and new format (object)
     if (obj["supplements"].isArray()) {
-        // Old format - convert to new format with quantity 1
         QJsonArray supplementsArray = obj["supplements"].toArray();
         for (const QJsonValue &value : supplementsArray) {
             client.supplements[value.toInt()] = 1;
         }
     } else if (obj["supplements"].isObject()) {
-        // New format
         QJsonObject supplementsObj = obj["supplements"].toObject();
         for (auto it = supplementsObj.begin(); it != supplementsObj.end(); ++it) {
             client.supplements[it.key().toInt()] = it.value().toInt();
@@ -186,7 +179,7 @@ void ClientModel::entryFromJson(const QJsonObject &obj)
 
 void ClientModel::performSort()
 {
-    std::sort(m_clients.begin(), m_clients.end(), [this](const Client &a, const Client &b) {
+    std::stable_sort(m_clients.begin(), m_clients.end(), [this](const Client &a, const Client &b) {
         bool result = false;
 
         switch (m_sortColumn) {
@@ -222,7 +215,6 @@ void ClientModel::performSort()
 
 void ClientModel::addEntryToModel()
 {
-    // Not used in this implementation
 }
 
 void ClientModel::removeEntryFromModel(int index)
@@ -306,7 +298,6 @@ void ClientModel::addClientWithQuantities(int businessType, const QString &name,
     client.offer = static_cast<Offer>(offer);
     client.price = price;
 
-    // Convert QVariantMap to QMap<int, int>
     for (auto it = supplementQuantities.begin(); it != supplementQuantities.end(); ++it) {
         int suppId = it.key().toInt();
         int quantity = it.value().toInt();
@@ -321,7 +312,6 @@ void ClientModel::addClientWithQuantities(int businessType, const QString &name,
     m_clients.append(client);
     endInsertRows();
 
-    // Sort after adding
     beginResetModel();
     performSort();
     endResetModel();
@@ -343,7 +333,6 @@ void ClientModel::updateClientWithQuantities(int index, int businessType, const 
     client.offer = static_cast<Offer>(offer);
     client.price = price;
 
-    // Convert QVariantMap to QMap<int, int>
     client.supplements.clear();
     for (auto it = supplementQuantities.begin(); it != supplementQuantities.end(); ++it) {
         int suppId = it.key().toInt();
@@ -357,7 +346,6 @@ void ClientModel::updateClientWithQuantities(int index, int businessType, const 
     client.phoneNumber = phoneNumber;
     client.comment = comment;
 
-    // Resort after updating
     beginResetModel();
     performSort();
     endResetModel();
@@ -375,13 +363,11 @@ void ClientModel::recalculateAllPrices()
     for (int i = 0; i < m_clients.size(); ++i) {
         Client &client = m_clients[i];
 
-        // Get base price from actual offer model
         int basePrice = 0;
         if (client.offer >= 0 && client.offer < m_offerModel->rowCount()) {
             basePrice = m_offerModel->getOfferPrice(client.offer);
         }
 
-        // Get supplement prices from actual supplement model
         int supplementsTotal = 0;
         for (auto it = client.supplements.begin(); it != client.supplements.end(); ++it) {
             int suppId = it.key();

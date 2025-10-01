@@ -9,6 +9,7 @@
 #include <QDir>
 #include <QFile>
 #include <QSettings>
+#include <QTimer>
 #include <QtQml/qqmlregistration.h>
 
 class DataManager;
@@ -52,22 +53,23 @@ protected:
     virtual void performSort() = 0;
 
     void saveToFile();
-    void loadFromLocal();        // Added this method
-    void loadFromRemote();       // Added this method
-    void saveToLocal(const QJsonArray &array);  // Added this method
+    void loadFromLocal();
+    void loadFromRemote();
+    void saveToLocal(const QJsonArray &array);
     QString getDataFilePath() const;
 
     int m_sortColumn;
     bool m_sortAscending;
 
 private slots:
-    void onRemoteDataLoaded(const QString &collection, const QJsonObject &data);  // Added this slot
-    void onRemoteDataSaved(const QString &collection, bool success);  // Added this slot
+    void onRemoteDataLoaded(const QString &collection, const QJsonObject &data);
+    void onRemoteDataSaved(const QString &collection, bool success);
 
 private:
     void ensureRemoteConnection();
     QString m_fileName;
-    bool m_isLoading;  // Added this member variable
+    bool m_isLoading;
+    QTimer *m_sortTimer;
 };
 
 #endif // BASEMODEL_H

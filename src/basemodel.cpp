@@ -8,14 +8,23 @@ BaseModel::BaseModel(const QString &fileName, QObject *parent)
     , m_sortColumn(0)
     , m_sortAscending(true)
     , m_isLoading(false)
+    , m_sortTimer(new QTimer(this))
 {
     qDebug() << "BaseModel created for" << m_fileName;
+
+    m_sortTimer->setSingleShot(true);
+    m_sortTimer->setInterval(0);
+    connect(m_sortTimer, &QTimer::timeout, this, [this]() {
+        beginResetModel();
+        performSort();
+        endResetModel();
+    });
 }
 
 int BaseModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent)
-    return 0; // Override in derived classes
+    return 0;
 }
 
 void BaseModel::removeEntry(int index)
@@ -32,7 +41,6 @@ void BaseModel::ensureRemoteConnection()
 {
     RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
     if (remoteManager) {
-        // Use Qt::UniqueConnection to prevent duplicate connections
         bool connected1 = connect(remoteManager, &RemoteDatabaseManager::dataLoaded,
                                   this, &BaseModel::onRemoteDataLoaded, Qt::UniqueConnection);
         bool connected2 = connect(remoteManager, &RemoteDatabaseManager::dataSaved,
@@ -49,7 +57,7 @@ void BaseModel::loadFromFile(bool remote)
 {
     if (m_isLoading) {
         qDebug() << "Already loading" << m_fileName << "- skipping";
-        return; // Prevent recursion
+        return;
     }
 
     m_isLoading = true;
@@ -68,11 +76,9 @@ void BaseModel::loadFromFile(bool remote)
 void BaseModel::loadFromLocal()
 {
 #ifdef Q_OS_WASM
-    // Use QSettings for WebAssembly (IndexedDB backend)
     QSettings settings("Odizinne", "GTACOMPTA");
     QByteArray jsonData = settings.value(m_fileName).toByteArray();
 
-    // Always reset the model, whether we have data or not
     beginResetModel();
     clearModel();
 
@@ -94,15 +100,12 @@ void BaseModel::loadFromLocal()
         qDebug() << "No local data found for:" << m_fileName << "- model cleared";
     }
 
-    // Sort after loading (or after clearing)
     performSort();
     endResetModel();
     emit countChanged();
 #else
-    // Use file system for other platforms
     QString filePath = getDataFilePath();
 
-    // Always reset the model, whether we have data or not
     beginResetModel();
     clearModel();
 
@@ -128,7 +131,6 @@ void BaseModel::loadFromLocal()
         qDebug() << "No local data file found:" << filePath << "- model cleared";
     }
 
-    // Sort after loading (or after clearing)
     performSort();
     endResetModel();
     emit countChanged();
@@ -137,12 +139,12 @@ void BaseModel::loadFromLocal()
 
 void BaseModel::loadFromRemote()
 {
-    ensureRemoteConnection(); // Make sure THIS model is connected
+    ensureRemoteConnection();
 
     RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
     if (remoteManager) {
         qDebug() << "Loading from remote:" << m_fileName << "using instance:" << remoteManager;
-        remoteManager->loadData(m_fileName); // Back to original
+        remoteManager->loadData(m_fileName);
     } else {
         qWarning() << "RemoteDatabaseManager not available, falling back to local";
         loadFromLocal();
@@ -174,9 +176,7 @@ void BaseModel::sortBy(int column)
         emit sortAscendingChanged();
     }
 
-    beginResetModel();
-    performSort();
-    endResetModel();
+    m_sortTimer->start();
 }
 
 void BaseModel::saveToFile()
@@ -191,21 +191,19 @@ void BaseModel::saveToFile()
     bool useRemote = settings.value("useRemoteDatabase", false).toBool();
 
     if (useRemote) {
-        ensureRemoteConnection(); // Make sure THIS model is connected for saving too
+        ensureRemoteConnection();
 
-        // Save to remote database
         RemoteDatabaseManager *remoteManager = RemoteDatabaseManager::instance();
         if (remoteManager) {
             QJsonObject payload;
             payload["data"] = array;
             qDebug() << "Saving to remote:" << m_fileName;
-            remoteManager->saveData(m_fileName, payload); // Back to original
+            remoteManager->saveData(m_fileName, payload);
         } else {
             qWarning() << "RemoteDatabaseManager not available, falling back to local";
             saveToLocal(array);
         }
     } else {
-        // Save locally
         saveToLocal(array);
     }
 }
@@ -215,12 +213,10 @@ void BaseModel::saveToLocal(const QJsonArray &array)
     QJsonDocument doc(array);
 
 #ifdef Q_OS_WASM
-    // Use QSettings for WebAssembly (IndexedDB backend)
     QSettings settings("Odizinne", "GTACOMPTA");
     settings.setValue(m_fileName, doc.toJson(QJsonDocument::Compact));
-    settings.sync(); // Important for WebAssembly to ensure data is persisted
+    settings.sync();
 #else
-    // Use file system for other platforms
     QString filePath = getDataFilePath();
     QFileInfo fileInfo(filePath);
     QDir().mkpath(fileInfo.absolutePath());
@@ -240,7 +236,7 @@ void BaseModel::onRemoteDataLoaded(const QString &collection, const QJsonObject 
 {
     qDebug() << "onRemoteDataLoaded called for collection:" << collection << "my filename:" << m_fileName;
 
-    if (collection != m_fileName) { // Back to original comparison
+    if (collection != m_fileName) {
         return;
     }
 
@@ -257,7 +253,6 @@ void BaseModel::onRemoteDataLoaded(const QString &collection, const QJsonObject 
         entryFromJson(obj);
     }
 
-    // Sort after loading
     performSort();
 
     endResetModel();
@@ -268,21 +263,18 @@ void BaseModel::onRemoteDataLoaded(const QString &collection, const QJsonObject 
 
 void BaseModel::onRemoteDataSaved(const QString &collection, bool success)
 {
-    if (collection != m_fileName) return; // Back to original comparison
+    if (collection != m_fileName) return;
 
     qDebug() << "Remote save result for" << collection << ":" << (success ? "SUCCESS" : "FAILED");
 
     if (!success) {
         qWarning() << "Failed to save to remote, consider fallback to local storage";
-        // Could implement fallback logic here
     }
 }
 
 QString BaseModel::getDataFilePath() const
 {
 #ifdef Q_OS_WASM
-    // For WebAssembly, this is only used as a key identifier
-    // The actual storage is handled by QSettings
     return m_fileName;
 #else
     QString dataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);

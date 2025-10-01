@@ -4,12 +4,12 @@
 AwaitingTransactionModel::AwaitingTransactionModel(QObject *parent)
     : BaseModel("awaiting_transactions.json", parent)
 {
-    m_sortColumn = SortByDate; // Default sort by date
+    m_sortColumn = SortByDate;
 }
 
 int AwaitingTransactionModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    Q_UNUSED(parent)
     return m_awaitingTransactions.size();
 }
 
@@ -47,7 +47,6 @@ void AwaitingTransactionModel::addAwaitingTransaction(const QString &description
     m_awaitingTransactions.append({description, amount, date});
     endInsertRows();
 
-    // Sort after adding
     beginResetModel();
     performSort();
     endResetModel();
@@ -63,7 +62,6 @@ void AwaitingTransactionModel::updateAwaitingTransaction(int index, const QStrin
 
     m_awaitingTransactions[index] = {description, amount, date};
 
-    // Resort after updating
     beginResetModel();
     performSort();
     endResetModel();
@@ -86,16 +84,14 @@ void AwaitingTransactionModel::approveTransaction(int index)
 
     const AwaitingTransaction &transaction = m_awaitingTransactions.at(index);
 
-    // Emit signal to add to real transaction model
     emit transactionApproved(transaction.description, transaction.amount, transaction.date);
 
-    // Remove from awaiting list
     removeEntry(index);
 }
 
 void AwaitingTransactionModel::performSort()
 {
-    std::sort(m_awaitingTransactions.begin(), m_awaitingTransactions.end(), [this](const AwaitingTransaction &a, const AwaitingTransaction &b) {
+    std::stable_sort(m_awaitingTransactions.begin(), m_awaitingTransactions.end(), [this](const AwaitingTransaction &a, const AwaitingTransaction &b) {
         bool result = false;
 
         switch (m_sortColumn) {
@@ -109,7 +105,7 @@ void AwaitingTransactionModel::performSort()
             result = a.date < b.date;
             break;
         default:
-            result = a.date < b.date; // Default sort by date
+            result = a.date < b.date;
             break;
         }
 
@@ -141,7 +137,6 @@ void AwaitingTransactionModel::entryFromJson(const QJsonObject &obj)
 
 void AwaitingTransactionModel::addEntryToModel()
 {
-    // Not used in this implementation
 }
 
 void AwaitingTransactionModel::removeEntryFromModel(int index)
