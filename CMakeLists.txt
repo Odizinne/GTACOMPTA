@@ -127,7 +127,7 @@ set(QML_FILES
     qml/Dialogs/ConfirmDialog.qml
     qml/Dialogs/EmployeeDialog.qml
     qml/Dialogs/ExportDialog.qml
-    qml/Dialogs/FakeUpgradeDialog.qml
+
     qml/Dialogs/ImportDialog.qml
     qml/Dialogs/MessageDialog.qml
     qml/Dialogs/NotesDialog.qml

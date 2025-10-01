@@ -15,7 +15,6 @@ Page {
 
     signal showSettings()
     signal showNotes()
-    signal showFakeUpgrade()
     signal showVersion()
     signal showNewEmployee()
     signal showNewTransaction()
@@ -111,11 +110,6 @@ Page {
                     MenuItem {
                         text: "Notes"
                         onTriggered: root.showNotes()
-                    }
-
-                    MenuItem {
-                        text: "Connect to FiveM"
-                        onTriggered: root.showFakeUpgrade()
                     }
                 }
             }

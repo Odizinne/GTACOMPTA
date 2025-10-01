@@ -229,7 +229,6 @@ ApplicationWindow {
         visible: false
         onShowSettings: settingsDialog.open()
         onShowNotes: notesDialog.open()
-        onShowFakeUpgrade: fakeUpgradeDialog.open()
         onShowVersion: versionDialog.open()
         onShowNewEmployee: employeeDialog.open()
         onShowNewTransaction: transactionDialog.open()
@@ -247,10 +246,6 @@ ApplicationWindow {
 
     NotesDialog {
         id: notesDialog
-    }
-
-    FakeUpgradeDialog {
-        id: fakeUpgradeDialog
     }
 
     VersionDialog {
