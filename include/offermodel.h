@@ -35,6 +35,9 @@ public:
     Q_INVOKABLE QString getOfferName(int index) const;
     Q_INVOKABLE int getOfferPrice(int index) const;
 
+signals:
+    void priceDataChanged();
+
 protected:
     QJsonObject entryToJson(int index) const override;
     void entryFromJson(const QJsonObject &obj) override;

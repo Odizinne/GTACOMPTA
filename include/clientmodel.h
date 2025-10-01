@@ -1,6 +1,8 @@
 #ifndef CLIENTMODEL_H
 #define CLIENTMODEL_H
 #include "basemodel.h"
+#include "offermodel.h"
+#include "supplementmodel.h"
 #include <QtQml/qqmlregistration.h>
 
 class ClientModel : public BaseModel
@@ -54,7 +56,6 @@ public:
     Q_INVOKABLE void updateClient(int index, int businessType, const QString &name, int offer, int price,
                                   const QList<int> &supplements, int discount, const QString &phoneNumber,
                                   const QString &comment);
-    //Q_INVOKABLE int calculatePrice(int offer, const QList<int> &supplements, int discount);
     Q_INVOKABLE void checkout(int clientIndex);
     Q_INVOKABLE int getSupplementCount() const;
     Q_INVOKABLE QString getSupplementName(int id) const;
@@ -66,6 +67,9 @@ public:
     Q_INVOKABLE void updateClientWithQuantities(int index, int businessType, const QString &name, int offer, int price,
                                                 const QVariantMap &supplementQuantities, int discount,
                                                 const QString &phoneNumber, const QString &comment);
+    Q_INVOKABLE void setOfferModel(OfferModel *model);
+    Q_INVOKABLE void setSupplementModel(SupplementModel *model);
+    Q_INVOKABLE void recalculateAllPrices();
 
 protected:
     QJsonObject entryToJson(int index) const override;
@@ -79,9 +83,6 @@ signals:
     void checkoutCompleted(const QString &description, double amount);
 
 private:
-    static const int BRONZE_BASE_PRICE = 1000;
-    static const int SILVER_BASE_PRICE = 2000;
-    static const int GOLD_BASE_PRICE = 3000;
     struct Client {
         BusinessType businessType;
         QString name;
@@ -93,6 +94,8 @@ private:
         QString comment;
     };
     QList<Client> m_clients;
-    int getSupplementPrice(int supplementId) const;
+
+    OfferModel *m_offerModel;
+    SupplementModel *m_supplementModel;
 };
 #endif // CLIENTMODEL_H

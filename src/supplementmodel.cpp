@@ -64,7 +64,7 @@ void SupplementModel::updateSupplement(int index, const QString &name, int price
     beginResetModel();
     performSort();
     endResetModel();
-
+    emit priceDataChanged();
     saveToFile();
 }
 

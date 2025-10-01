@@ -64,7 +64,7 @@ void OfferModel::updateOffer(int index, const QString &name, int price)
     beginResetModel();
     performSort();
     endResetModel();
-
+    emit priceDataChanged();
     saveToFile();
 }
 

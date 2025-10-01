@@ -39,6 +39,9 @@ ApplicationWindow {
         AppState.clientDialog = clientDialog
         AppState.confirmDialog = confirmDialog
         AppState.supplementDialog = supplementDialog
+
+        clientModel.setOfferModel(offerModel)
+        clientModel.setSupplementModel(supplementModel)
     }
 
     // Add this connection for readonly status
@@ -97,6 +100,10 @@ ApplicationWindow {
         }
 
         function checkIfShouldShowWelcome() {
+            if (!UserSettings.firstRun) {
+                return
+            }
+
             if (!UserSettings.useRemoteDatabase && mainStack.currentItem === mainPage) {
                 var isEmpty = companySummaryModel.count === 0
                 var noCompanyName = !companySummaryModel.companyName || companySummaryModel.companyName.length === 0
@@ -168,6 +175,22 @@ ApplicationWindow {
                 var amount = transactionModel.getTransactionAmount(i)
                 companySummaryModel.addToMoney(amount)
             }
+        }
+    }
+
+    Connections {
+        target: supplementModel
+        function onPriceDataChanged() {
+            console.log("pass")
+            clientModel.recalculateAllPrices()
+        }
+    }
+
+    Connections {
+        target: offerModel
+        function onPriceDataChanged() {
+            console.log("pass")
+            clientModel.recalculateAllPrices()
         }
     }
 

@@ -120,11 +120,6 @@ Dialog {
             onClicked: {
                 UserSettings.firstRun = false
                 AppState.loadAllModels(UserSettings.useRemoteDatabase)
-
-                if (!UserSettings.useRemoteDatabase && welcomeDialog.initialAmount !== 0) {
-                    initialTransactionTimer.start()
-                }
-
                 welcomeDialog.close()
             }
         }

@@ -4,8 +4,20 @@
 
 ClientModel::ClientModel(QObject *parent)
     : BaseModel("clients.json", parent)
+    , m_offerModel(nullptr)
+    , m_supplementModel(nullptr)
 {
     m_sortColumn = SortByName; // Default sort by name
+}
+
+void ClientModel::setOfferModel(OfferModel *model)
+{
+    m_offerModel = model;
+}
+
+void ClientModel::setSupplementModel(SupplementModel *model)
+{
+    m_supplementModel = model;
 }
 
 int ClientModel::rowCount(const QModelIndex &parent) const
@@ -248,23 +260,15 @@ QString ClientModel::getSupplementName(int id) const
 
 double ClientModel::getSupplementPriceDisplay(int id) const
 {
-    return getSupplementPrice(id);
-}
-
-int ClientModel::getSupplementPrice(int supplementId) const
-{
-    switch (supplementId) {
-    case 1: return 200; // $200.00
-    case 2: return 350; // $350.00
-    case 3: return 120; // $120.00
-    case 4: return 180; // $180.00
-    case 5: return 400; // $400.00
-    case 6: return 90;  // $90.00
-    case 7: return 500; // $500.00
-    case 8: return 80;  // $80.00
-    case 9: return 50;  // $50.00
-    default: return 0;
+    if (!m_supplementModel) {
+        return 0.0;
     }
+
+    if (id >= 0 && id < m_supplementModel->rowCount()) {
+        return m_supplementModel->getSupplementPrice(id);
+    }
+
+    return 0.0;
 }
 
 void ClientModel::checkout(int clientIndex)
@@ -357,6 +361,45 @@ void ClientModel::updateClientWithQuantities(int index, int businessType, const 
     beginResetModel();
     performSort();
     endResetModel();
+
+    saveToFile();
+}
+
+void ClientModel::recalculateAllPrices()
+{
+    if (!m_offerModel || !m_supplementModel) {
+        qWarning() << "Cannot recalculate prices: models not set";
+        return;
+    }
+
+    for (int i = 0; i < m_clients.size(); ++i) {
+        Client &client = m_clients[i];
+
+        // Get base price from actual offer model
+        int basePrice = 0;
+        if (client.offer >= 0 && client.offer < m_offerModel->rowCount()) {
+            basePrice = m_offerModel->getOfferPrice(client.offer);
+        }
+
+        // Get supplement prices from actual supplement model
+        int supplementsTotal = 0;
+        for (auto it = client.supplements.begin(); it != client.supplements.end(); ++it) {
+            int suppId = it.key();
+            int quantity = it.value();
+            if (suppId >= 0 && suppId < m_supplementModel->rowCount()) {
+                supplementsTotal += m_supplementModel->getSupplementPrice(suppId) * quantity;
+            }
+        }
+
+        int totalBeforeDiscount = basePrice + supplementsTotal;
+        int newPrice = totalBeforeDiscount * (100 - client.discount) / 100;
+
+        if (client.price != newPrice) {
+            client.price = newPrice;
+            QModelIndex idx = index(i, 0);
+            emit dataChanged(idx, idx, {PriceRole});
+        }
+    }
 
     saveToFile();
 }
