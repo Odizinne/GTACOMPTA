@@ -227,6 +227,9 @@ Page {
         anchors.right: parent.right
 
         TabButton {
+            text: "Home"
+        }
+        TabButton {
             text: "Employees (" + (AppState.filterText ? (AppState.employeeFilterModel ? AppState.employeeFilterModel.rowCount() + "/" + AppState.employeeModel.count : "0/0") : (AppState.employeeModel ? AppState.employeeModel.count : "0")) + ")"
         }
         TabButton {
@@ -258,6 +261,11 @@ Page {
         }
 
         Component {
+            id: homeComponent
+            HomeTab {}
+        }
+
+        Component {
             id: employeeComponent
             EmployeeTab {}
         }
@@ -277,7 +285,17 @@ Page {
             ClientTab {}
         }
 
-        initialItem: employeeComponent
+        initialItem: homeComponent
+    }
+
+    Connections {
+        target: tabBar
+        function onCurrentIndexChanged() {
+            var components = [homeComponent, employeeComponent, transactionComponent, awaitingComponent, clientComponent]
+            if (tabBar.currentIndex < components.length && tabBar.currentIndex >= 0) {
+                stackView.push(components[tabBar.currentIndex])
+            }
+        }
     }
 
     Connections {

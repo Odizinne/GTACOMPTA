@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.30)
 
-project(GTACOMPTA VERSION 1.4.2 LANGUAGES CXX)
+project(GTACOMPTA VERSION 1.5.0 LANGUAGES CXX)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
 set(CMAKE_CXX_STANDARD 20)
@@ -144,6 +144,7 @@ set(QML_FILES
     qml/Tabs/ClientTab.qml
     qml/Tabs/EmployeeTab.qml
     qml/Tabs/TransactionTab.qml
+    qml/Tabs/HomeTab.qml
 )
 
 set(QML_SINGLETONS
@@ -167,7 +168,6 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
     DEPENDENCIES QtCore QtQml
-    SOURCES
 )
 
 target_link_libraries(GTACOMPTA
