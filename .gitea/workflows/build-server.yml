@@ -34,7 +34,7 @@ jobs:
           cmake --build build-server --parallel
 
       - name: Upload server binary
-        uses: actions/upload-artifact@v3
+        uses: https://git.odizinne.com/Odizinne/gitea-actions/upload-artifact@main
         with:
           name: GTACOMPTAServer
           path: build-server/GTACOMPTAServer
