@@ -16,13 +16,13 @@ jobs:
       - uses: https://git.odizinne.com/Odizinne/gitea-actions/clone@main
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          aqtversion: '==3.1.*'
-          version: ${{ env.QT_VERSION }}
-          host: 'linux'
-          target: 'desktop'
-          arch: 'gcc_64'
+        run: |
+          pip install --upgrade pip
+          pip install aqtinstall
+          aqt install-qt linux desktop ${QT_VERSION} gcc_64 -O /opt/Qt 
+          echo "/opt/Qt/${QT_VERSION}/gcc_64/bin" >> $GITHUB_PATH
+          echo "QT_PLUGIN_PATH=/opt/Qt/${QT_VERSION}/gcc_64/plugins" >> $GITHUB_ENV
+          echo "QML_IMPORT_PATH=/opt/Qt/${QT_VERSION}/gcc_64/qml" >> $GITHUB_ENV
 
       - name: Configure (server only)
         run: |
