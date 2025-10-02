@@ -9,6 +9,7 @@ jobs:
     runs-on: linux
     container:
       image: git.odizinne.com/odizinne/wasm-ubuntu-22.04:latest
+      options: --add-host=127.0.0.1:host-gateway
    
     steps:
       - uses: actions/checkout@v4
