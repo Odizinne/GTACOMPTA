@@ -27,6 +27,7 @@ jobs:
           actions-cache-folder: 'emsdk-cache'
      
       - name: Build WebAssembly
+        shell: bash
         run: |
           source ${EMSDK}/emsdk_env.sh
           mkdir build
