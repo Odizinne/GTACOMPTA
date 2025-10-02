@@ -16,14 +16,13 @@ jobs:
       - uses: https://git.odizinne.com/Odizinne/gitea-actions/clone@main
 
       - name: Install Qt
-        run: |
-          pip install --upgrade pip
-          pip install aqtinstall
-          aqt install-qt linux desktop ${QT_VERSION} gcc_64 -O /opt/Qt 
-          echo "/opt/Qt/${QT_VERSION}/gcc_64/bin" >> $GITHUB_PATH
-          echo "QT_PLUGIN_PATH=/opt/Qt/${QT_VERSION}/gcc_64/plugins" >> $GITHUB_ENV
-          echo "QML_IMPORT_PATH=/opt/Qt/${QT_VERSION}/gcc_64/qml" >> $GITHUB_ENV
-
+        uses: https://git.odizinne.com/Odizinne/gitea-actions/install-qt@main
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+    
       - name: Configure (server only)
         run: |
           mkdir build-server
@@ -35,7 +34,7 @@ jobs:
           cmake --build build-server --parallel
 
       - name: Upload server binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: GTACOMPTAServer
           path: build-server/GTACOMPTAServer
