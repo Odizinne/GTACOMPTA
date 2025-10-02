@@ -8,15 +8,15 @@ env:
 
 jobs:
   build:
-    runs-on: linux
+    runs-on: ubuntu-22.04
     container:
-      image: git.odizinne.com/odizinne/noqt-ubuntu-22.04:latest
+      image: ghcr.io/odizinne/noqt-ubuntu-22.04:latest
 
     steps:
-      - uses: https://git.odizinne.com/Odizinne/gitea-actions/clone@main
+      - uses: actions/checkout@v4
 
       - name: Install Qt
-        uses: https://git.odizinne.com/Odizinne/gitea-actions/install-qt@main
+        uses: Odizinne/github-actions/install-qt@main
         with:
           version: ${{ env.QT_VERSION }}
           host: 'linux'
@@ -34,7 +34,7 @@ jobs:
           cmake --build build-server --parallel
 
       - name: Upload server binary
-        uses: https://git.odizinne.com/Odizinne/gitea-actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: GTACOMPTAServer
           path: build-server/GTACOMPTAServer
