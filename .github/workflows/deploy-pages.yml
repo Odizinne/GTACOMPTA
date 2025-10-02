@@ -6,9 +6,9 @@ env:
  
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: linux
     container:
-      image: ghcr.io/odizinne/wasm-ubuntu-22.04:latest
+      image: git.odizinne.com/odizinne/wasm-ubuntu-22.04:latest
    
     steps:
       - uses: actions/checkout@v4

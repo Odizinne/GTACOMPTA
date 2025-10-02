@@ -8,9 +8,9 @@ env:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: linux
     container:
-      image: ghcr.io/odizinne/noqt-ubuntu-22.04:latest
+      image: git.odizinne.com/odizinne/noqt-ubuntu-22.04:latest
 
     steps:
       - uses: actions/checkout@v4
