@@ -8,8 +8,10 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/odizinne/ubuntu-22.04:latest
+      
     steps:
       - uses: actions/checkout@v4
 
