@@ -13,9 +13,7 @@ jobs:
       image: git.odizinne.com/odizinne/noqt-ubuntu-22.04:latest
 
     steps:
-      - name: Clone repository
-        run: |
-          git clone --depth=1 https://git.odizinne.com/${{ gitea.repository }}.git .
+      - uses: https://git.odizinne.com/Odizinne/gitea-actions/clone@main
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
