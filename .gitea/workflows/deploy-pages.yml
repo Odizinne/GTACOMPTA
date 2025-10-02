@@ -39,38 +39,10 @@ jobs:
           echo "Files in build directory:"
           ls -la build/
      
-      - name: Deploy to server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        run: |
-          apt-get update && apt-get install -y openssh-client rsync
-          
-          mkdir -p /root/.ssh
-          chmod 700 /root/.ssh
-          
-          # Write key with printf to preserve formatting
-          printf "%s\n" "$SSH_PRIVATE_KEY" > /root/.ssh/id_ed25519
-          chmod 600 /root/.ssh/id_ed25519
-          
-          # Verify the key format
-          echo "First and last lines of key:"
-          head -n 1 /root/.ssh/id_ed25519
-          tail -n 1 /root/.ssh/id_ed25519
-          echo "Total lines in key file:"
-          wc -l /root/.ssh/id_ed25519
-          
-          # Test key
-          ssh-keygen -l -f /root/.ssh/id_ed25519
-          
-          # Try direct SSH test first
-          ssh -p ${{ secrets.SSH_PORT }} \
-            -o StrictHostKeyChecking=no \
-            -o UserKnownHostsFile=/dev/null \
-            -i /root/.ssh/id_ed25519 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "echo 'Direct SSH works!' && pwd"
-          
-          # If that works, do rsync
-          rsync -avz --delete \
-            -e "ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_ed25519" \
-            build/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}
+      - uses: https://git.odizinne.com/Odizinne/gitea-actions/deploy-ssh@main
+        with:
+          ssh_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          ssh_port: ${{ secrets.SSH_PORT }}
+          server_user: ${{ secrets.SERVER_USER }}
+          server_host: ${{ secrets.SERVER_HOST }}
+          source_path: 'build/'
