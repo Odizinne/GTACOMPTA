@@ -1,15 +1,18 @@
 name: Deploy to GitHub Pages
+
 on:
   workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
-env:
-  QT_VERSION: '6.9.1'
+
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container:
+      image: ghcr.io/odizinne/wasm-ubuntu-22.04:latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -22,47 +25,6 @@ jobs:
         with:
           version: 3.1.70
           actions-cache-folder: 'emsdk-cache'
-     
-      - name: Install Qt Desktop (Host)
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: 'linux'
-          target: 'desktop'
-          arch: 'linux_gcc_64'
-          modules: 'qtimageformats'
-          cache: true
-          add-tools-to-path: true
-
-      - name: Install Qt WebAssembly
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: 'all_os'
-          target: 'wasm'
-          arch: 'wasm_singlethread'
-          modules: 'qtimageformats'
-          cache: true
-          add-tools-to-path: false
-     
-      - name: Install CMake and Ninja
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build
-
-      - name: Set explicit Qt paths
-        run: |
-          echo "QT_HOST_PATH=/home/runner/work/GTACOMPTA/Qt/${{ env.QT_VERSION }}/gcc_64" >> $GITHUB_ENV
-          echo "QT_WASM_PATH=/home/runner/work/GTACOMPTA/Qt/${{ env.QT_VERSION }}/wasm_singlethread" >> $GITHUB_ENV
-
-      - name: Verify Qt paths
-        run: |
-          echo "=== QT PATHS VERIFICATION ==="
-          echo "Host Qt: $QT_HOST_PATH"
-          echo "WASM Qt: $QT_WASM_PATH"
-          echo "Host Qt exists: $([ -d "$QT_HOST_PATH" ] && echo "YES" || echo "NO")"
-          echo "WASM Qt exists: $([ -d "$QT_WASM_PATH" ] && echo "YES" || echo "NO")"
-          echo "============================="
      
       - name: Build WebAssembly
         run: |
@@ -89,13 +51,6 @@ jobs:
           echo "Files in build directory:"
           ls -la build/
           
-      - name: List build artifacts
-        run: |
-          echo "Build directory contents:"
-          ls -la build/
-          echo "Looking for WASM files:"
-          find build/ -name "*.html" -o -name "*.js" -o -name "*.wasm" | head -10
-     
       - name: Setup Pages
         uses: actions/configure-pages@v4
      

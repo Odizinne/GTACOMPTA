@@ -10,8 +10,8 @@ jobs:
   build:
     runs-on: self-hosted
     container:
-      image: ghcr.io/odizinne/ubuntu-22.04:latest
-      
+      image: ghcr.io/odizinne/noqt-ubuntu-22.04:latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,11 +24,6 @@ jobs:
           target: 'desktop'
           arch: 'gcc_64'
 
-      - name: Install CMake and Ninja
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build
-
       - name: Configure (server only)
         run: |
           mkdir build-server
@@ -38,10 +33,6 @@ jobs:
       - name: Build
         run: |
           cmake --build build-server --parallel
-
-      - name: List artifacts
-        run: |
-          ls -la build-server/
 
       - name: Upload server binary
         uses: actions/upload-artifact@v4
