@@ -10,18 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/odizinne/noqt-ubuntu-22.04:latest
+      image: ghcr.io/odizinne/6.2.4-ubuntu-22.04:latest
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Qt
-        uses: Odizinne/github-actions/install-qt@main
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: 'linux'
-          target: 'desktop'
-          arch: 'gcc_64'
     
       - name: Configure (server only)
         run: |
