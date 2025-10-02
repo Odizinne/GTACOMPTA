@@ -12,7 +12,9 @@ jobs:
       options: --add-host=127.0.0.1:host-gateway
    
     steps:
-      - uses: actions/checkout@v4
+      - name: Clone repository
+        run: |
+          git clone --depth=1 https://git.odizinne.com/${{ gitea.repository }}.git .
 
       - name: Build WebAssembly
         shell: bash
