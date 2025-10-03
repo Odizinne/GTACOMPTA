@@ -65,7 +65,7 @@ QString RemoteDatabaseManager::getApiUrl(const QString &endpoint) const
 void RemoteDatabaseManager::makeRequest(const QString &method, const QString &endpoint, const QJsonObject &data)
 {
     QSettings settings("Odizinne", "GTACOMPTA");
-    QString password = settings.value("remotePassword", "1234").toString();
+    // REMOVE: QString password = settings.value("remotePassword", "1234").toString();
     QString username = settings.value("remoteUsername", "").toString();
     QString userPassword = settings.value("remoteUserPassword", "").toString();
 
@@ -74,14 +74,14 @@ void RemoteDatabaseManager::makeRequest(const QString &method, const QString &en
 
     QNetworkRequest request;
     request.setUrl(QUrl(url));
-    request.setRawHeader("X-Password", password.toUtf8());
+    // REMOVE: request.setRawHeader("X-Password", password.toUtf8());
     request.setRawHeader("X-Username", username.toUtf8());
     request.setRawHeader("X-User-Password", userPassword.toUtf8());
     request.setRawHeader("Content-Type", "application/json");
     request.setRawHeader("X-Protocol-Version", "1.0");
 
     qDebug() << "Headers set:";
-    qDebug() << "  X-Password:" << QString::fromUtf8(request.rawHeader("X-Password"));
+    // REMOVE: qDebug() << "  X-Password:" << QString::fromUtf8(request.rawHeader("X-Password"));
     qDebug() << "  X-Username:" << QString::fromUtf8(request.rawHeader("X-Username"));
     qDebug() << "  X-User-Password:" << QString::fromUtf8(request.rawHeader("X-User-Password"));
     qDebug() << "  Content-Type:" << QString::fromUtf8(request.rawHeader("Content-Type"));

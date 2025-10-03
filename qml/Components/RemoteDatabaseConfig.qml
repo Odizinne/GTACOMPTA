@@ -85,23 +85,6 @@ ColumnLayout {
         }
     }
 
-    RowLayout {
-        enabled: UserSettings.useRemoteDatabase
-        Label { text: "Server Password:"; Layout.fillWidth: true }
-        TextField {
-            Layout.preferredHeight: Constants.comboHeight
-            text: UserSettings.remotePassword
-            onTextChanged: {
-                UserSettings.remotePassword = text
-                if (root.showSynchronizeButton && UserSettings.useRemoteDatabase) {
-                    root.connectionStatus = ""
-                }
-            }
-            echoMode: TextInput.Password
-            placeholderText: "Server password"
-        }
-    }
-
     MenuSeparator {
         Layout.fillWidth: true
         visible: UserSettings.useRemoteDatabase

@@ -10,7 +10,6 @@
 DatabaseServer::DatabaseServer(QObject *parent)
     : QObject(parent)
     , m_server(new QTcpServer(this))
-    , m_password("1234")
     , m_userManager(new UserManager(this))
 {
     m_dataDirectory = "";
@@ -33,7 +32,7 @@ bool DatabaseServer::start(quint16 port)
         qDebug() << "GTACOMPTA Database Server started on port" << port;
         qDebug() << "Data directory:" << m_dataDirectory;
         qDebug() << "Running in HTTP mode (nginx handles HTTPS)";
-        qDebug() << "Password protection enabled";
+        qDebug() << "User authentication enabled";
 
         m_logTimer->start(30000);
         return true;
@@ -50,12 +49,6 @@ void DatabaseServer::stop()
         m_logTimer->stop();
         qDebug() << "Server stopped";
     }
-}
-
-void DatabaseServer::setPassword(const QString &password)
-{
-    m_password = password;
-    qDebug() << "Password updated";
 }
 
 void DatabaseServer::setDataDirectory(const QString &path)
@@ -102,7 +95,6 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
     QString method = parseHttpMethod(request);
     QString path = parseHttpPath(request);
     QString body = parseHttpBody(request);
-    QString authHeader = getHttpHeader(request, "X-Password");
     QString protocolVersion = getHttpHeader(request, "X-Protocol-Version");
     QString username = getHttpHeader(request, "X-Username");
     QString userPassword = getHttpHeader(request, "X-User-Password");
@@ -122,15 +114,8 @@ void DatabaseServer::handleHttpRequest(QTcpSocket *socket, const QString &reques
         return;
     }
 
-    // Server authentication check
-    if (!authenticate(authHeader)) {
-        QJsonObject error;
-        error["error"] = "Unauthorized - Invalid server password";
-        response = createHttpResponse(401, QJsonDocument(error).toJson());
-        logRequest(method, path, "UNAUTHORIZED - SERVER");
-    }
     // User authentication check
-    else if (!authenticateRequest(username, userPassword)) {
+    if (!authenticateRequest(username, userPassword)) {
         QJsonObject error;
         error["error"] = "Unauthorized - Invalid user credentials";
         response = createHttpResponse(401, QJsonDocument(error).toJson());
@@ -299,11 +284,6 @@ QString DatabaseServer::getHttpHeader(const QString &request, const QString &hea
     }
 
     return "";
-}
-
-bool DatabaseServer::authenticate(const QString &password)
-{
-    return password == m_password;
 }
 
 bool DatabaseServer::authenticateRequest(const QString &username, const QString &password)

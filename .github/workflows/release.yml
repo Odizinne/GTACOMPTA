@@ -17,7 +17,7 @@ jobs:
         id: cmake_version
         uses: DarwinInnovation/cmake-project-version-action@v1.0
 
-      - name: Download Windows artifact
+      - name: Download artifact
         uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -401,8 +401,6 @@ QJsonObject DataManager::collectUserSettings()
     settings["darkMode"] = qsettings.value("darkMode", true).toBool();
     settings["useRemoteDatabase"] = qsettings.value("useRemoteDatabase", false).toBool();
     settings["remoteHost"] = qsettings.value("remoteHost", "localhost").toString();
-    settings["remotePort"] = qsettings.value("remotePort", 3000).toInt();
-    settings["remotePassword"] = qsettings.value("remotePassword", "1234").toString();
 
     return settings;
 }

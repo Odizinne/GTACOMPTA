@@ -8,8 +8,6 @@ Settings {
 
     property bool useRemoteDatabase: false
     property string remoteHost: "localhost"
-    property int remotePort: 3000
-    property string remotePassword: "1234"
     property string remoteUsername: ""
     property string remoteUserPassword: ""
 }

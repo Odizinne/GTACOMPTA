@@ -24,7 +24,6 @@ public:
 
     bool start(quint16 port = 3000);
     void stop();
-    void setPassword(const QString &password);
     void setDataDirectory(const QString &path);
 
 private slots:
@@ -34,12 +33,10 @@ private slots:
 
 private:
     QTcpServer *m_server;
-    QString m_password;
     QString m_dataDirectory;
     QTimer *m_logTimer;
     UserManager *m_userManager;
 
-    bool authenticate(const QString &password);
     bool authenticateRequest(const QString &username, const QString &password);
     bool isRequestReadOnly(const QString &username);
     void logRequest(const QString &method, const QString &path, const QString &response = "");

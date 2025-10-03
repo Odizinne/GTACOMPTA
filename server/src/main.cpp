@@ -13,19 +13,18 @@ void printWelcomeBanner()
     QTextStream out(stdout);
     out << Qt::endl;
     out << "========================================" << Qt::endl;
-    out << "    GTACOMPTA Database Server v1.0     " << Qt::endl;
+    out << "    GTACOMPTA Database Server v1.5.1    " << Qt::endl;
     out << "========================================" << Qt::endl;
     out << "Remote storage server for GTACOMPTA" << Qt::endl;
     out << "Built with Qt " << QT_VERSION_STR << Qt::endl;
     out << Qt::endl;
 }
 
-void printServerInfo(quint16 port, const QString &password, const QString &dataDir)
+void printServerInfo(quint16 port, const QString &dataDir)
 {
     QTextStream out(stdout);
     out << "Server Configuration:" << Qt::endl;
     out << "  Port: " << port << Qt::endl;
-    out << "  Password: " << (password.isEmpty() ? "none (WARNING: No authentication!)" : "***protected***") << Qt::endl;
     out << "  Data Directory: " << dataDir << Qt::endl;
     out << Qt::endl;
     out << "API Endpoints:" << Qt::endl;
@@ -35,7 +34,7 @@ void printServerInfo(quint16 port, const QString &password, const QString &dataD
     out << "  POST /api/save/<collection> - Save data" << Qt::endl;
     out << Qt::endl;
     out << "CORS: Handled by nginx reverse proxy" << Qt::endl;
-    out << "Authentication: X-Password header required" << Qt::endl;
+    out << "Authentication: Username/Password (X-Username, X-User-Password headers)" << Qt::endl;
     out << "SSL: Handled by nginx reverse proxy" << Qt::endl;
     out << Qt::endl;
     out << "Server is running... Press Ctrl+C to stop" << Qt::endl;
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
 
     app.setApplicationName("GTACOMPTAServer");
-    app.setApplicationVersion("1.0.0");
+    app.setApplicationVersion("1.5.1");
     app.setOrganizationName("Odizinne");
 
     printWelcomeBanner();
@@ -76,9 +75,6 @@ int main(int argc, char *argv[])
     QCommandLineOption portOption(QStringList() << "p" << "port",
                                   "Port to listen on (default: 3000)",
                                   "port", "3000");
-    QCommandLineOption passwordOption(QStringList() << "w" << "password",
-                                      "Authentication password (default: 1234)",
-                                      "password", "1234");
     QCommandLineOption dataOption(QStringList() << "d" << "data-dir",
                                   QString("Data directory path (default: %1)").arg(defaultDataDir),
                                   "path");
@@ -97,7 +93,6 @@ int main(int argc, char *argv[])
                                        "List all registered users");
 
     parser.addOption(portOption);
-    parser.addOption(passwordOption);
     parser.addOption(dataOption);
     parser.addOption(verboseOption);
     parser.addOption(addUserOption);
@@ -190,12 +185,6 @@ int main(int argc, char *argv[])
 
     // If we get here, we're starting the server
     DatabaseServer server;
-
-    QString password = parser.value(passwordOption);
-    if (password.isEmpty()) {
-        qWarning() << "WARNING: No password set! Server will be unprotected.";
-    }
-    server.setPassword(password);
     server.setDataDirectory(dataDir);
 
     bool portOk;
@@ -210,7 +199,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    printServerInfo(port, password, dataDir);
+    printServerInfo(port, dataDir);
 
     // Show current users
     userManager.listUsers();
