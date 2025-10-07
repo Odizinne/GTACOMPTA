@@ -78,6 +78,7 @@ bool FilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &source
     if (qobject_cast<ClientModel*>(model)) {
         QString name = model->data(index, ClientModel::NameRole).toString();
         QString phone = model->data(index, ClientModel::PhoneNumberRole).toString();
+        QString paymentDate = model->data(index, ClientModel::PaymentDateRole).toString();
         QString comment = model->data(index, ClientModel::CommentRole).toString();
 
         // Format price as display string

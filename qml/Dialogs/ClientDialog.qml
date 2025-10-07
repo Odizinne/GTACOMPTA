@@ -15,9 +15,10 @@ Dialog {
     property int editIndex: -1
     property var selectedSupplements: []
     property var supplementQuantities: ({})
+    property string clientComment: ""
 
-    signal clientAdded(int businessType, string name, int offer, real price, var supplementQuantities, int discount, string phoneNumber, string comment)
-    signal clientUpdated(int index, int businessType, string name, int offer, real price, var supplementQuantities, int discount, string phoneNumber, string comment)
+    signal clientAdded(int businessType, string name, int offer, real price, var supplementQuantities, int discount, string phoneNumber, string date, string comment)
+    signal clientUpdated(int index, int businessType, string name, int offer, real price, var supplementQuantities, int discount, string phoneNumber, string date, string comment)
     signal supplementManagementRequested()
 
     function calculatePrice() {
@@ -41,7 +42,7 @@ Dialog {
         return finalPrice
     }
 
-    function loadClient(businessType, name, offer, price, supplements, discount, phoneNumber, comment) {
+    function loadClient(businessType, name, offer, price, supplements, discount, phoneNumber, paymentDate, comment) {
         businessTypeCombo.currentIndex = businessType
         clientName.text = name
         clientOfferCombo.currentIndex = offer
@@ -62,7 +63,8 @@ Dialog {
 
         clientDiscount.value = discount
         clientPhone.text = phoneNumber
-        clientComment.text = comment
+        paymentDatePicker.text = paymentDate
+        clientComment = comment
     }
 
     function clearFields() {
@@ -73,13 +75,20 @@ Dialog {
         root.supplementQuantities = {}
         clientDiscount.value = 0
         clientPhone.clear()
-        clientComment.clear()
+        clientComment = ""
     }
 
     onClosed: {
         editMode = false
         editIndex = -1
         clearFields()
+    }
+
+    ClientCommentDialog {
+        id: clientCommentDialog
+        anchors.centerIn: parent
+        onClosed: root.clientComment = text
+        onOpened: text = root.clientComment
     }
 
     GridLayout {
@@ -110,6 +119,15 @@ Dialog {
             id: clientPhone
             Layout.fillWidth: true
             placeholderText: "+1234567890"
+        }
+
+        Label { text: "Payment date:" }
+        DatePicker {
+            id: paymentDatePicker
+            Layout.fillWidth: true
+            selectedDate: new Date()
+            placeholderText: "Select employee start date"
+            onOpenDateDialog: datePickerDialog.open()
         }
 
         Label { text: "Offer:" }
@@ -208,14 +226,26 @@ Dialog {
         }
 
         Label { text: "Comment:" }
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 80
-            TextArea {
-                id: clientComment
-                placeholderText: "Additional comments..."
-                wrapMode: TextArea.Wrap
+        RowLayout {
+            Item {
+                Layout.fillWidth: true
             }
+            Button {
+                text: "Additional notes"
+                onClicked: clientCommentDialog.open()
+            }
+        }
+    }
+
+    DatePickerDialog {
+        id: datePickerDialog
+        selectedDate: paymentDatePicker.selectedDate
+        onDateSelected: function(newDate) {
+            paymentDatePicker.selectedDate = newDate
+            paymentDatePicker.dateChanged(newDate)
+        }
+        onOpened: {
+            currentDate = paymentDatePicker.selectedDate
         }
     }
 
@@ -244,14 +274,14 @@ Dialog {
 
                 if (root.editMode) {
                     root.clientUpdated(root.editIndex, businessTypeCombo.currentIndex, clientName.text,
-                                      clientOfferCombo.currentIndex, calculatedPriceValue,
-                                      root.supplementQuantities, clientDiscount.value,
-                                      clientPhone.text, clientComment.text)
+                                       clientOfferCombo.currentIndex, calculatedPriceValue,
+                                       root.supplementQuantities, clientDiscount.value,
+                                       clientPhone.text, paymentDatePicker.formatDate(paymentDatePicker.selectedDate), root.clientComment)
                 } else {
                     root.clientAdded(businessTypeCombo.currentIndex, clientName.text,
-                                    clientOfferCombo.currentIndex, calculatedPriceValue,
-                                    root.supplementQuantities, clientDiscount.value,
-                                    clientPhone.text, clientComment.text)
+                                     clientOfferCombo.currentIndex, calculatedPriceValue,
+                                     root.supplementQuantities, clientDiscount.value,
+                                     clientPhone.text, paymentDatePicker.formatDate(paymentDatePicker.selectedDate), root.clientComment)
                 }
                 root.close()
             }

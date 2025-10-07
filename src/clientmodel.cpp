@@ -48,6 +48,8 @@ QVariant ClientModel::data(const QModelIndex &index, int role) const
         return client.discount;
     case PhoneNumberRole:
         return client.phoneNumber;
+    case PaymentDateRole:
+        return client.paymentDate;
     case CommentRole:
         return client.comment;
     default:
@@ -65,13 +67,14 @@ QHash<int, QByteArray> ClientModel::roleNames() const
     roles[SupplementsRole] = "supplements";
     roles[DiscountRole] = "discount";
     roles[PhoneNumberRole] = "phoneNumber";
+    roles[PaymentDateRole] = "paymentDate";
     roles[CommentRole] = "comment";
     return roles;
 }
 
 void ClientModel::addClient(int businessType, const QString &name, int offer, int price,
                             const QList<int> &supplements, int discount, const QString &phoneNumber,
-                            const QString &comment)
+                            const QString &paymentDate, const QString &comment)
 {
     beginInsertRows(QModelIndex(), m_clients.size(), m_clients.size());
     Client client;
@@ -86,6 +89,7 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
 
     client.discount = discount;
     client.phoneNumber = phoneNumber;
+    client.paymentDate = paymentDate;
     client.comment = comment;
     m_clients.append(client);
     endInsertRows();
@@ -100,7 +104,7 @@ void ClientModel::addClient(int businessType, const QString &name, int offer, in
 
 void ClientModel::updateClient(int index, int businessType, const QString &name, int offer, int price,
                                const QList<int> &supplements, int discount, const QString &phoneNumber,
-                               const QString &comment)
+                               const QString &paymentDate, const QString &comment)
 {
     if (index < 0 || index >= m_clients.size())
         return;
@@ -118,6 +122,7 @@ void ClientModel::updateClient(int index, int businessType, const QString &name,
 
     client.discount = discount;
     client.phoneNumber = phoneNumber;
+    client.paymentDate = paymentDate;
     client.comment = comment;
 
     beginResetModel();
@@ -147,6 +152,7 @@ QJsonObject ClientModel::entryToJson(int index) const
 
     obj["discount"] = client.discount;
     obj["phoneNumber"] = client.phoneNumber;
+    obj["paymentDate"] = client.paymentDate;
     obj["comment"] = client.comment;
     return obj;
 }
@@ -173,6 +179,7 @@ void ClientModel::entryFromJson(const QJsonObject &obj)
 
     client.discount = obj["discount"].toInt();
     client.phoneNumber = obj["phoneNumber"].toString();
+    client.paymentDate = obj["paymentDate"].toString();
     client.comment = obj["comment"].toString();
     m_clients.append(client);
 }
@@ -200,6 +207,9 @@ void ClientModel::performSort()
             break;
         case SortByPhone:
             result = a.phoneNumber.toLower() < b.phoneNumber.toLower();
+            break;
+        case SortByPaymentDate:
+            result = a.paymentDate.toLower() < b.paymentDate.toLower();
             break;
         case SortByComment:
             result = a.comment.toLower() < b.comment.toLower();
@@ -289,7 +299,7 @@ QVariantMap ClientModel::getSupplementQuantities(int clientIndex) const
 
 void ClientModel::addClientWithQuantities(int businessType, const QString &name, int offer, int price,
                                           const QVariantMap &supplementQuantities, int discount,
-                                          const QString &phoneNumber, const QString &comment)
+                                          const QString &phoneNumber, const QString &paymentDate, const QString &comment)
 {
     beginInsertRows(QModelIndex(), m_clients.size(), m_clients.size());
     Client client;
@@ -308,6 +318,7 @@ void ClientModel::addClientWithQuantities(int businessType, const QString &name,
 
     client.discount = discount;
     client.phoneNumber = phoneNumber;
+    client.paymentDate = paymentDate;
     client.comment = comment;
     m_clients.append(client);
     endInsertRows();
@@ -322,7 +333,7 @@ void ClientModel::addClientWithQuantities(int businessType, const QString &name,
 
 void ClientModel::updateClientWithQuantities(int index, int businessType, const QString &name, int offer, int price,
                                              const QVariantMap &supplementQuantities, int discount,
-                                             const QString &phoneNumber, const QString &comment)
+                                             const QString &phoneNumber, const QString &paymentDate, const QString &comment)
 {
     if (index < 0 || index >= m_clients.size())
         return;
@@ -344,6 +355,7 @@ void ClientModel::updateClientWithQuantities(int index, int businessType, const 
 
     client.discount = discount;
     client.phoneNumber = phoneNumber;
+    client.paymentDate = paymentDate;
     client.comment = comment;
 
     beginResetModel();

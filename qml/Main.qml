@@ -291,11 +291,11 @@ ApplicationWindow {
 
     ClientDialog {
         id: clientDialog
-        onClientAdded: function(businessType, name, offer, price, supplementQuantities, discount, phoneNumber, comment) {
-            clientModel.addClientWithQuantities(businessType, name, offer, price, supplementQuantities, discount, phoneNumber, comment)
+        onClientAdded: function(businessType, name, offer, price, supplementQuantities, discount, phoneNumber, paymentDate, comment) {
+            clientModel.addClientWithQuantities(businessType, name, offer, price, supplementQuantities, discount, phoneNumber, paymentDate, comment)
         }
-        onClientUpdated: function(index, businessType, name, offer, price, supplementQuantities, discount, phoneNumber, comment) {
-            clientModel.updateClientWithQuantities(index, businessType, name, offer, price, supplementQuantities, discount, phoneNumber, comment)
+        onClientUpdated: function(index, businessType, name, offer, price, supplementQuantities, discount, phoneNumber, paymentDate, comment) {
+            clientModel.updateClientWithQuantities(index, businessType, name, offer, price, supplementQuantities, discount, phoneNumber, paymentDate, comment)
         }
         onSupplementManagementRequested: {
             supplementOfferManagementDialog.open()

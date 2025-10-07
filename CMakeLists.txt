@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(GTACOMPTA VERSION 1.5.1 LANGUAGES CXX)
+project(GTACOMPTA VERSION 1.5.2 LANGUAGES CXX)
 
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory" FORCE)
 set(CMAKE_CXX_STANDARD 20)
@@ -168,6 +168,7 @@ qt_add_qml_module(GTACOMPTA
     QML_FILES ${QML_FILES} ${QML_SINGLETONS}
     SOURCES ${SOURCES} ${HEADERS}
     DEPENDENCIES QtCore QtQml
+    QML_FILES qml/Dialogs/ClientCommentDialog.qml
 )
 
 target_link_libraries(GTACOMPTA

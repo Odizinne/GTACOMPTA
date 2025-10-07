@@ -19,6 +19,7 @@ public:
         SupplementsRole,
         DiscountRole,
         PhoneNumberRole,
+        PaymentDateRole,
         CommentRole
     };
 
@@ -42,7 +43,8 @@ public:
         SortByPrice = 3,
         SortByDiscount = 5,
         SortByPhone = 6,
-        SortByComment = 7
+        SortByPaymentDate = 7,
+        SortByComment = 8
     };
     Q_ENUM(SortColumns)
 
@@ -51,10 +53,10 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QHash<int, QByteArray> roleNames() const override;
     Q_INVOKABLE void addClient(int businessType, const QString &name, int offer, int price,
-                               const QList<int> &supplements, int discount, const QString &phoneNumber,
+                               const QList<int> &supplements, int discount, const QString &phoneNumber, const QString &paymentDate,
                                const QString &comment);
     Q_INVOKABLE void updateClient(int index, int businessType, const QString &name, int offer, int price,
-                                  const QList<int> &supplements, int discount, const QString &phoneNumber,
+                                  const QList<int> &supplements, int discount, const QString &phoneNumber, const QString &paymentDate,
                                   const QString &comment);
     Q_INVOKABLE void checkout(int clientIndex);
     Q_INVOKABLE int getSupplementCount() const;
@@ -63,10 +65,10 @@ public:
     Q_INVOKABLE QVariantMap getSupplementQuantities(int clientIndex) const;
     Q_INVOKABLE void addClientWithQuantities(int businessType, const QString &name, int offer, int price,
                                              const QVariantMap &supplementQuantities, int discount,
-                                             const QString &phoneNumber, const QString &comment);
+                                             const QString &phoneNumber, const QString &paymentDate, const QString &comment);
     Q_INVOKABLE void updateClientWithQuantities(int index, int businessType, const QString &name, int offer, int price,
                                                 const QVariantMap &supplementQuantities, int discount,
-                                                const QString &phoneNumber, const QString &comment);
+                                                const QString &phoneNumber, const QString &paymentDate, const QString &comment);
     Q_INVOKABLE void setOfferModel(OfferModel *model);
     Q_INVOKABLE void setSupplementModel(SupplementModel *model);
     Q_INVOKABLE void recalculateAllPrices();
@@ -91,6 +93,7 @@ private:
         QMap<int, int> supplements;
         int discount;
         QString phoneNumber;
+        QString paymentDate;
         QString comment;
     };
     QList<Client> m_clients;
