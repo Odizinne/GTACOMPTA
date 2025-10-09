@@ -401,3 +401,15 @@ void ClientModel::recalculateAllPrices()
 
     saveToFile();
 }
+
+void ClientModel::updateComment(int row, const QString &comment)
+{
+    if (row < 0 || row >= m_clients.size()) {
+        return;
+    }
+
+    m_clients[row].comment = comment;
+
+    QModelIndex index = this->index(row, 0);
+    emit dataChanged(index, index, {CommentRole});
+}

@@ -6,7 +6,10 @@ import QtQuick.Layouts
 import Odizinne.GTACOMPTA
 
 Column {
+    id: root
     spacing: 0
+
+    property int editingClientIndex: -1
 
     ToolBar {
         width: parent.width
@@ -111,6 +114,15 @@ Column {
     ClientCommentDialog {
         id: clientCommentDialog
         anchors.centerIn: parent
+        signal notesUpdated(string text)
+        enabled: !AppState.isReadOnly
+        onClosed: {
+            if (root.editingClientIndex >= 0) {
+                var sourceIndex = AppState.getSourceIndex(AppState.clientFilterModel, root.editingClientIndex)
+                AppState.clientModel.updateComment(sourceIndex.row, text)
+                root.editingClientIndex = -1
+            }
+        }
     }
 
     ScrollView {
@@ -258,6 +270,7 @@ Column {
                             anchors.fill: parent
                             text: "View"
                             onClicked: {
+                                root.editingClientIndex = del.index
                                 clientCommentDialog.text = del.model.comment
                                 clientCommentDialog.open()
                             }

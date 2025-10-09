@@ -72,6 +72,7 @@ public:
     Q_INVOKABLE void setOfferModel(OfferModel *model);
     Q_INVOKABLE void setSupplementModel(SupplementModel *model);
     Q_INVOKABLE void recalculateAllPrices();
+    Q_INVOKABLE void updateComment(int row, const QString &comment);
 
 protected:
     QJsonObject entryToJson(int index) const override;

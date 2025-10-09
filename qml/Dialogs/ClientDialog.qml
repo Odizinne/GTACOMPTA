@@ -63,7 +63,7 @@ Dialog {
 
         clientDiscount.value = discount
         clientPhone.text = phoneNumber
-        paymentDatePicker.text = paymentDate
+        paymentDatePicker.selectedDate = paymentDate
         clientComment = comment
     }
 
