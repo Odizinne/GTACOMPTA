@@ -63,7 +63,20 @@ Dialog {
 
         clientDiscount.value = discount
         clientPhone.text = phoneNumber
-        paymentDatePicker.selectedDate = paymentDate
+
+        // Parse date string properly
+        if (paymentDate && paymentDate.length > 0) {
+            // Ensure the date string is in format YYYY-MM-DD
+            var dateParts = paymentDate.split('-')
+            if (dateParts.length === 3) {
+                paymentDatePicker.selectedDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]))
+            } else {
+                paymentDatePicker.selectedDate = new Date()
+            }
+        } else {
+            paymentDatePicker.selectedDate = new Date()
+        }
+
         clientComment = comment
     }
 
